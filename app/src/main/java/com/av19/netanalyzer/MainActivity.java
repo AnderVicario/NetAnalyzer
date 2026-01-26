@@ -36,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -216,24 +217,40 @@ public class MainActivity extends AppCompatActivity {
                 updateProgress(0, "Poblando tabla ARP...");
 
                 int total = last - first + 1;
-                int current = 0;
+                AtomicInteger current = new AtomicInteger(0);
+                CountDownLatch latch = new CountDownLatch(total);
 
                 runOnUiThread(() -> progressBar.setMax(total));
 
+                // Ejecutar todos los pings en paralelo
                 for (int host = first; host <= last; host++) {
+                    final int currentHost = host;
+                    executor.execute(() -> {
+                        try {
+                            @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
+                                    (currentHost >> 24) & 0xff,
+                                    (currentHost >> 16) & 0xff,
+                                    (currentHost >> 8) & 0xff,
+                                    currentHost & 0xff);
 
-                    @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
-                            (host >> 24) & 0xff,
-                            (host >> 16) & 0xff,
-                            (host >> 8) & 0xff,
-                            host & 0xff);
+                            InetAddress.getByName(ip).isReachable(300);
 
-                    InetAddress.getByName(ip).isReachable(100);
+                            // Actualizar progreso de forma segura
+                            int progress = current.incrementAndGet();
+                            updateProgress(progress, "Escaneando: " + ip);
 
-                    int progress = ++current;
-
-                    updateProgress(progress, "Escaneando: " + ip);
+                        } catch (Exception e) {
+                            // Ignorar errores individuales de ping
+                            int progress = current.incrementAndGet();
+                            updateProgress(progress, "Ping falló para una IP");
+                        } finally {
+                            latch.countDown();
+                        }
+                    });
                 }
+
+                // Esperar a que todos los pings terminen
+                latch.await();
 
                 updateProgress(total, "Leyendo tabla ARP...");
 
