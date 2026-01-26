@@ -28,8 +28,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -40,6 +43,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import okhttp3.Call;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -263,10 +269,20 @@ public class MainActivity extends AppCompatActivity {
                     String[] p = line.split("\\s+");
                     if (p.length >= 4 && !p[3].equals("00:00:00:00:00:00")) {
                         hostsFound++;
+
+                        // 1. Imprimir Host y MAC
                         append("💻 Host encontrado: " + p[0], R.color.on_terminal);
                         append("   MAC: " + p[3], R.color.on_terminal);
+
+                        // 2. Llamada SÍNCRONA (El código espera aquí la respuesta)
+                        String vendor = ApiClient.getMacVendorSync(p[3]);
+
+                        // 3. Imprimir Vendor justo debajo
+                        append("   Vendor: " + vendor, R.color.on_terminal);
+
+                        // 4. Continuar con el resto
                         scanPorts(p[0]);
-                        addDivider(); // Divisor SOLO entre hosts diferentes
+                        addDivider();
                     }
                 }
                 br.close();
@@ -380,7 +396,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             append("   Sin puertos abiertos conocidos", R.color.on_terminal);
         }
-        // NO se añade divisor aquí para no separar host de sus puertos
     }
 
     private boolean isAlive(String host) {
