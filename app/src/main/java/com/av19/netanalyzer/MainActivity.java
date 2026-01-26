@@ -1,15 +1,28 @@
 package com.av19.netanalyzer;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
+import android.net.Network;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.format.Formatter;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.ColorRes;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -17,16 +30,19 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView output;
+    private LinearLayout outputContainer;
     private TextView progressText;
     private ProgressBar progressBar;
     private Button scanButton;
@@ -35,71 +51,83 @@ public class MainActivity extends AppCompatActivity {
     private final int[] ports = {80, 443, 22, 445, 8080, 21, 23, 3389};
     private boolean isScanning = false;
     private AtomicInteger scannedHosts = new AtomicInteger(0);
+    private int networkInt;
+    private int mask;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Configurar edge-to-edge para Android moderno
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         }
 
         setContentView(R.layout.activity_main);
 
-        // Inicializar vistas
-        output = findViewById(R.id.output);
+        outputContainer = findViewById(R.id.outputContainer);
         progressText = findViewById(R.id.progressText);
         progressBar = findViewById(R.id.progressBar);
         scanButton = findViewById(R.id.scanButton);
 
-        // Configurar window insets para Android moderno
         setupWindowInsets();
-
-        // Configurar botón de escaneo
         scanButton.setOnClickListener(v -> startScan());
 
-        // Mostrar información inicial
         int api = Build.VERSION.SDK_INT;
-        append("📱 Android API: " + api);
-        append("━━━━━━━━━━━━━━━━━━━━━━");
+        append("📱 Android API: " + api, R.color.on_terminal);
 
         if (api < Build.VERSION_CODES.Q) {
-            append("✓ Modo ARP disponible (Android ≤9)");
+            append("✓ Modo ARP disponible (Android ≤9)", R.color.on_terminal);
         } else {
-            append("⚠ Modo limitado (Android ≥10, sin acceso ARP)");
+            append("⚠ Modo limitado (Android ≥10, sin acceso ARP)", R.color.on_terminal);
         }
-        append("━━━━━━━━━━━━━━━━━━━━━━\n");
+        addDivider();
+    }
+
+    private void append(String text, @ColorRes int colorRes) {
+        runOnUiThread(() -> {
+            TextView tv = new TextView(this);
+            tv.setText(text);
+            tv.setTextSize(13);
+            tv.setPadding(0, 4, 0, 4);
+            tv.setTypeface(Typeface.MONOSPACE);
+            tv.setTextColor(ContextCompat.getColor(this, colorRes));
+            outputContainer.addView(tv);
+        });
+    }
+
+    private void addDivider() {
+        runOnUiThread(() -> {
+            View divider = new View(this);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, 2);
+            params.setMargins(0, 15, 0, 15);
+            divider.setLayoutParams(params);
+            divider.setBackgroundColor(Color.LTGRAY);
+            outputContainer.addView(divider);
+        });
     }
 
     private void setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            // Aplicar padding solo en los lados necesarios
-            v.setPadding(
-                    systemBars.left,
-                    systemBars.top,
-                    systemBars.right,
-                    0 // No padding abajo para aprovechar todo el espacio
-            );
-
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
     }
 
     private void startScan() {
         if (isScanning) {
-            append("⚠ Escaneo ya en progreso...\n");
+            append("⚠ Escaneo ya en progreso...", R.color.on_terminal);
+            addDivider();
             return;
         }
 
         isScanning = true;
         scannedHosts.set(0);
 
-        // Limpiar output anterior
         runOnUiThread(() -> {
-            output.setText("");
+            outputContainer.removeAllViews();
             scanButton.setEnabled(false);
             scanButton.setText("Escaneando...");
             progressBar.setVisibility(View.VISIBLE);
@@ -107,42 +135,110 @@ public class MainActivity extends AppCompatActivity {
             progressText.setText("Iniciando escaneo...");
         });
 
-        // Crear nuevo executor
         executor = Executors.newFixedThreadPool(30);
-
         int api = Build.VERSION.SDK_INT;
 
         if (api < Build.VERSION_CODES.Q) {
-            append("🔍 Iniciando escaneo ARP...\n");
+            append("🔍 Iniciando escaneo ARP...", R.color.on_terminal);
+            addDivider();
             scanWithArp();
         } else {
-            append("🔍 Iniciando escaneo TCP...\n");
+            append("🔍 Iniciando escaneo TCP...", R.color.on_terminal);
+            addDivider();
             scanWithTcp();
         }
     }
 
-    // =======================
-    // ANDROID ≤ 9  (ARP)
-    // =======================
+    private void getNetworkDetails(){
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        Network network = cm.getActiveNetwork();
+        if (network == null) return;
+
+        LinkProperties lp = cm.getLinkProperties(network);
+        if (lp == null) return;
+
+        for (LinkAddress la : lp.getLinkAddresses()) {
+
+            InetAddress ip = la.getAddress();
+            int prefix = la.getPrefixLength();   // máscara en formato CIDR
+
+            if (ip instanceof Inet4Address) {
+
+                String ipStr = ip.getHostAddress();
+
+                // convertir /24 → 255.255.255.0
+                mask = 0xffffffff << (32 - prefix);
+                @SuppressLint("DefaultLocale") String netmask = String.format(
+                        "%d.%d.%d.%d",
+                        (mask >> 24) & 0xff,
+                        (mask >> 16) & 0xff,
+                        (mask >> 8) & 0xff,
+                        mask & 0xff
+                );
+
+                // calcular red
+                byte[] addr = ip.getAddress();
+                int ipInt =
+                        ((addr[0] & 0xff) << 24) |
+                                ((addr[1] & 0xff) << 16) |
+                                ((addr[2] & 0xff) << 8) |
+                                (addr[3] & 0xff);
+
+                networkInt = ipInt & mask;
+
+                @SuppressLint("DefaultLocale") String networkAddr = String.format(
+                        "%d.%d.%d.%d",
+                        (networkInt >> 24) & 0xff,
+                        (networkInt >> 16) & 0xff,
+                        (networkInt >> 8) & 0xff,
+                        networkInt & 0xff
+                );
+
+                append("🌐 IP: " + ipStr, R.color.on_terminal);
+                append("🎭 Máscara: " + netmask + " (/" + prefix + ")", R.color.on_terminal);
+                append("📡 Red: " + networkAddr + "/" + prefix, R.color.on_terminal);
+                addDivider();
+            }
+        }
+    }
+
     private void scanWithArp() {
+        getNetworkDetails();
         executor.execute(() -> {
             try {
-                String subnet = getSubnet();
-                append("📡 Red: " + subnet + ".0/24\n");
+                int first = networkInt + 1;
+                int last = (networkInt | ~mask) - 1;
+
+                append("📡 Escaneo ARP iniciado", R.color.on_terminal);
+                addDivider();
 
                 updateProgress(0, "Poblando tabla ARP...");
 
-                // Poblar ARP
-                for (int i = 1; i < 255; i++) {
-                    final int current = i;
-                    InetAddress.getByName(subnet + "." + i).isReachable(100);
-                    updateProgress(current, "Escaneando: " + subnet + "." + current);
+                int total = last - first + 1;
+                int current = 0;
+
+                runOnUiThread(() -> progressBar.setMax(total));
+
+                for (int host = first; host <= last; host++) {
+
+                    @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
+                            (host >> 24) & 0xff,
+                            (host >> 16) & 0xff,
+                            (host >> 8) & 0xff,
+                            host & 0xff);
+
+                    InetAddress.getByName(ip).isReachable(100);
+
+                    int progress = ++current;
+
+                    updateProgress(progress, "Escaneando: " + ip);
                 }
 
-                updateProgress(0, "Leyendo tabla ARP...");
+                updateProgress(total, "Leyendo tabla ARP...");
 
                 BufferedReader br = new BufferedReader(new FileReader("/proc/net/arp"));
-                br.readLine(); // header
+                br.readLine();
                 String line;
                 int hostsFound = 0;
 
@@ -150,9 +246,10 @@ public class MainActivity extends AppCompatActivity {
                     String[] p = line.split("\\s+");
                     if (p.length >= 4 && !p[3].equals("00:00:00:00:00:00")) {
                         hostsFound++;
-                        append("\n💻 Host encontrado: " + p[0]);
-                        append("   MAC: " + p[3]);
+                        append("💻 Host encontrado: " + p[0], R.color.on_terminal);
+                        append("   MAC: " + p[3], R.color.on_terminal);
                         scanPorts(p[0]);
+                        addDivider(); // Divisor SOLO entre hosts diferentes
                     }
                 }
                 br.close();
@@ -160,44 +257,95 @@ public class MainActivity extends AppCompatActivity {
                 finishScan(hostsFound);
 
             } catch (Exception e) {
-                append("\n❌ Error ARP: " + e.getMessage());
+                append("❌ Error ARP: " + e.getMessage(), R.color.on_terminal);
                 finishScan(0);
             }
         });
     }
 
-    // =======================
-    // ANDROID ≥ 10  (TCP)
-    // =======================
     private void scanWithTcp() {
-        String subnet = getSubnet();
-        append("📡 Red: " + subnet + ".0/24\n");
+        getNetworkDetails();
+        executor.execute(() -> {
+            try {
+                int first = networkInt + 1;
+                int last = (networkInt | ~mask) - 1;
+                int totalHosts = last - first + 1;
 
-        final AtomicInteger hostsFound = new AtomicInteger(0);
+                append("📡 Escaneo TCP iniciado", R.color.on_terminal);
+                addDivider();
 
-        for (int i = 1; i < 255; i++) {
-            final int current = i;
-            String host = subnet + "." + i;
+                TreeMap<Integer, String> results = new TreeMap<>();
+                AtomicInteger hostsFound = new AtomicInteger(0);
+                AtomicInteger scanned = new AtomicInteger(0);
 
-            executor.execute(() -> {
-                updateProgress(current, "Escaneando: " + subnet + "." + current);
+                ExecutorService pool = Executors.newFixedThreadPool(10);
 
-                if (isAlive(host)) {
-                    hostsFound.incrementAndGet();
-                    append("\n💻 Host activo: " + host);
-                    scanPorts(host);
+                for (int host = first; host <= last; host++) {
+
+                    final int currentHost = host;
+
+                    pool.execute(() -> {
+
+                        @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
+                                (currentHost >> 24) & 0xff,
+                                (currentHost >> 16) & 0xff,
+                                (currentHost >> 8) & 0xff,
+                                currentHost & 0xff);
+
+                        updateProgress(scanned.get(), "Escaneando: " + ip);
+
+                        if (isAlive(ip)) {
+
+                            hostsFound.incrementAndGet();
+
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("💻 Host activo: ").append(ip).append("\n");
+
+                            StringBuilder openPorts = new StringBuilder("   Puertos: ");
+                            boolean found = false;
+
+                            for (int port : ports) {
+                                try (Socket s = new Socket()) {
+                                    s.connect(new InetSocketAddress(ip, port), 150);
+                                    openPorts.append(port).append(" ");
+                                    found = true;
+                                } catch (Exception ignored) {}
+                            }
+
+                            if (found) sb.append(openPorts);
+                            else sb.append("   Sin puertos abiertos conocidos");
+
+                            synchronized (results) {
+                                results.put(currentHost, sb.toString());
+                            }
+                        }
+
+                        if (scanned.incrementAndGet() >= totalHosts) {
+
+                            runOnUiThread(() -> {
+                                for (String res : results.values()) {
+                                    String[] lines = res.split("\n");
+                                    append(lines[0], R.color.on_terminal);
+                                    if (lines.length > 1)
+                                        append(lines[1], R.color.on_terminal);
+                                    addDivider();
+                                }
+
+                                finishScan(hostsFound.get());
+                            });
+
+                            pool.shutdown();
+                        }
+                    });
                 }
 
-                if (scannedHosts.incrementAndGet() >= 254) {
-                    finishScan(hostsFound.get());
-                }
-            });
-        }
+            } catch (Exception e) {
+                append("❌ Error TCP: " + e.getMessage(), R.color.on_terminal);
+                finishScan(0);
+            }
+        });
     }
 
-    // =======================
-    // UTILIDADES
-    // =======================
     private void scanPorts(String host) {
         StringBuilder openPorts = new StringBuilder("   Puertos: ");
         boolean foundPort = false;
@@ -211,10 +359,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (foundPort) {
-            append(openPorts.toString());
+            append(openPorts.toString(), R.color.on_terminal);
         } else {
-            append("   Sin puertos abiertos conocidos");
+            append("   Sin puertos abiertos conocidos", R.color.on_terminal);
         }
+        // NO se añade divisor aquí para no separar host de sus puertos
     }
 
     private boolean isAlive(String host) {
@@ -232,10 +381,6 @@ public class MainActivity extends AppCompatActivity {
         return ip.substring(0, ip.lastIndexOf("."));
     }
 
-    private void append(String text) {
-        runOnUiThread(() -> output.append(text + "\n"));
-    }
-
     private void updateProgress(int progress, String message) {
         runOnUiThread(() -> {
             progressBar.setProgress(progress);
@@ -251,10 +396,9 @@ public class MainActivity extends AppCompatActivity {
             progressBar.setVisibility(View.GONE);
             progressText.setText("Escaneo completado");
 
-            append("\n━━━━━━━━━━━━━━━━━━━━━━");
-            append("✓ Escaneo finalizado");
-            append("📊 Hosts encontrados: " + hostsFound);
-            append("━━━━━━━━━━━━━━━━━━━━━━");
+            append("✓ Escaneo finalizado", R.color.on_terminal);
+            append("📊 Hosts encontrados: " + hostsFound, R.color.on_terminal);
+            addDivider();
         });
     }
 
