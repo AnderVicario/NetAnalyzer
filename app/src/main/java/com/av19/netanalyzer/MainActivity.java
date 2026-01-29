@@ -37,12 +37,17 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import okhttp3.Call;
 import okhttp3.Response;
@@ -55,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private Button scanButton;
 
     private ExecutorService executor;
-    private final int[] ports = {80, 443, 22, 445, 8080, 21, 23, 3389};
+    private final int[] ports = IntStream.rangeClosed(1, 65535).toArray();
     private boolean isScanning = false;
     private AtomicInteger scannedHosts = new AtomicInteger(0);
     private int networkInt;
@@ -281,7 +286,19 @@ public class MainActivity extends AppCompatActivity {
                         append("   Vendor: " + vendor, R.color.on_terminal);
 
                         // 4. Continuar con el resto
-                        scanPorts(p[0]);
+
+                        long startTime = System.currentTimeMillis();
+                        scanPortsNio(p[0]);
+                        long endTime = System.currentTimeMillis();
+                        long duration = endTime - startTime;
+                        append("   Tiempo de escaneo 1: " + duration, R.color.on_terminal);
+
+//                        long startTime2 = System.currentTimeMillis();
+//                        scanPorts(p[0]);
+//                        long endTime2 = System.currentTimeMillis();
+//                        long duration2 = endTime2 - startTime2;
+//                        append("   Tiempo de escaneo 2: " + duration2, R.color.on_terminal);
+
                         addDivider();
                     }
                 }
@@ -396,6 +413,73 @@ public class MainActivity extends AppCompatActivity {
         } else {
             append("   Sin puertos abiertos conocidos", R.color.on_terminal);
         }
+    }
+
+    private void scanPortsNio(String host) {
+
+        executor.execute(() -> {
+            StringBuilder openPorts = new StringBuilder("   Puertos: ");
+            boolean found = false;
+
+            try {
+                Selector selector = Selector.open();
+                InetAddress addr = InetAddress.getByName(host);
+
+                final int MAX_INFLIGHT = 200;
+                int inflight = 0;
+                int index = 0;
+
+                while (index < ports.length || inflight > 0) {
+
+                    // Lanzar conexiones en paralelo
+                    while (index < ports.length && inflight < MAX_INFLIGHT) {
+                        int port = ports[index++];
+
+                        SocketChannel ch = SocketChannel.open();
+                        ch.configureBlocking(false);
+                        ch.socket().setTcpNoDelay(true);
+                        ch.connect(new InetSocketAddress(addr, port));
+                        ch.register(selector, SelectionKey.OP_CONNECT, port);
+
+                        inflight++;
+                    }
+
+                    selector.select(150);
+
+                    Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+
+                    while (keys.hasNext()) {
+                        SelectionKey key = keys.next();
+                        keys.remove();
+
+                        SocketChannel ch = (SocketChannel) key.channel();
+                        int port = (int) key.attachment();
+
+                        try {
+                            if (ch.finishConnect()) {
+                                openPorts.append(port).append(" ");
+                                found = true;
+                            }
+                        } catch (IOException ignored) {
+                        } finally {
+                            ch.close();
+                            inflight--;
+                        }
+                    }
+                }
+
+                selector.close();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (found) {
+                append(openPorts.toString(), R.color.on_terminal);
+            } else {
+                append("   Sin puertos abiertos conocidos", R.color.on_terminal);
+            }
+        });
     }
 
     private boolean isAlive(String host) {
