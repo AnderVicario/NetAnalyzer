@@ -1,14 +1,20 @@
 package com.av19.netanalyzer;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.RouteInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private Button scanButton;
 
     private ExecutorService executor;
-    private final int[] ports = IntStream.rangeClosed(1, 65535).toArray();
+    private final int[] ports = IntStream.rangeClosed(1, 1000).toArray();
     private boolean isScanning = false;
     private AtomicInteger scannedHosts = new AtomicInteger(0);
     private int networkInt;
@@ -93,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             append("⚠ Modo limitado (Android ≥10, sin acceso ARP)", R.color.on_terminal);
         }
+        checkLocationStatus();
         addDivider();
     }
 
@@ -126,6 +133,40 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
+    }
+
+    private void checkLocationStatus() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+
+            boolean permissionGranted =
+                    checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED;
+
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            boolean locationEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                    || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            if (!permissionGranted) {
+
+                append("⚠ Permiso de ubicación no concedido", R.color.warning);
+                append("ℹ Necesario para mostrar SSID y detalles WiFi (requisito de Android)", R.color.warning);
+
+                requestPermissions(
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        1001
+                );
+
+            } else if (!locationEnabled) {
+
+                append("⚠ Ubicación desactivada", R.color.warning);
+                append("ℹ Actívala para ver el nombre de la red (SSID)", R.color.warning);
+
+            } else {
+
+                append("✓ Acceso a SSID y detalles WiFi disponible", R.color.on_terminal);
+            }
+        }
     }
 
     private void startScan() {
@@ -215,8 +256,99 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint({"MissingPermission"})
+    private void getAdvancedNetworkDetails() {
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        Network network = cm.getActiveNetwork();
+        if (network == null) {
+            append("❌ Sin red activa", R.color.error);
+            return;
+        }
+
+        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+        LinkProperties lp = cm.getLinkProperties(network);
+
+        if (caps == null || lp == null) return;
+
+        // 📡 Tipo de red
+        String transport = "Desconocido";
+
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            transport = "WiFi";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+            transport = "Datos móviles";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+            transport = "VPN";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+            transport = "Ethernet";
+        }
+
+        append("📡 Tipo: " + transport, R.color.on_terminal);
+
+        // 🌍 Estado de internet
+        boolean hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        boolean validated = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+
+        append("🌐 Internet: " + (hasInternet ? "Sí" : "No"), R.color.on_terminal);
+        append("✔️ Validada: " + (validated ? "Sí (acceso real)" : "No"), R.color.on_terminal);
+
+        // 🔐 Seguridad (nivel básico)
+        boolean notMetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
+        append("💸 Red medida: " + (notMetered ? "No (WiFi usualmente)" : "Sí (datos móviles)"), R.color.on_terminal);
+
+        // ⚡ Velocidad estimada
+        append("⚡ Downstream: " + caps.getLinkDownstreamBandwidthKbps() + " kbps", R.color.on_terminal);
+        append("⚡ Upstream: " + caps.getLinkUpstreamBandwidthKbps() + " kbps", R.color.on_terminal);
+
+        // 🌐 DNS
+        for (InetAddress dns : lp.getDnsServers()) {
+            append("🧭 DNS: " + dns.getHostAddress(), R.color.on_terminal);
+        }
+
+        // 🚪 Gateway
+        for (RouteInfo route : lp.getRoutes()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (route.hasGateway()) {
+                    append("🚪 Gateway: " + route.getGateway().getHostAddress(), R.color.on_terminal);
+                }
+            }
+            else {
+                InetAddress gateway = route.getGateway();
+
+                if (gateway != null && !gateway.isAnyLocalAddress()) {
+                    append("🚪 Gateway: " + gateway.getHostAddress(), R.color.on_terminal);
+                }
+            }
+        }
+
+        // 🌐 IPs
+        for (LinkAddress la : lp.getLinkAddresses()) {
+            append("🌐 IP: " + la.getAddress().getHostAddress() + "/" + la.getPrefixLength(), R.color.on_terminal);
+        }
+
+        // 📶 Info específica de WiFi
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+
+            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+
+            if (wifiInfo != null) {
+                append("📶 SSID: " + wifiInfo.getSSID(), R.color.on_terminal);
+                append("📡 BSSID: " + wifiInfo.getBSSID(), R.color.on_terminal);
+                append("📊 RSSI: " + wifiInfo.getRssi() + " dBm", R.color.on_terminal);
+                append("⚙️ Velocidad enlace: " + wifiInfo.getLinkSpeed() + " Mbps", R.color.on_terminal);
+                append("📡 Frecuencia: " + wifiInfo.getFrequency() + " MHz", R.color.on_terminal);
+            }
+        }
+
+        addDivider();
+    }
+
     private void scanWithArp() {
         getNetworkDetails();
+        getAdvancedNetworkDetails();
         executor.execute(() -> {
             try {
                 int first = networkInt + 1;
@@ -293,11 +425,11 @@ public class MainActivity extends AppCompatActivity {
                         long duration = endTime - startTime;
                         append("   Tiempo de escaneo 1: " + duration, R.color.on_terminal);
 
-//                        long startTime2 = System.currentTimeMillis();
-//                        scanPorts(p[0]);
-//                        long endTime2 = System.currentTimeMillis();
-//                        long duration2 = endTime2 - startTime2;
-//                        append("   Tiempo de escaneo 2: " + duration2, R.color.on_terminal);
+                        long startTime2 = System.currentTimeMillis();
+                        scanPorts(p[0]);
+                        long endTime2 = System.currentTimeMillis();
+                        long duration2 = endTime2 - startTime2;
+                        append("   Tiempo de escaneo 2: " + duration2, R.color.on_terminal);
 
                         addDivider();
                     }
@@ -315,6 +447,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void scanWithTcp() {
         getNetworkDetails();
+        getAdvancedNetworkDetails();
         executor.execute(() -> {
             try {
                 int first = networkInt + 1;

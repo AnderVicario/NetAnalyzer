@@ -21,5 +21,6 @@
 
     <!-- Error - Modo claro -->
     <color name="error">#FFB00020</color>
+    <color name="warning">#FFC107</color>
     <color name="on_error">#FFFFFFFF</color>
 </resources>
