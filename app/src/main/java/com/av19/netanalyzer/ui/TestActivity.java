@@ -1,4 +1,4 @@
-package com.av19.netanalyzer;
+package com.av19.netanalyzer.ui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
-import android.net.DhcpInfo;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
@@ -34,7 +33,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import org.json.JSONObject;
+import com.av19.netanalyzer.ApiClient;
+import com.av19.netanalyzer.R;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -47,7 +47,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -55,10 +54,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import okhttp3.Call;
-import okhttp3.Response;
-
-public class MainActivity extends AppCompatActivity {
+public class TestActivity extends AppCompatActivity {
 
     private LinearLayout outputContainer;
     private TextView progressText;
@@ -81,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
             WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         }
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_test);
 
         outputContainer = findViewById(R.id.outputContainer);
         progressText = findViewById(R.id.progressText);
