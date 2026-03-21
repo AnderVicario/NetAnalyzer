@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Tema principal -->
-    <style name="Theme.NetAnalyzer" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.NetAnalyzer" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Colores primarios -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_variant</item>
@@ -27,13 +27,10 @@
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
 
         <!-- Colores de texto -->
-        <item name="android:textColorPrimary">?attr/colorOnBackground</item>
-        <item name="android:textColorSecondary">#8A000000</item>
-    </style>
+        <item name="android:textColorPrimary">@color/on_primary</item>
+        <item name="android:textColorSecondary">@color/on_secondary</item>
 
-    <!-- Tema sin ActionBar -->
-    <style name="Theme.NetAnalyzer.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+        <item name="colorControlNormal">?attr/colorOnSurface</item>
+        <item name="colorControlActivated">@color/primary</item>
     </style>
 </resources>

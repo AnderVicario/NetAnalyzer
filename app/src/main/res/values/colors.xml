@@ -10,13 +10,11 @@
     <color name="on_secondary">#FF000000</color>
 
     <!-- Colores de fondo - Modo claro -->
+    <color name="terminal">#FF121212</color>
     <color name="background">#FFFFFFFF</color>
+    <color name="surface">#FFF5F5F5</color>
+    <color name="on_terminal">#FFFFFFFF</color>
     <color name="on_background">#FF000000</color>
-    <color name="terminal">#A9A9A9</color>
-    <color name="on_terminal">#000000</color>
-
-    <!-- Colores de superficie - Modo claro -->
-    <color name="surface">#FFFFFFFF</color>
     <color name="on_surface">#FF000000</color>
 
     <!-- Error - Modo claro -->
