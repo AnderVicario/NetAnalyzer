@@ -7,6 +7,6 @@ import com.av19.netanalyzer.R;
 public class SettingsFragment extends Fragment {
 
     public SettingsFragment() {
-        super(R.layout.fragment_devices);
+        super(R.layout.fragment_settings);
     }
 }

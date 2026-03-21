@@ -7,6 +7,6 @@ import com.av19.netanalyzer.R;
 public class HomeFragment extends Fragment {
 
     public HomeFragment() {
-        super(R.layout.fragment_devices);
+        super(R.layout.fragment_home);
     }
 }
