@@ -22,10 +22,6 @@
         <item name="colorError">@color/error</item>
         <item name="colorOnError">@color/on_error</item>
 
-        <!-- Status bar -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-
         <!-- Colores de texto -->
         <item name="android:textColorPrimary">@color/on_primary</item>
         <item name="android:textColorSecondary">@color/on_secondary</item>
