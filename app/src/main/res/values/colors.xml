@@ -12,6 +12,7 @@
     <!-- Colores de fondo - Modo claro -->
     <color name="terminal">#FF121212</color>
     <color name="background">#FFFFFFFF</color>
+    <color name="background_10">#11121212</color>
     <color name="surface">#FFF5F5F5</color>
     <color name="on_terminal">#FFFFFFFF</color>
     <color name="on_background">#FF000000</color>
@@ -21,4 +22,6 @@
     <color name="error">#FFB00020</color>
     <color name="warning">#FFC107</color>
     <color name="on_error">#FFFFFFFF</color>
+
+    <color name="transparent">#00FFFFFF</color>
 </resources>

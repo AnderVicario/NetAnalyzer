@@ -29,4 +29,9 @@
         <item name="colorControlNormal">?attr/colorOnSurface</item>
         <item name="colorControlActivated">@color/primary</item>
     </style>
+
+    <style name="mySwitchStyle" parent="@style/Widget.AppCompat.CompoundButton.Switch" />
+    <style name="mySwitchTheme" parent="ThemeOverlay.AppCompat.Light">
+        <item name="switchStyle">@style/mySwitchStyle</item>
+    </style>
 </resources>

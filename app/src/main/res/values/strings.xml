@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">NetAnalyzer</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_default">Por defecto</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
 </resources>
