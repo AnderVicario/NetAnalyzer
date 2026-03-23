@@ -3,9 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
+    android:background="@color/surface"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="false">
+    android:layout_height="match_parent">
 
     <!-- Contenedor de fragments -->
     <FrameLayout
@@ -25,6 +25,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:menu="@menu/bottom_nav_menu"
+        app:elevation="0dp"
         app:itemIconTint="@color/bottom_nav_icon_tint"
         app:itemBackground="@color/surface"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -56,18 +56,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupWindow() {
-
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-//            return insets;
-//        });
-
+        EdgeToEdge.enable(this);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            return insets;
+        });
         Window window = getWindow();
-        WindowCompat.setDecorFitsSystemWindows(window, true);
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(ContextCompat.getColor(this, R.color.primary));
-        window.setNavigationBarColor(ContextCompat.getColor(this, R.color.primary));
     }
 
     private boolean loadFragment(Fragment fragment) {
