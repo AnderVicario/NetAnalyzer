@@ -4,6 +4,7 @@
     <color name="primary">#FF6200EE</color>
     <color name="primary_variant">#FF3700B3</color>
     <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_primary_70">#B3FFFFFF</color>
 
     <!-- Colores secundarios - Modo claro -->
     <color name="secondary">#FF03DAC5</color>
@@ -16,7 +17,7 @@
     <color name="surface">#FFF5F5F5</color>
     <color name="on_terminal">#FFFFFFFF</color>
     <color name="on_background">#FF000000</color>
-    <color name="on_surface">#FF000000</color>
+    <color name="on_surface">#CC000000</color>
 
     <!-- Error - Modo claro -->
     <color name="error">#FFB00020</color>
