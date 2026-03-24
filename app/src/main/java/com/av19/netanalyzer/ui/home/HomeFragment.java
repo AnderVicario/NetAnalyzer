@@ -108,28 +108,30 @@ public class HomeFragment extends Fragment {
 
     private void updateNetworkInfo(NetworkInfo info) {
         if (info == null) {
-            // Set placeholders or clear
             tvIp.setText("X.X.X.X");
             tvGateway.setText("X.X.X.X");
             tvNet.setText("X.X.X.X/X");
             tvConnection.setText("—");
+
+            tvIp.setTag(R.id.tag_glitch_target, null);
+            tvGateway.setTag(R.id.tag_glitch_target, null);
+            tvNet.setTag(R.id.tag_glitch_target, null);
+            tvConnection.setTag(R.id.tag_glitch_target, null);
             return;
         }
 
-        // Update the four fields
-        tvIp.setText(info.getIp() != null ? info.getIp() : "—");
+        String newIp = info.getIp() != null ? info.getIp() : "—";
+        checkAndApplyGlitch(tvIp, newIp);
 
-        String gatewayText = info.getGateway() != null ? info.getGateway() : "—";
-        tvGateway.setText(gatewayText);
+        String newGateway = info.getGateway() != null ? info.getGateway() : "—";
+        checkAndApplyGlitch(tvGateway, newGateway);
 
-        // Network address in format "192.168.1.0/24"
-        String netText = info.getNetworkAddress() != null ?
+        String newNet = info.getNetworkAddress() != null ?
                 info.getNetworkAddress() + "/" + info.getPrefix() : "—";
-        tvNet.setText(netText);
+        checkAndApplyGlitch(tvNet, newNet);
 
-        // Connection type (WiFi, Cellular, etc.)
-        String connText = info.getConnectionType() != null ? info.getConnectionType() : "—";
-        tvConnection.setText(connText);
+        String newConn = info.getConnectionType() != null ? info.getConnectionType() : "—";
+        checkAndApplyGlitch(tvConnection, newConn);
     }
 
     private void startScan() {
@@ -225,5 +227,44 @@ public class HomeFragment extends Fragment {
         if (rippleSet != null) {
             rippleSet.cancel();
         }
+    }
+
+    private void checkAndApplyGlitch(TextView textView, String newText) {
+        String lastTarget = (String) textView.getTag(R.id.tag_glitch_target);
+
+        if (newText.equals(lastTarget)) {
+            return;
+        }
+
+        applyGlitchEffect(textView, newText);
+    }
+
+    private void applyGlitchEffect(final TextView textView, final String targetText) {
+        textView.setTag(R.id.tag_glitch_target, targetText);
+
+        final int duration = 120; // Algo muy rápido
+        final int totalFrames = 4;
+
+        android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(0, totalFrames);
+        animator.setDuration(duration);
+        animator.setInterpolator(new android.view.animation.LinearInterpolator());
+
+        animator.addUpdateListener(animation -> {
+            int frame = (int) animation.getAnimatedValue();
+            if (frame == totalFrames) {
+                textView.setText(targetText);
+            } else {
+                textView.setText(generateRandomBinary(targetText.length()));
+            }
+        });
+        animator.start();
+    }
+
+    private String generateRandomBinary(int length) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            sb.append(Math.random() > 0.5 ? "1" : "0");
+        }
+        return sb.toString();
     }
 }

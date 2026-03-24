@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:background="@color/background"
             android:columnCount="2"
-            android:rowCount="2">
+            android:rowCount="3">
 
             <LinearLayout
                 android:id="@+id/info1"
@@ -154,6 +154,31 @@
                     android:textColor="@color/on_background"/>
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/more"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginTop="1dp"
+                android:background="@color/surface"
+                android:focusable="true"
+                android:padding="12dp"
+                android:clickable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iv_expand_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Expandir información"
+                    android:src="@drawable/ic_arrow_forward"
+                    android:layout_gravity="center"
+                    android:rotation="90"
+                    app:tint="@color/on_surface"/>
+            </LinearLayout>
+
         </GridLayout>
 
     </com.google.android.material.card.MaterialCardView>
@@ -195,32 +220,154 @@
         android:id="@+id/btn_scan"
         android:layout_width="140dp"
         android:layout_height="140dp"
-        android:text="SCAN"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/on_primary_70"
-        android:letterSpacing="0.15"
-        app:backgroundTint="@null"
+        android:layout_marginTop="64dp"
         android:background="@drawable/bg_button_gradient"
-        app:cornerRadius="70dp"
         android:insetTop="0dp"
         android:insetBottom="0dp"
-        app:layout_constraintVertical_bias="0.4"
-        app:layout_constraintTop_toBottomOf="@id/card_info"
+        android:letterSpacing="0.15"
+        android:text="SCAN"
+        android:textColor="@color/on_primary_70"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:backgroundTint="@null"
+        app:cornerRadius="70dp"
         app:layout_constraintBottom_toTopOf="@id/tv_status"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/card_info"
+        app:layout_constraintVertical_bias="0.4" />
 
     <TextView
         android:id="@+id/tv_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         android:layout_marginBottom="32dp"
         android:text="READY"
-        android:textSize="14sp"
         android:textColor="@color/primary"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/card_history"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/btn_scan" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_history"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_status">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginBottom="12dp"
+            android:gravity="center">
+
+            <LinearLayout
+                android:id="@+id/history"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_document"
+                    android:layout_marginEnd="6dp"
+                    app:tint="@color/on_surface" />
+
+                <TextView
+                    android:id="@+id/tv_history_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="LAST SCAN SUMMARY"
+                    android:textColor="@color/on_surface"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tv_history_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12h ago"
+                    android:textColor="@color/on_surface"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:baselineAligned="false">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/tv_devices_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="14"
+                        android:textColor="@color/on_background"
+                        android:textStyle="bold"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DEVICES FOUND"
+                        android:textColor="@color/on_surface"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="24dp"
+                    android:background="@color/background" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/tv_time_elapsed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="26 s"
+                        android:textColor="@color/on_background"
+                        android:textStyle="bold"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TIME ELAPSED"
+                        android:textColor="@color/on_surface"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
