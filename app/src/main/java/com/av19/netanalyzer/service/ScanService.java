@@ -21,6 +21,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.text.format.Formatter;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -34,6 +35,9 @@ import com.av19.netanalyzer.repository.ScanRepository;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -42,12 +46,16 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 public class ScanService extends Service {
@@ -61,7 +69,7 @@ public class ScanService extends Service {
 
     private int networkInt;
     private int mask;
-    private final int[] ports = IntStream.rangeClosed(1, 1000).toArray();
+    private int[] ports;
 
     @Override
     public void onCreate() {
@@ -74,6 +82,9 @@ public class ScanService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        String scanLevel = intent.getStringExtra("SCAN_LEVEL"); // "100", "500" o "1000"
+        String fileName = "top" + (scanLevel != null ? scanLevel : "100") + ".txt";
+        this.ports = loadPortsFromAssets(fileName);
         if (intent != null && "STOP_SCAN".equals(intent.getAction())) {
             stopScan();
             stopSelf();
@@ -233,6 +244,7 @@ public class ScanService extends Service {
                         }
                     }
                     int progress = (int) (scanned.incrementAndGet() * 100.0 / total);
+                    Log.d("ScanService", "Scanned " + progress + "% of hosts, IP: " + ip);
                     repository.setScanning(progress, ip, devices);
                 });
             }
@@ -248,42 +260,68 @@ public class ScanService extends Service {
 
     private List<Integer> scanPortsNio(String host) {
         List<Integer> openPorts = new ArrayList<>();
-        try {
-            Selector selector = Selector.open();
+        // Mapa para rastrear cuándo se registró cada canal
+        Map<SelectionKey, Long> timestamps = new HashMap<>();
+        long timeoutMillis = 1000; // Tiempo máximo de espera por puerto
+
+        try (Selector selector = Selector.open()) {
             InetAddress addr = InetAddress.getByName(host);
-            int maxInflight = 200;
+            int maxInflight = 50; // Bajamos esto para no saturar el socket del móvil
             int inflight = 0;
             int index = 0;
+
             while (index < ports.length || inflight > 0) {
+                // 1. Lanzar nuevas conexiones si hay hueco
                 while (index < ports.length && inflight < maxInflight) {
                     int port = ports[index++];
-                    SocketChannel ch = SocketChannel.open();
-                    ch.configureBlocking(false);
-                    ch.connect(new InetSocketAddress(addr, port));
-                    ch.register(selector, SelectionKey.OP_CONNECT, port);
-                    inflight++;
-                }
-                selector.select(150);
-                Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
-                while (keys.hasNext()) {
-                    SelectionKey key = keys.next();
-                    keys.remove();
-                    SocketChannel ch = (SocketChannel) key.channel();
-                    int port = (int) key.attachment();
                     try {
-                        if (ch.finishConnect()) {
-                            openPorts.add(port);
+                        SocketChannel ch = SocketChannel.open();
+                        ch.configureBlocking(false);
+                        ch.connect(new InetSocketAddress(addr, port));
+                        SelectionKey key = ch.register(selector, SelectionKey.OP_CONNECT, port);
+                        timestamps.put(key, System.currentTimeMillis());
+                        inflight++;
+                    } catch (IOException e) { /* puerto local ocupado o error inmediato */ }
+                }
+
+                // 2. Esperar eventos (bloqueo corto)
+                if (selector.select(200) > 0) {
+                    Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+                    while (keys.hasNext()) {
+                        SelectionKey key = keys.next();
+                        keys.remove();
+                        SocketChannel ch = (SocketChannel) key.channel();
+                        try {
+                            if (ch.finishConnect()) {
+                                openPorts.add((Integer) key.attachment());
+                            }
+                        } catch (Exception ignored) {
+                        } finally {
+                            timestamps.remove(key);
+                            ch.close();
+                            inflight--;
                         }
-                    } catch (Exception ignored) {
-                    } finally {
-                        ch.close();
-                        inflight--;
+                    }
+                }
+
+                // 3. LIMPIEZA DE ZOMBIS (Crucial para que no se quede al 99%)
+                long now = System.currentTimeMillis();
+                Iterator<Map.Entry<SelectionKey, Long>> it = timestamps.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry<SelectionKey, Long> entry = it.next();
+                    if (now - entry.getValue() > timeoutMillis) {
+                        SelectionKey key = entry.getKey();
+                        try {
+                            key.channel().close();
+                        } catch (IOException ignored) {}
+                        key.cancel();
+                        it.remove();
+                        inflight--; // Liberamos el hueco
                     }
                 }
             }
-            selector.close();
         } catch (Exception e) {
-            // ignore
+            Log.e("ScanService", "Error en scanPorts para " + host, e);
         }
         return openPorts;
     }
@@ -321,5 +359,31 @@ public class ScanService extends Service {
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
         }
+    }
+
+    private int[] loadPortsFromAssets(String fileName) {
+        List<Integer> portList = new ArrayList<>();
+        // Regex: busca dígitos seguidos de /tcp
+        Pattern pattern = Pattern.compile("(\\d+)/tcp");
+
+        try (InputStream is = getAssets().open(fileName);
+             BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    // El grupo 1 es el número (\d+)
+                    portList.add(Integer.parseInt(matcher.group(1)));
+                }
+            }
+        } catch (IOException e) {
+            Log.e("ScanService", "Error cargando puertos: " + e.getMessage());
+            // Backup por si falla la lectura
+            return new int[]{80, 443, 22, 135};
+        }
+
+        // Convertir List<Integer> a int[]
+        return portList.stream().mapToInt(i -> i).toArray();
     }
 }
