@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background">
+    android:background="@color/background"
+    android:layout_margin="20dp">
 
     <TextView
         android:id="@+id/tvSettingsTitle"
@@ -15,9 +16,7 @@
         android:textSize="26sp"
         android:textColor="@color/on_background"
         android:textStyle="bold"
-        android:paddingTop="16dp"
-        android:paddingBottom="8dp"
-        android:gravity="center" />
+        android:paddingBottom="8dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewSettings"

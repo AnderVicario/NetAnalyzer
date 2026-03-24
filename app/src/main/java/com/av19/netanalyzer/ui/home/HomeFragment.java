@@ -4,18 +4,27 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.data.ScanState;
+import com.av19.netanalyzer.service.ScanService;
+import com.av19.netanalyzer.viewmodel.ScanViewModel;
 import com.google.android.material.button.MaterialButton;
 
 public class HomeFragment extends Fragment {
 
+    private ScanViewModel viewModel;
     private boolean isScanning = false;
     private AnimatorSet rippleSet;
 
@@ -31,37 +40,83 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ring1    = view.findViewById(R.id.ring1);
-        ring2    = view.findViewById(R.id.ring2);
-        ring3    = view.findViewById(R.id.ring3);
-        btnScan  = view.findViewById(R.id.btn_scan);
+        ring1 = view.findViewById(R.id.ring1);
+        ring2 = view.findViewById(R.id.ring2);
+        ring3 = view.findViewById(R.id.ring3);
+        btnScan = view.findViewById(R.id.btn_scan);
         tvStatus = view.findViewById(R.id.tv_status);
+
+        viewModel = new ViewModelProvider(requireActivity()).get(ScanViewModel.class);
 
         btnScan.setOnClickListener(v -> {
             if (isScanning) stopScan();
-            else            startScan();
+            else startScan();
         });
+
+        // Observe state changes
+        viewModel.getScanState().observe(getViewLifecycleOwner(), this::updateUi);
     }
 
-    // ── Iniciar escaneo ───────────────────────────────────────────────────────
+    private void updateUi(ScanState state) {
+        if (state == null) return;
+        switch (state.getStatus()) {
+            case SCANNING:
+                isScanning = true;
+                btnScan.setText("STOP");
+                tvStatus.setText("Escaneando red… " + state.getProgress() + "%");
+                tvStatus.animate().alpha(1f).setDuration(300).start();
+                startRippleAnimation();
+                break;
+            case COMPLETED:
+                isScanning = false;
+                btnScan.setText("SCAN");
+                tvStatus.animate().alpha(0f).setDuration(200).start();
+                stopRippleAnimation();
+                break;
+            case ERROR:
+                isScanning = false;
+                btnScan.setText("SCAN");
+                tvStatus.setText("Error: " + state.getErrorMessage());
+                tvStatus.animate().alpha(1f).setDuration(300).start();
+                stopRippleAnimation();
+                break;
+            default:
+                isScanning = false;
+                btnScan.setText("SCAN");
+                tvStatus.animate().alpha(0f).setDuration(200).start();
+                stopRippleAnimation();
+                break;
+        }
+    }
 
     private void startScan() {
-        isScanning = true;
-        btnScan.setText("STOP");
-        tvStatus.setText("Escaneando red…");
-        tvStatus.animate().alpha(1f).setDuration(300).start();
+        Intent intent = new Intent(requireContext(), ScanService.class);
 
+        // Handle foreground service based on Android version
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Android 8.0+ (API 26+)
+            requireContext().startForegroundService(intent);
+        } else {
+            // Android 7.0 and below (API 24-25)
+            requireContext().startService(intent);
+        }
+    }
+
+    private void stopScan() {
+        Intent intent = new Intent(requireContext(), ScanService.class);
+        intent.setAction("STOP_SCAN");
+        requireContext().startService(intent);
+        // Optionally also reset state in ViewModel
+        viewModel.resetScan();
+    }
+
+    private void startRippleAnimation() {
+        if (rippleSet != null && rippleSet.isRunning()) return;
         rippleSet = buildRippleAnimator();
         rippleSet.start();
     }
 
-    // ── Detener escaneo ───────────────────────────────────────────────────────
-
-    private void stopScan() {
-        isScanning = false;
-        btnScan.setText("SCAN");
-        tvStatus.animate().alpha(0f).setDuration(200).start();
-
+    private void stopRippleAnimation() {
         if (rippleSet != null) {
             rippleSet.cancel();
             rippleSet = null;
@@ -70,12 +125,11 @@ public class HomeFragment extends Fragment {
     }
 
     // ── Animación de ondas concéntricas ───────────────────────────────────────
-
     private AnimatorSet buildRippleAnimator() {
-        long duration  = 1800L;
-        long delay1    = 0L;
-        long delay2    = 500L;
-        long delay3    = 1000L;
+        long duration = 1800L;
+        long delay1 = 0L;
+        long delay2 = 500L;
+        long delay3 = 1000L;
 
         AnimatorSet set = new AnimatorSet();
         set.playTogether(
@@ -122,7 +176,6 @@ public class HomeFragment extends Fragment {
     }
 
     // ── Limpieza al destruir la vista ─────────────────────────────────────────
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
