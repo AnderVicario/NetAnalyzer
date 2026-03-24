@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.service.ScanService;
 import com.av19.netanalyzer.viewmodel.ScanViewModel;
@@ -32,6 +33,12 @@ public class HomeFragment extends Fragment {
     private MaterialButton btnScan;
     private TextView tvStatus;
 
+    // Network info UI elements
+    private TextView tvIp;
+    private TextView tvGateway;
+    private TextView tvNet;
+    private TextView tvConnection;
+
     public HomeFragment() {
         super(R.layout.fragment_home);
     }
@@ -46,6 +53,12 @@ public class HomeFragment extends Fragment {
         btnScan = view.findViewById(R.id.btn_scan);
         tvStatus = view.findViewById(R.id.tv_status);
 
+        // Find network info views
+        tvIp = view.findViewById(R.id.tv_ip);
+        tvGateway = view.findViewById(R.id.tv_gateway);
+        tvNet = view.findViewById(R.id.tv_net);
+        tvConnection = view.findViewById(R.id.tv_connection);
+
         viewModel = new ViewModelProvider(requireActivity()).get(ScanViewModel.class);
 
         btnScan.setOnClickListener(v -> {
@@ -59,6 +72,10 @@ public class HomeFragment extends Fragment {
 
     private void updateUi(ScanState state) {
         if (state == null) return;
+
+        // Update network info (if available)
+        updateNetworkInfo(state.getNetworkInfo());
+
         switch (state.getStatus()) {
             case SCANNING:
                 isScanning = true;
@@ -87,6 +104,32 @@ public class HomeFragment extends Fragment {
                 stopRippleAnimation();
                 break;
         }
+    }
+
+    private void updateNetworkInfo(NetworkInfo info) {
+        if (info == null) {
+            // Set placeholders or clear
+            tvIp.setText("X.X.X.X");
+            tvGateway.setText("X.X.X.X");
+            tvNet.setText("X.X.X.X/X");
+            tvConnection.setText("—");
+            return;
+        }
+
+        // Update the four fields
+        tvIp.setText(info.getIp() != null ? info.getIp() : "—");
+
+        String gatewayText = info.getGateway() != null ? info.getGateway() : "—";
+        tvGateway.setText(gatewayText);
+
+        // Network address in format "192.168.1.0/24"
+        String netText = info.getNetworkAddress() != null ?
+                info.getNetworkAddress() + "/" + info.getPrefix() : "—";
+        tvNet.setText(netText);
+
+        // Connection type (WiFi, Cellular, etc.)
+        String connText = info.getConnectionType() != null ? info.getConnectionType() : "—";
+        tvConnection.setText(connText);
     }
 
     private void startScan() {

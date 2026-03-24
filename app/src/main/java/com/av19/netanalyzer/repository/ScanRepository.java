@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.av19.netanalyzer.data.DeviceInfo;
+import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.data.ScanState;
 
 import java.util.List;
@@ -39,12 +40,12 @@ public class ScanRepository {
     }
 
     // Convenience methods for the service
-    public void setScanning(int progress, String currentHost, List<DeviceInfo> devices) {
-        updateState(ScanState.scanning(progress, currentHost, devices));
+    public void setScanning(int progress, String currentHost, List<DeviceInfo> devices, NetworkInfo networkInfo) {
+        updateState(ScanState.scanning(progress, currentHost, devices, networkInfo));
     }
 
-    public void setCompleted(List<DeviceInfo> devices) {
-        updateState(ScanState.completed(devices));
+    public void setCompleted(List<DeviceInfo> devices, NetworkInfo networkInfo) {
+        updateState(ScanState.completed(devices, networkInfo));
     }
 
     public void setError(String error) {

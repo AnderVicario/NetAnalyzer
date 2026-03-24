@@ -1,5 +1,6 @@
 package com.av19.netanalyzer.service;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -14,6 +15,8 @@ import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.RouteInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
@@ -27,6 +30,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.av19.netanalyzer.ApiClient;
+import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.ui.main.MainActivity;
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
@@ -66,6 +70,7 @@ public class ScanService extends Service {
     private ExecutorService executor;
     private Handler mainHandler;
     private boolean isScanning = false;
+    private NetworkInfo currentNetworkInfo;
 
     private int networkInt;
     private int mask;
@@ -112,6 +117,7 @@ public class ScanService extends Service {
 
                 // Gather network details
                 getNetworkDetails();
+                currentNetworkInfo = collectNetworkInfo();
                 // Determine scan method based on Android version
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                     scanWithArp();
@@ -134,6 +140,118 @@ public class ScanService extends Service {
             executor.shutdownNow();
         }
         isScanning = false;
+    }
+
+    @SuppressLint("DefaultLocale")
+    private NetworkInfo collectNetworkInfo() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network network = cm.getActiveNetwork();
+        if (network == null) return null;
+
+        LinkProperties lp = cm.getLinkProperties(network);
+        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+        if (lp == null || caps == null) return null;
+
+        String ip = null, netmask = null, networkAddr = null, gateway = null, dns = null;
+        int prefix = 0;
+        String connectionType = "Unknown";
+        boolean hasInternet = false, validated = false, metered = true;
+        int downstream = 0, upstream = 0;
+        String ssid = null, bssid = null;
+        int rssi = 0, linkSpeed = 0, frequency = 0;
+
+        // --- IP and network details ---
+        for (LinkAddress la : lp.getLinkAddresses()) {
+            InetAddress addr = la.getAddress();
+            if (addr instanceof Inet4Address) {
+                ip = addr.getHostAddress();
+                prefix = la.getPrefixLength();
+                int maskInt = 0xffffffff << (32 - prefix);
+                netmask = String.format("%d.%d.%d.%d",
+                        (maskInt >> 24) & 0xff, (maskInt >> 16) & 0xff,
+                        (maskInt >> 8) & 0xff, maskInt & 0xff);
+                byte[] bytes = addr.getAddress();
+                int ipInt = ((bytes[0] & 0xff) << 24) | ((bytes[1] & 0xff) << 16) |
+                        ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff);
+                int networkInt = ipInt & maskInt;
+                networkAddr = String.format("%d.%d.%d.%d",
+                        (networkInt >> 24) & 0xff, (networkInt >> 16) & 0xff,
+                        (networkInt >> 8) & 0xff, networkInt & 0xff);
+                break;
+            }
+        }
+
+        // --- Gateway ---
+        for (RouteInfo route : lp.getRoutes()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (route.hasGateway()) {
+                    gateway = route.getGateway().getHostAddress();
+                    break;
+                }
+            } else {
+                InetAddress gw = route.getGateway();
+                if (gw != null && !gw.isAnyLocalAddress()) {
+                    gateway = gw.getHostAddress();
+                    break;
+                }
+            }
+        }
+
+        // --- DNS servers ---
+        List<InetAddress> dnsList = lp.getDnsServers();
+        if (!dnsList.isEmpty()) {
+            dns = dnsList.get(0).getHostAddress();
+        }
+
+        // --- Connection type and capabilities ---
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            connectionType = "WiFi";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+            connectionType = "Cellular";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+            connectionType = "VPN";
+        } else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+            connectionType = "Ethernet";
+        }
+
+        hasInternet = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        validated = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        metered = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
+        downstream = caps.getLinkDownstreamBandwidthKbps();
+        upstream = caps.getLinkUpstreamBandwidthKbps();
+
+        // --- WiFi specific info (only if WiFi and permissions granted) ---
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Need ACCESS_FINE_LOCATION permission for SSID/BSSID
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                    if (wifiInfo != null) {
+                        ssid = wifiInfo.getSSID();
+                        bssid = wifiInfo.getBSSID();
+                        rssi = wifiInfo.getRssi();
+                        linkSpeed = wifiInfo.getLinkSpeed();
+                        frequency = wifiInfo.getFrequency();
+                    }
+                }
+            } else {
+                // Older versions: no location permission needed for SSID
+                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                if (wifiInfo != null) {
+                    ssid = wifiInfo.getSSID();
+                    bssid = wifiInfo.getBSSID();
+                    rssi = wifiInfo.getRssi();
+                    linkSpeed = wifiInfo.getLinkSpeed();
+                    frequency = wifiInfo.getFrequency();
+                }
+            }
+        }
+
+        return new NetworkInfo(ip, netmask, prefix, networkAddr, gateway, dns,
+                connectionType, hasInternet, validated, metered,
+                downstream, upstream, ssid, bssid, rssi, linkSpeed, frequency);
     }
 
     private void getNetworkDetails() {
@@ -185,7 +303,7 @@ public class ScanService extends Service {
                                 currentHost & 0xff);
                         InetAddress.getByName(ip).isReachable(300);
                         int progress = (int) (current.incrementAndGet() * 100.0 / total);
-                        repository.setScanning(progress, ip, devices);
+                        repository.setScanning(progress, ip, devices, currentNetworkInfo);
                     } catch (Exception e) {
                         current.incrementAndGet();
                     } finally {
@@ -213,7 +331,7 @@ public class ScanService extends Service {
             }
             br.close();
 
-            repository.setCompleted(devices);
+            repository.setCompleted(devices, currentNetworkInfo);
         } catch (Exception e) {
             repository.setError(e.getMessage());
         }
@@ -245,14 +363,14 @@ public class ScanService extends Service {
                     }
                     int progress = (int) (scanned.incrementAndGet() * 100.0 / total);
                     Log.d("ScanService", "Scanned " + progress + "% of hosts, IP: " + ip);
-                    repository.setScanning(progress, ip, devices);
+                    repository.setScanning(progress, ip, devices, currentNetworkInfo);
                 });
             }
 
             hostPool.shutdown();
             // Wait for all tasks to finish (simplified: use awaitTermination with timeout)
             hostPool.awaitTermination(5, java.util.concurrent.TimeUnit.MINUTES);
-            repository.setCompleted(devices);
+            repository.setCompleted(devices, currentNetworkInfo);
         } catch (Exception e) {
             repository.setError(e.getMessage());
         }
