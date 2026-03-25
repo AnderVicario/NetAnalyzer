@@ -52,16 +52,23 @@ public class NetworkDetailsActivity extends AppCompatActivity {
 
     private List<DetailItem> getDetailItems(NetworkInfo info) {
         List<DetailItem> items = new ArrayList<>();
-        items.add(new DetailItem("LOCAL IP", info.getIp()));
-        items.add(new DetailItem("GATEWAY", info.getGateway()));
-        items.add(new DetailItem("NETWORK", info.getNetworkAddress()));
-        items.add(new DetailItem("NETMASK", info.getNetmask()));
-        items.add(new DetailItem("DNS", info.getDns()));
-        items.add(new DetailItem("PREFIX", String.valueOf(info.getPrefix())));
+        items.add(new DetailItem("IP Address", info.getIp()));
+        items.add(new DetailItem("Netmask", info.getNetmask()));
+        items.add(new DetailItem("Prefix Length", String.valueOf(info.getPrefix())));
+        items.add(new DetailItem("Network Address", info.getNetworkAddress()));
+        items.add(new DetailItem("Gateway", info.getGateway()));
+        items.add(new DetailItem("DNS Servers", info.getDns()));
+        items.add(new DetailItem("Connection Type", info.getConnectionType()));
+        items.add(new DetailItem("Internet Access", info.isHasInternet() ? "YES" : "NO"));
+        items.add(new DetailItem("Network Validated", info.isValidated() ? "YES" : "NO"));
+        items.add(new DetailItem("Metered Connection", info.isMetered() ? "YES" : "NO"));
+        items.add(new DetailItem("Downstream", info.getDownstreamBandwidth() + " kbps"));
+        items.add(new DetailItem("Upstream", info.getUpstreamBandwidth() + " kbps"));
         items.add(new DetailItem("SSID", info.getSsid()));
+        items.add(new DetailItem("RSSI", String.valueOf(info.getRssi())));
+        items.add(new DetailItem("BSSID", info.getBssid()));
         items.add(new DetailItem("LINK SPEED", info.getLinkSpeed() + " Mbps"));
         items.add(new DetailItem("SIGNAL", info.getRssi() + " dBm"));
-        items.add(new DetailItem("METERED", info.isMetered() ? "YES" : "NO"));
         return items;
     }
 
