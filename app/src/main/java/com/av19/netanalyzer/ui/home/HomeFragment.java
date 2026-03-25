@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
@@ -38,6 +39,7 @@ public class HomeFragment extends Fragment {
     private TextView tvGateway;
     private TextView tvNet;
     private TextView tvConnection;
+    private NetworkInfo currentInfo;
 
     public HomeFragment() {
         super(R.layout.fragment_home);
@@ -64,6 +66,14 @@ public class HomeFragment extends Fragment {
         btnScan.setOnClickListener(v -> {
             if (isScanning) stopScan();
             else startScan();
+        });
+
+        view.findViewById(R.id.more).setOnClickListener(v -> {
+            if (currentInfo != null) {
+                Intent intent = new Intent(requireContext(), NetworkDetailsActivity.class);
+                intent.putExtra("EXTRA_NETWORK_INFO", currentInfo);
+                startActivity(intent);
+            }
         });
 
         // Observe state changes
@@ -107,6 +117,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void updateNetworkInfo(NetworkInfo info) {
+        this.currentInfo = info;
         if (info == null) {
             tvIp.setText("X.X.X.X");
             tvGateway.setText("X.X.X.X");

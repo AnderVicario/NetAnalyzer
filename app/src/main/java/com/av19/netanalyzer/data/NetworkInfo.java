@@ -1,6 +1,9 @@
 package com.av19.netanalyzer.data;
 
-public class NetworkInfo {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class NetworkInfo implements Parcelable {
     private final String ip;
     private final String netmask;
     private final int prefix;
@@ -43,6 +46,63 @@ public class NetworkInfo {
         this.linkSpeed = linkSpeed;
         this.frequency = frequency;
     }
+
+    protected NetworkInfo(Parcel in) {
+        ip = in.readString();
+        netmask = in.readString();
+        prefix = in.readInt();
+        networkAddress = in.readString();
+        gateway = in.readString();
+        dns = in.readString();
+        connectionType = in.readString();
+        hasInternet = in.readByte() != 0;
+        validated = in.readByte() != 0;
+        metered = in.readByte() != 0;
+        downstreamBandwidth = in.readInt();
+        upstreamBandwidth = in.readInt();
+        ssid = in.readString();
+        bssid = in.readString();
+        rssi = in.readInt();
+        linkSpeed = in.readInt();
+        frequency = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(ip);
+        dest.writeString(netmask);
+        dest.writeString(networkAddress);
+        dest.writeString(gateway);
+        dest.writeString(dns);
+        dest.writeString(connectionType);
+        dest.writeByte((byte) (hasInternet ? 1 : 0));
+        dest.writeByte((byte) (validated ? 1 : 0));
+        dest.writeByte((byte) (metered ? 1 : 0));
+        dest.writeInt(downstreamBandwidth);
+        dest.writeInt(upstreamBandwidth);
+        dest.writeString(ssid);
+        dest.writeString(bssid);
+        dest.writeInt(rssi);
+        dest.writeInt(linkSpeed);
+        dest.writeInt(frequency);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<NetworkInfo> CREATOR = new Creator<NetworkInfo>() {
+        @Override
+        public NetworkInfo createFromParcel(Parcel in) {
+            return new NetworkInfo(in);
+        }
+
+        @Override
+        public NetworkInfo[] newArray(int size) {
+            return new NetworkInfo[size];
+        }
+    };
 
     // Getters
     public String getIp() { return ip; }

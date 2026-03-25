@@ -42,6 +42,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.home.NetworkDetailsActivity"
+            android:theme="@style/Theme.NetAnalyzer" />
+
         <!-- Scan Service with foreground service type -->
         <service
             android:name=".service.ScanService"
