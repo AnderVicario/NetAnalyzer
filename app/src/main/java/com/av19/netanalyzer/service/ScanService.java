@@ -248,7 +248,7 @@ public class ScanService extends Service {
                 }
             }
         }
-        /*String TAG = "NetworkAnalyzer";
+        String TAG = "NetworkAnalyzer";
 
         Log.d(TAG, "=== NETWORK ANALYSIS RESULT ===");
         Log.d(TAG, "IP: " + ip);
@@ -269,7 +269,7 @@ public class ScanService extends Service {
             Log.d(TAG, "RSSI: " + rssi + " dBm");
             Log.d(TAG, "LinkSpeed: " + linkSpeed + " Mbps");
             Log.d(TAG, "Frequency: " + frequency + " MHz");
-        }*/
+        }
 
         return new NetworkInfo(ip, netmask, prefix, networkAddr, gateway, dns,
                 connectionType, hasInternet, validated, metered,

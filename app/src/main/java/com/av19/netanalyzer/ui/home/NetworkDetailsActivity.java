@@ -1,6 +1,7 @@
 package com.av19.netanalyzer.ui.home;
 
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
@@ -78,7 +79,8 @@ public class NetworkDetailsActivity extends AppCompatActivity {
         gridLayout.setColumnCount(isMosaicMode ? 2 : 1);  // 2 columnas para mosaico, 1 para lista
 
         int layoutRes = isMosaicMode ? R.layout.view_detail_item_mosaic : R.layout.view_detail_item_list;
-
+        int marginPx = Math.round(TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 0.5f, getResources().getDisplayMetrics()));
         for (DetailItem item : items) {
             // Inflar el layout del ítem
             View itemView = getLayoutInflater().inflate(layoutRes, gridLayout, false);
@@ -94,6 +96,7 @@ public class NetworkDetailsActivity extends AppCompatActivity {
             lp.width = 0;
             lp.height = GridLayout.LayoutParams.WRAP_CONTENT;
             lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);  // columnWeight = 1
+            lp.setMargins(marginPx, marginPx, marginPx, marginPx);
             if (!isMosaicMode) {
                 // En modo lista, el elemento ocupa las 2 columnas (si columnCount=2) o la única columna
                 // Con columnCount=1, el comportamiento por defecto es ocupar toda la fila.
@@ -104,15 +107,6 @@ public class NetworkDetailsActivity extends AppCompatActivity {
             itemView.setLayoutParams(lp);
             gridLayout.addView(itemView);
         }
-    }
-
-    private void setupDetailItem(int containerId, String title, String value) {
-        android.view.View container = findViewById(containerId);
-        TextView tvTitle = container.findViewById(R.id.tv_title); // Ajusta según tu view_detail_item
-        TextView tvValue = container.findViewById(R.id.tv_value);
-
-        tvTitle.setText(title);
-        applyGlitchEffect(tvValue, value != null ? value : "—");
     }
 
     private void applyGlitchEffect(final TextView textView, final String targetText) {
