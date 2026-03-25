@@ -1,37 +1,102 @@
 package com.av19.netanalyzer.ui.home;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.NetworkInfo;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NetworkDetailsActivity extends AppCompatActivity {
+
+    private boolean isMosaicMode = false;
+    private List<DetailItem> detailItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_network_details);
 
-        // Configurar Toolbar para volver atrás
+        // Configurar Toolbar
         findViewById(R.id.toolbar).setOnClickListener(v -> finish());
 
+        // Obtener datos
         NetworkInfo info = getIntent().getParcelableExtra("EXTRA_NETWORK_INFO");
         if (info != null) {
-            populateData(info);
+            detailItems = getDetailItems(info);
+            // Inicialmente mostrar modo lista (isMosaicMode = false)
+            buildGridLayout(false, detailItems);
         }
+
+        // Configurar botón
+        ImageButton btn = findViewById(R.id.btnEditLayout);
+        btn.setOnClickListener(v -> {
+            isMosaicMode = !isMosaicMode;   // cambiar modo
+            buildGridLayout(isMosaicMode, detailItems);
+
+            // Actualizar icono y contentDescription
+            if (isMosaicMode) {
+                btn.setImageResource(R.drawable.ic_mosaic);   // icono de mosaico
+                btn.setContentDescription("Mosaic layout");
+            } else {
+                btn.setImageResource(R.drawable.ic_list);     // icono de lista
+                btn.setContentDescription("List layout");
+            }
+        });
     }
 
-    private void populateData(NetworkInfo info) {
-        // Ejemplo de mapeo de datos
-        setupDetailItem(R.id.detail_ip, "LOCAL IP", info.getIp());
-        setupDetailItem(R.id.detail_gateway, "GATEWAY", info.getGateway());
-        setupDetailItem(R.id.detail_mask, "NETMASK", info.getNetmask());
-        setupDetailItem(R.id.detail_dns, "DNS", info.getDns());
-        setupDetailItem(R.id.detail_ssid, "SSID", info.getSsid());
-        setupDetailItem(R.id.detail_speed, "LINK SPEED", info.getLinkSpeed() + " Mbps");
-        setupDetailItem(R.id.detail_rssi, "SIGNAL", info.getRssi() + " dBm");
-        setupDetailItem(R.id.detail_metered, "METERED", info.isMetered() ? "YES" : "NO");
+    private List<DetailItem> getDetailItems(NetworkInfo info) {
+        List<DetailItem> items = new ArrayList<>();
+        items.add(new DetailItem("LOCAL IP", info.getIp()));
+        items.add(new DetailItem("GATEWAY", info.getGateway()));
+        items.add(new DetailItem("NETWORK", info.getNetworkAddress()));
+        items.add(new DetailItem("NETMASK", info.getNetmask()));
+        items.add(new DetailItem("DNS", info.getDns()));
+        items.add(new DetailItem("PREFIX", String.valueOf(info.getPrefix())));
+        items.add(new DetailItem("SSID", info.getSsid()));
+        items.add(new DetailItem("LINK SPEED", info.getLinkSpeed() + " Mbps"));
+        items.add(new DetailItem("SIGNAL", info.getRssi() + " dBm"));
+        items.add(new DetailItem("METERED", info.isMetered() ? "YES" : "NO"));
+        return items;
+    }
+
+    private void buildGridLayout(boolean isMosaicMode, List<DetailItem> items) {
+        GridLayout gridLayout = findViewById(R.id.detail_layout);
+        gridLayout.removeAllViews();               // Limpia el contenido actual
+        gridLayout.setColumnCount(isMosaicMode ? 2 : 1);  // 2 columnas para mosaico, 1 para lista
+
+        int layoutRes = isMosaicMode ? R.layout.view_detail_item_mosaic : R.layout.view_detail_item_list;
+
+        for (DetailItem item : items) {
+            // Inflar el layout del ítem
+            View itemView = getLayoutInflater().inflate(layoutRes, gridLayout, false);
+
+            // Asignar título y valor
+            TextView tvTitle = itemView.findViewById(R.id.tv_title);
+            TextView tvValue = itemView.findViewById(R.id.tv_value);
+            tvTitle.setText(item.title);
+            applyGlitchEffect(tvValue, item.value != null ? item.value : "—");
+
+            // Configurar LayoutParams para que cada elemento ocupe el ancho adecuado
+            GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
+            lp.width = 0;
+            lp.height = GridLayout.LayoutParams.WRAP_CONTENT;
+            lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f);  // columnWeight = 1
+            if (!isMosaicMode) {
+                // En modo lista, el elemento ocupa las 2 columnas (si columnCount=2) o la única columna
+                // Con columnCount=1, el comportamiento por defecto es ocupar toda la fila.
+                // Podemos forzar que ocupe toda la fila con rowSpec, pero no es necesario.
+                // Simplemente aseguramos que el ancho sea match_parent.
+                lp.width = GridLayout.LayoutParams.MATCH_PARENT;
+            }
+            itemView.setLayoutParams(lp);
+            gridLayout.addView(itemView);
+        }
     }
 
     private void setupDetailItem(int containerId, String title, String value) {
@@ -70,5 +135,15 @@ public class NetworkDetailsActivity extends AppCompatActivity {
             sb.append(Math.random() > 0.5 ? "1" : "0");
         }
         return sb.toString();
+    }
+
+    private static class DetailItem {
+        String title;
+        String value;
+
+        DetailItem(String title, String value) {
+            this.title = title;
+            this.value = value;
+        }
     }
 }

@@ -22,12 +22,27 @@
             app:titleTextColor="@color/on_background" />
     </com.google.android.material.appbar.AppBarLayout>
 
+    <ImageButton
+        android:id="@+id/btnEditLayout"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="end"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="28dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/ic_mosaic"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="List layout"
+        app:tint="@color/on_surface"/>
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_marginStart="28dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="28dp"
         android:layout_marginEnd="28dp">
 
         <LinearLayout
@@ -42,79 +57,19 @@
                 app:cardElevation="0dp">
 
                 <GridLayout
+                    android:id="@+id/detail_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/background"
-                    android:columnCount="2"
+                    android:columnCount="1"
                     android:alignmentMode="alignMargins">
 
-                    <include
-                        android:id="@+id/detail_ip"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
-                    <include
-                        android:id="@+id/detail_gateway"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
-                    <include
-                        android:id="@+id/detail_mask"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
-                    <include
-                        android:id="@+id/detail_dns"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
-                    <include
-                        android:id="@+id/detail_ssid"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
-                    <include
-                        android:id="@+id/detail_speed"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
-                    <include
-                        android:id="@+id/detail_rssi"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
-                    <include
-                        android:id="@+id/detail_metered"
-                        layout="@layout/view_detail_item"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
-                        android:layout_margin="0.5dp"/>
-
                 </GridLayout>
+
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

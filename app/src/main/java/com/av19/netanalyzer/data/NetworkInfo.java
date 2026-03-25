@@ -25,7 +25,7 @@ public class NetworkInfo implements Parcelable {
     // Constructor
     public NetworkInfo(String ip, String netmask, int prefix, String networkAddress,
                        String gateway, String dns, String connectionType,
-                       boolean hasInternet, boolean validated, boolean metered,
+                       boolean hasInternet, boolean isValidated, boolean isMetered,
                        int downstreamBandwidth, int upstreamBandwidth,
                        String ssid, String bssid, int rssi, int linkSpeed, int frequency) {
         this.ip = ip;
@@ -36,8 +36,8 @@ public class NetworkInfo implements Parcelable {
         this.dns = dns;
         this.connectionType = connectionType;
         this.hasInternet = hasInternet;
-        this.validated = validated;
-        this.metered = metered;
+        this.validated = isValidated;
+        this.metered = isMetered;
         this.downstreamBandwidth = downstreamBandwidth;
         this.upstreamBandwidth = upstreamBandwidth;
         this.ssid = ssid;
@@ -67,10 +67,10 @@ public class NetworkInfo implements Parcelable {
         frequency = in.readInt();
     }
 
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(ip);
         dest.writeString(netmask);
+        dest.writeInt(prefix);
         dest.writeString(networkAddress);
         dest.writeString(gateway);
         dest.writeString(dns);

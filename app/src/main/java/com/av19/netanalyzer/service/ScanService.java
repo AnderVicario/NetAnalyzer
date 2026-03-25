@@ -248,6 +248,28 @@ public class ScanService extends Service {
                 }
             }
         }
+        /*String TAG = "NetworkAnalyzer";
+
+        Log.d(TAG, "=== NETWORK ANALYSIS RESULT ===");
+        Log.d(TAG, "IP: " + ip);
+        Log.d(TAG, "Netmask: " + netmask + " /" + prefix);
+        Log.d(TAG, "Network: " + networkAddr);
+        Log.d(TAG, "Gateway: " + gateway);
+        Log.d(TAG, "DNS: " + dns);
+        Log.d(TAG, "Type: " + connectionType);
+        Log.d(TAG, "Internet: " + hasInternet + " | Validated: " + validated);
+        Log.d(TAG, "Metered: " + metered);
+        Log.d(TAG, "Downstream: " + downstream + " kbps");
+        Log.d(TAG, "Upstream: " + upstream + " kbps");
+
+        if ("WiFi".equals(connectionType)) {
+            Log.d(TAG, "--- WIFI INFO ---");
+            Log.d(TAG, "SSID: " + ssid);
+            Log.d(TAG, "BSSID: " + bssid);
+            Log.d(TAG, "RSSI: " + rssi + " dBm");
+            Log.d(TAG, "LinkSpeed: " + linkSpeed + " Mbps");
+            Log.d(TAG, "Frequency: " + frequency + " MHz");
+        }*/
 
         return new NetworkInfo(ip, netmask, prefix, networkAddr, gateway, dns,
                 connectionType, hasInternet, validated, metered,
