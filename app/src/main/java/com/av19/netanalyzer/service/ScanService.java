@@ -140,6 +140,7 @@ public class ScanService extends Service {
             executor.shutdownNow();
         }
         isScanning = false;
+        repository.setError("Scan cancelled");
     }
 
     @SuppressLint("DefaultLocale")

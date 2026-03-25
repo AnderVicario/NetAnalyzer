@@ -10,6 +10,7 @@ import com.av19.netanalyzer.repository.ScanRepository;
 
 public class ScanViewModel extends AndroidViewModel {
     private final ScanRepository repository;
+    private long scanStartTime = 0;
 
     public ScanViewModel(Application application) {
         super(application);
@@ -22,5 +23,13 @@ public class ScanViewModel extends AndroidViewModel {
 
     public void resetScan() {
         repository.reset();
+    }
+
+    public long getScanStartTime() {
+        return scanStartTime;
+    }
+
+    public void setScanStartTime(long time) {
+        scanStartTime = time;
     }
 }

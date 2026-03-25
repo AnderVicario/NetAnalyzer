@@ -4,9 +4,13 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -24,6 +28,10 @@ import com.av19.netanalyzer.service.ScanService;
 import com.av19.netanalyzer.viewmodel.ScanViewModel;
 import com.google.android.material.button.MaterialButton;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class HomeFragment extends Fragment {
 
     private ScanViewModel viewModel;
@@ -40,6 +48,12 @@ public class HomeFragment extends Fragment {
     private TextView tvNet;
     private TextView tvConnection;
     private NetworkInfo currentInfo;
+    private TextView tvDevicesCount;
+    private TextView tvTimeElapsed;
+    private TextView tvHistoryTime;
+    private Handler timerHandler;
+    private Runnable timerRunnable;
+    private boolean timerRunning = false;
 
     public HomeFragment() {
         super(R.layout.fragment_home);
@@ -63,6 +77,23 @@ public class HomeFragment extends Fragment {
 
         viewModel = new ViewModelProvider(requireActivity()).get(ScanViewModel.class);
 
+        tvDevicesCount = view.findViewById(R.id.tv_devices_count);
+        tvTimeElapsed = view.findViewById(R.id.tv_time_elapsed);
+        tvHistoryTime = view.findViewById(R.id.tv_history_time);
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
+        long lastScanTime = prefs.getLong("last_scan_time", 0);
+        int lastDeviceCount = prefs.getInt("last_device_count", 0);
+        long lastDuration = prefs.getLong("last_duration", 0);
+        if (lastScanTime != 0) {
+            updateHistoryCard(lastScanTime, lastDeviceCount, lastDuration);
+        } else {
+            // Placeholder si no hay resumen
+            tvHistoryTime.setText("Never");
+            tvDevicesCount.setText("0");
+            tvTimeElapsed.setText("0 s");
+        }
+
         btnScan.setOnClickListener(v -> {
             if (isScanning) stopScan();
             else startScan();
@@ -83,7 +114,6 @@ public class HomeFragment extends Fragment {
     private void updateUi(ScanState state) {
         if (state == null) return;
 
-        // Update network info (if available)
         updateNetworkInfo(state.getNetworkInfo());
 
         switch (state.getStatus()) {
@@ -93,25 +123,61 @@ public class HomeFragment extends Fragment {
                 tvStatus.setText("Escaneando red… " + state.getProgress() + "%");
                 tvStatus.animate().alpha(1f).setDuration(300).start();
                 startRippleAnimation();
+
+                // Iniciar temporizador si es la primera vez que se ve SCANNING
+                if (viewModel.getScanStartTime() == 0) {
+                    viewModel.setScanStartTime(System.currentTimeMillis());
+                }
+                startTimer();
+
+                // Actualizar contador de dispositivos en tiempo real
+                updateDeviceCount(state.getDevices().size());
+
+                // Mostrar estado "En progreso" en el campo de fecha
+                tvHistoryTime.setText("In progress");
                 break;
+
             case COMPLETED:
                 isScanning = false;
                 btnScan.setText("SCAN");
                 tvStatus.animate().alpha(0f).setDuration(200).start();
                 stopRippleAnimation();
+
+                // Calcular datos finales
+                long duration = (System.currentTimeMillis() - viewModel.getScanStartTime()) / 1000;
+                int deviceCount = state.getDevices().size();
+                long completionTime = System.currentTimeMillis();
+
+                // Guardar y actualizar UI
+                saveScanSummary(completionTime, deviceCount, duration);
+                updateHistoryCard(completionTime, deviceCount, duration);
+
+                // Limpiar temporizador y startTime
+                stopTimer();
+                viewModel.setScanStartTime(0);
                 break;
+
             case ERROR:
                 isScanning = false;
                 btnScan.setText("SCAN");
                 tvStatus.setText("Error: " + state.getErrorMessage());
                 tvStatus.animate().alpha(1f).setDuration(300).start();
                 stopRippleAnimation();
+
+                // Detener temporizador y limpiar estado
+                stopTimer();
+                viewModel.setScanStartTime(0);
                 break;
+
             default:
                 isScanning = false;
                 btnScan.setText("SCAN");
                 tvStatus.animate().alpha(0f).setDuration(200).start();
                 stopRippleAnimation();
+
+                // Detener temporizador (por si acaso)
+                stopTimer();
+                viewModel.setScanStartTime(0);
                 break;
         }
     }
@@ -235,6 +301,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        stopTimer();
         if (rippleSet != null) {
             rippleSet.cancel();
         }
@@ -277,5 +344,61 @@ public class HomeFragment extends Fragment {
             sb.append(Math.random() > 0.5 ? "1" : "0");
         }
         return sb.toString();
+    }
+
+    private void startTimer() {
+        if (timerRunning) return;
+        timerRunning = true;
+        timerHandler = new Handler(Looper.getMainLooper());
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!timerRunning) return;
+                long start = viewModel.getScanStartTime();
+                if (start == 0) {
+                    stopTimer();
+                    return;
+                }
+                long elapsedSeconds = (System.currentTimeMillis() - start) / 1000;
+                tvTimeElapsed.setText(elapsedSeconds + " s");
+                timerHandler.postDelayed(this, 1000);
+            }
+        };
+        timerHandler.post(timerRunnable);
+    }
+
+    private void stopTimer() {
+        if (timerRunning) {
+            timerRunning = false;
+            if (timerHandler != null) {
+                timerHandler.removeCallbacks(timerRunnable);
+            }
+        }
+    }
+
+    private void updateDeviceCount(int count) {
+        tvDevicesCount.setText(String.valueOf(count));
+    }
+
+    private void saveScanSummary(long timestamp, int deviceCount, long durationSeconds) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
+        prefs.edit()
+                .putLong("last_scan_time", timestamp)
+                .putInt("last_device_count", deviceCount)
+                .putLong("last_duration", durationSeconds)
+                .apply();
+    }
+
+    private void updateHistoryCard(long timestamp, int deviceCount, long durationSeconds) {
+        String dateStr = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                .format(new Date(timestamp));
+        tvHistoryTime.setText(dateStr);
+        tvDevicesCount.setText(String.valueOf(deviceCount));
+        tvTimeElapsed.setText(durationSeconds + " s");
+    }
+
+    private String formatTimestamp(long timestamp) {
+        return new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                .format(new Date(timestamp));
     }
 }
