@@ -75,6 +75,8 @@ public class ScanService extends Service {
     private int networkInt;
     private int mask;
     private int[] ports;
+    private String currentScanMethod = "AUTO";
+    private String currentScanLevel = "100";
 
     @Override
     public void onCreate() {
@@ -87,17 +89,35 @@ public class ScanService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String scanLevel = intent.getStringExtra("SCAN_LEVEL"); // "100", "500" o "1000"
-        String fileName = "top" + (scanLevel != null ? scanLevel : "100") + ".txt";
-        this.ports = loadPortsFromAssets(fileName);
-        if (intent != null && "STOP_SCAN".equals(intent.getAction())) {
-            stopScan();
-            stopSelf();
-            return START_NOT_STICKY;
+        if (intent != null) {
+            // 1. Manejar acción de parada
+            if ("STOP_SCAN".equals(intent.getAction())) {
+                stopScan();
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+
+            // 2. Extraer parámetros del Intent o SharedPreferences (Fallback)
+            currentScanLevel = intent.getStringExtra("SCAN_LEVEL");
+            currentScanMethod = intent.getStringExtra("SCAN_METHOD");
+
+            if (currentScanLevel == null || currentScanMethod == null) {
+                android.content.SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+                if (currentScanLevel == null) currentScanLevel = prefs.getString("scan_level", "100");
+                if (currentScanMethod == null) currentScanMethod = prefs.getString("scan_method", "AUTO");
+            }
+
+            // 3. Cargar los puertos según el nivel seleccionado
+            String fileName = "top" + currentScanLevel + ".txt";
+            this.ports = loadPortsFromAssets(fileName);
+
+            Log.d("ScanService", "Config: Method=" + currentScanMethod + ", Level=" + currentScanLevel);
         }
 
-        startForeground(NOTIFICATION_ID, createNotification("Starting scan..."));
+        // 4. Iniciar el servicio en primer plano y ejecutar escaneo
+        startForeground(NOTIFICATION_ID, createNotification("Escaneando red en modo " + currentScanMethod + "..."));
         startScan();
+
         return START_STICKY;
     }
 
@@ -110,26 +130,39 @@ public class ScanService extends Service {
     private void startScan() {
         if (isScanning) return;
         isScanning = true;
+
         executor.execute(() -> {
             try {
-                // Reset state before starting
                 repository.reset();
-
-                // Gather network details
                 getNetworkDetails();
                 currentNetworkInfo = collectNetworkInfo();
-                // Determine scan method based on Android version
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                    scanWithArp();
-                } else {
-                    scanWithTcp();
+
+                switch (currentScanMethod) {
+                    case "ARP":
+                        scanWithArp();
+                        break;
+                    case "TCP":
+                        scanWithTcp();
+                        break;
+                    case "ICMP":
+                        scanWithIcmp();
+                        break;
+                    case "AUTO":
+                    default:
+                        // Comportamiento inteligente por defecto
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                            scanWithArp();
+                        } else {
+                            scanWithTcp();
+                        }
+                        break;
                 }
+
             } catch (Exception e) {
                 repository.setError(e.getMessage());
-                stopSelf();
             } finally {
                 isScanning = false;
-                stopForeground(false);
+                stopForeground(true);
                 stopSelf();
             }
         });
@@ -301,6 +334,10 @@ public class ScanService extends Service {
                 break;
             }
         }
+    }
+
+    private void scanWithIcmp() {
+        //todo
     }
 
     private void scanWithArp() {

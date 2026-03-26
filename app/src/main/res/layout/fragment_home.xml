@@ -259,6 +259,37 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_scan" />
 
+    <LinearLayout
+        android:id="@+id/advanced_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_button_selector"
+        android:padding="10dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="@drawable/round_ripple"
+        app:layout_constraintBottom_toTopOf="@id/card_history"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_status">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_advanced"
+            android:layout_marginEnd="6dp"
+            app:tint="@color/on_surface" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ADVANCED SETTINGS"
+            android:textColor="@color/on_surface"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_history"
         android:layout_width="320dp"

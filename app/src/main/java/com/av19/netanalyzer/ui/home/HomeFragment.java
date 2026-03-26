@@ -107,6 +107,11 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        view.findViewById(R.id.advanced_menu).setOnClickListener(v -> {
+            AdvancedSettingsBottomSheet bottomSheet = new AdvancedSettingsBottomSheet();
+            bottomSheet.show(getChildFragmentManager(), "AdvancedSettings");
+        });
+
         // Observe state changes
         viewModel.getScanState().observe(getViewLifecycleOwner(), this::updateUi);
     }
@@ -212,7 +217,11 @@ public class HomeFragment extends Fragment {
     }
 
     private void startScan() {
+        SharedPreferences p = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE);
+
         Intent intent = new Intent(requireContext(), ScanService.class);
+        intent.putExtra("SCAN_LEVEL", p.getString("scan_level", "100"));
+        intent.putExtra("SCAN_METHOD", p.getString("scan_method", "AUTO"));
 
         // Handle foreground service based on Android version
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -14,7 +14,7 @@
     <color name="terminal">#FF121212</color>
     <color name="background">#FFFFFFFF</color>
     <color name="background_10">#11121212</color>
-    <color name="surface">#FFF5F5F5</color>
+    <color name="surface">#EFEFEF</color>
     <color name="on_terminal">#FFFFFFFF</color>
     <color name="on_background">#FF000000</color>
     <color name="on_surface">#CC000000</color>
