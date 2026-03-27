@@ -55,20 +55,23 @@ public class DevicesFragment extends Fragment {
     }
 
     private void addDeviceView(DeviceInfo device) {
+        if (device==null){return;}
         TextView tv = new TextView(requireContext());
         tv.setTypeface(Typeface.MONOSPACE);
         tv.setTextSize(13);
         tv.setPadding(20, 10, 20, 10);
 
         StringBuilder sb = new StringBuilder();
-        sb.append("IP: ").append(device.getIp()).append("\n");
-        if (!device.getMac().isEmpty()) {
+        if (device.getIp()!= null && !device.getIp().isEmpty()) {
+            sb.append("IP: ").append(device.getIp()).append("\n");
+        }
+        if (device.getMac()!= null && !device.getMac().isEmpty()) {
             sb.append("MAC: ").append(device.getMac()).append("\n");
         }
-        if (!device.getVendor().isEmpty()) {
+        if (device.getVendor()!= null && !device.getVendor().isEmpty()) {
             sb.append("Vendor: ").append(device.getVendor()).append("\n");
         }
-        if (!device.getOpenPorts().isEmpty()) {
+        if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
             sb.append("Open ports: ");
             for (int port : device.getOpenPorts()) {
                 sb.append(port).append(" ");

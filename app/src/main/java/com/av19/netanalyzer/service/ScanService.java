@@ -336,8 +336,78 @@ public class ScanService extends Service {
         }
     }
 
+    @SuppressLint("DefaultLocale")
     private void scanWithIcmp() {
-        //todo
+        try {
+            int first = networkInt + 1;
+            int last = (networkInt | ~mask) - 1;
+            int totalHosts = last - first + 1;
+
+            List<DeviceInfo> devices = new ArrayList<>();
+            AtomicInteger scanned = new AtomicInteger(0);
+            CountDownLatch latch = new CountDownLatch(totalHosts);
+
+            // Pool de hilos para ejecutar los pings en paralelo
+            ExecutorService executor = Executors.newFixedThreadPool(30); // 30 es un buen equilibrio
+
+            for (int host = first; host <= last; host++) {
+                final int currentHost = host;
+
+                executor.execute(() -> {
+                    String ip = null;
+                    try {
+                        ip = String.format("%d.%d.%d.%d",
+                                (currentHost >> 24) & 0xff,
+                                (currentHost >> 16) & 0xff,
+                                (currentHost >> 8) & 0xff,
+                                currentHost & 0xff);
+
+                        // Ping con 1 paquete y timeout de 700ms
+                        boolean isReachable = pingHost(ip, 1, 700);
+
+                        if (isReachable) {
+                            // Agregamos el dispositivo encontrado (sin MAC ni puertos)
+                            devices.add(new DeviceInfo(ip, null, null, null));
+                        }
+
+                        // Actualizar progreso
+                        int progress = (int) (scanned.incrementAndGet() * 100.0 / totalHosts);
+                        repository.setScanning(progress, ip, devices, currentNetworkInfo);
+
+                    } catch (Exception e) {
+                        scanned.incrementAndGet();
+                    } finally {
+                        latch.countDown();
+                    }
+                });
+            }
+
+            // Esperamos a que termine
+            latch.await();
+            executor.shutdown();
+
+            // Enviamos el resultado final
+            repository.setCompleted(devices, currentNetworkInfo);
+
+        } catch (Exception e) {
+            repository.setError("Error durante el escaneo: " + e.getMessage());
+        }
+    }
+
+    private boolean pingHost(String ip, int count, int timeoutMs) {
+        try {
+            int timeoutSec = Math.max(1, timeoutMs / 1000);
+
+            String command = "ping -c " + count + " -W " + timeoutSec + " " + ip;
+
+            Process process = Runtime.getRuntime().exec(command);
+            int exitCode = process.waitFor();
+
+            return exitCode == 0;   // 0 = dispositivo respondió
+
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void scanWithArp() {
