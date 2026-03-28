@@ -16,12 +16,11 @@
         android:textSize="26sp"
         android:textColor="@color/on_background"
         android:textStyle="bold"
-        android:paddingBottom="8dp"/>
+        android:paddingBottom="20dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewSettings"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp"/>
+        android:layout_height="match_parent"/>
 
 </LinearLayout>

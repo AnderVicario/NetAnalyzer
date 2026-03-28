@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/devicesRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -12,28 +13,21 @@
         android:text="Dispositivos en la red"
         android:textSize="26sp"
         android:textStyle="bold"
-        android:paddingBottom="8dp"
+        android:paddingBottom="20dp"
         android:textColor="@color/on_background" />
 
-    <View
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewDevices"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/background_10"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="match_parent"/>
 
-    <!-- Scrollable container for devices -->
-    <ScrollView
+    <TextView
+        android:id="@+id/emptyView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
-
-        <LinearLayout
-            android:id="@+id/devices_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="8dp" />
-
-    </ScrollView>
+        android:text="No devices discovered yet.\nStart a scan from Home."
+        android:textSize="14sp"
+        android:gravity="center"
+        android:visibility="gone" />
 
 </LinearLayout>
