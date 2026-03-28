@@ -129,60 +129,53 @@ public class HomeFragment extends Fragment {
                 tvStatus.animate().alpha(1f).setDuration(300).start();
                 startRippleAnimation();
 
-                // Iniciar temporizador si es la primera vez que se ve SCANNING
-                if (viewModel.getScanStartTime() == 0) {
+                // Si es el inicio real (start time es 0), lo fijamos
+                if (viewModel.getScanStartTime() <= 0) {
                     viewModel.setScanStartTime(System.currentTimeMillis());
                 }
-                startTimer();
 
-                // Actualizar contador de dispositivos en tiempo real
+                startTimer(); // El timer actualiza el UI en tiempo real
                 updateDeviceCount(state.getDevices().size());
-
-                // Mostrar estado "En progreso" en el campo de fecha
                 tvHistoryTime.setText("In progress");
                 break;
 
             case COMPLETED:
-                isScanning = false;
+                // Si estábamos escaneando y acabamos de terminar
+                if (isScanning) {
+                    long duration = (System.currentTimeMillis() - viewModel.getScanStartTime()) / 1000;
+                    if (viewModel.getScanStartTime() <= 0) duration = 0; // Seguridad
+
+                    int deviceCount = state.getDevices().size();
+                    long completionTime = System.currentTimeMillis();
+
+                    // 1. Guardar de forma persistente
+                    saveScanSummary(completionTime, deviceCount, duration);
+
+                    // 2. Limpiar el start time en el ViewModel para que no se vuelva a calcular
+                    viewModel.setScanStartTime(-1);
+
+                    isScanning = false;
+                }
+
+                // 3. UI de estado detenido
                 btnScan.setText("SCAN");
                 tvStatus.animate().alpha(0f).setDuration(200).start();
                 stopRippleAnimation();
-
-                // Calcular datos finales
-                long duration = (System.currentTimeMillis() - viewModel.getScanStartTime()) / 1000;
-                int deviceCount = state.getDevices().size();
-                long completionTime = System.currentTimeMillis();
-
-                // Guardar y actualizar UI
-                saveScanSummary(completionTime, deviceCount, duration);
-                updateHistoryCard(completionTime, deviceCount, duration);
-
-                // Limpiar temporizador y startTime
                 stopTimer();
-                viewModel.setScanStartTime(0);
+
+                // 4. Mostrar siempre lo que hay en SharedPreferences (el último resultado real)
+                loadLastScanSummary();
                 break;
 
             case ERROR:
-                isScanning = false;
-                btnScan.setText("SCAN");
-                tvStatus.setText("Error: " + state.getErrorMessage());
-                tvStatus.animate().alpha(1f).setDuration(300).start();
-                stopRippleAnimation();
-
-                // Detener temporizador y limpiar estado
-                stopTimer();
-                viewModel.setScanStartTime(0);
-                break;
-
-            default:
+            case IDLE:
                 isScanning = false;
                 btnScan.setText("SCAN");
                 tvStatus.animate().alpha(0f).setDuration(200).start();
                 stopRippleAnimation();
-
-                // Detener temporizador (por si acaso)
                 stopTimer();
                 viewModel.setScanStartTime(0);
+                loadLastScanSummary(); // Mostrar el último escaneo exitoso
                 break;
         }
     }
@@ -364,13 +357,11 @@ public class HomeFragment extends Fragment {
             public void run() {
                 if (!timerRunning) return;
                 long start = viewModel.getScanStartTime();
-                if (start == 0) {
-                    stopTimer();
-                    return;
+                if (start > 0) {
+                    long elapsedSeconds = (System.currentTimeMillis() - start) / 1000;
+                    tvTimeElapsed.setText(elapsedSeconds + " s");
+                    timerHandler.postDelayed(this, 1000);
                 }
-                long elapsedSeconds = (System.currentTimeMillis() - start) / 1000;
-                tvTimeElapsed.setText(elapsedSeconds + " s");
-                timerHandler.postDelayed(this, 1000);
             }
         };
         timerHandler.post(timerRunnable);
@@ -409,5 +400,16 @@ public class HomeFragment extends Fragment {
     private String formatTimestamp(long timestamp) {
         return new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 .format(new Date(timestamp));
+    }
+
+    private void loadLastScanSummary() {
+        SharedPreferences prefs = requireContext().getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
+        long lastScanTime = prefs.getLong("last_scan_time", 0);
+        int lastDeviceCount = prefs.getInt("last_device_count", 0);
+        long lastDuration = prefs.getLong("last_duration", 0);
+
+        if (lastScanTime != 0) {
+            updateHistoryCard(lastScanTime, lastDeviceCount, lastDuration);
+        }
     }
 }

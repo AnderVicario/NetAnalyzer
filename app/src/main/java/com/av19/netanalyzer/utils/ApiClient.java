@@ -1,4 +1,4 @@
-package com.av19.netanalyzer;
+package com.av19.netanalyzer.utils;
 import org.json.JSONObject;
 
 import okhttp3.*;

@@ -20,21 +20,17 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
-import android.text.format.Formatter;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.av19.netanalyzer.ApiClient;
+import com.av19.netanalyzer.utils.ApiClient;
 import com.av19.netanalyzer.data.NetworkInfo;
-import com.av19.netanalyzer.ui.main.MainActivity;
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
-import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.repository.ScanRepository;
 
 import java.io.BufferedReader;
@@ -61,7 +57,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 public class ScanService extends Service {
     private static final String CHANNEL_ID = "scan_channel";

@@ -33,7 +33,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.av19.netanalyzer.ApiClient;
+import com.av19.netanalyzer.utils.ApiClient;
 import com.av19.netanalyzer.R;
 
 import java.io.BufferedReader;
