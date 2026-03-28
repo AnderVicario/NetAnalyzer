@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,7 +68,9 @@ public class ScanService extends Service {
     private static final int NOTIFICATION_ID = 1;
 
     private ScanRepository repository;
-    private ExecutorService executor;
+    private ExecutorService mainExecutor;      // ejecutor principal del servicio
+    private ExecutorService discoveryExecutor; // para descubrimiento
+    private ExecutorService portScanExecutor;  // para escaneo de puertos
     private Handler mainHandler;
     private boolean isScanning = false;
     private NetworkInfo currentNetworkInfo;
@@ -82,7 +85,6 @@ public class ScanService extends Service {
     public void onCreate() {
         super.onCreate();
         repository = ScanRepository.getInstance();
-        executor = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
         createNotificationChannel();
     }
@@ -131,32 +133,33 @@ public class ScanService extends Service {
         if (isScanning) return;
         isScanning = true;
 
-        executor.execute(() -> {
+        mainExecutor = Executors.newSingleThreadExecutor();
+        mainExecutor.execute(() -> {
             try {
                 repository.reset();
                 getNetworkDetails();
                 currentNetworkInfo = collectNetworkInfo();
 
-                switch (currentScanMethod) {
-                    case "ARP":
-                        scanWithArp();
-                        break;
-                    case "TCP":
-                        scanWithTcp();
-                        break;
-                    case "ICMP":
-                        scanWithIcmp();
-                        break;
-                    case "AUTO":
-                    default:
-                        // Comportamiento inteligente por defecto
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                            scanWithArp();
-                        } else {
-                            scanWithTcp();
-                        }
-                        break;
+                // 1. Parsear métodos de descubrimiento
+                List<String> discoveryMethods = parseDiscoveryMethods(currentScanMethod);
+                if (discoveryMethods.contains("AUTO")) {
+                    discoveryMethods.clear();
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        discoveryMethods.add("ARP");
+                    } else {
+                        discoveryMethods.add("TCP");
+                        discoveryMethods.add("ICMP");
+                    }
                 }
+
+                // 2. Descubrir hosts
+                List<DeviceInfo> discoveredDevices = performDiscovery(discoveryMethods);
+
+                // 3. Escanear puertos
+                List<DeviceInfo> finalDevices = scanPortsForDevices(discoveredDevices);
+
+                // 4. Finalizar
+                repository.setCompleted(finalDevices, currentNetworkInfo);
 
             } catch (Exception e) {
                 repository.setError(e.getMessage());
@@ -164,16 +167,89 @@ public class ScanService extends Service {
                 isScanning = false;
                 stopForeground(true);
                 stopSelf();
+                if (mainExecutor != null) mainExecutor.shutdownNow();
             }
         });
     }
 
-    private void stopScan() {
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdownNow();
+    private List<String> parseDiscoveryMethods(String method) {
+        List<String> methods = new ArrayList<>();
+        if (method == null || method.isEmpty()) {
+            methods.add("AUTO");
+            return methods;
         }
+        if (method.equals("AUTO")) {
+            methods.add("AUTO");
+            return methods;
+        }
+        String[] parts = method.split("[+,]");
+        for (String part : parts) {
+            String trimmed = part.trim().toUpperCase();
+            if (trimmed.equals("ARP") || trimmed.equals("ICMP") || trimmed.equals("TCP")) {
+                methods.add(trimmed);
+            }
+        }
+        if (methods.isEmpty()) methods.add("AUTO");
+        return methods;
+    }
+
+
+    private void stopScan() {
         isScanning = false;
-        repository.setError("Scan cancelled");
+        if (discoveryExecutor != null && !discoveryExecutor.isShutdown()) {
+            discoveryExecutor.shutdownNow();
+        }
+        if (portScanExecutor != null && !portScanExecutor.isShutdown()) {
+            portScanExecutor.shutdownNow();
+        }
+        if (mainExecutor != null && !mainExecutor.isShutdown()) {
+            mainExecutor.shutdownNow();
+        }
+        repository.setError("Escaneo cancelado");
+    }
+
+    private List<DeviceInfo> performDiscovery(List<String> methods) {
+        Map<String, DeviceInfo> deviceMap = new HashMap<>();
+        int totalMethods = methods.size();
+        int currentIdx = 0;
+
+        for (String method : methods) {
+            if (!isScanning) break; // cancelado
+
+            List<DeviceInfo> result = null;
+            switch (method) {
+                case "ARP":
+                    result = discoverWithArp();
+                    break;
+                case "ICMP":
+                    result = discoverWithIcmp();
+                    break;
+                case "TCP":
+                    result = discoverWithTcp();
+                    break;
+            }
+            if (result != null) {
+                for (DeviceInfo dev : result) {
+                    String ip = dev.getIp();
+                    if (deviceMap.containsKey(ip)) {
+                        DeviceInfo existing = deviceMap.get(ip);
+                        // Si el nuevo tiene MAC y el actual no, lo actualizamos
+                        if ((existing.getMac() == null || existing.getMac().isEmpty()) &&
+                                dev.getMac() != null && !dev.getMac().isEmpty()) {
+                            existing.setMac(dev.getMac());
+                            existing.setVendor(dev.getVendor());
+                        }
+                    } else {
+                        deviceMap.put(ip, dev);
+                    }
+                }
+            }
+            currentIdx++;
+            int progress = (int) ((currentIdx / (float) totalMethods) * 100);
+            repository.setScanning(progress, "Descubrimiento con " + method,
+                    new ArrayList<>(deviceMap.values()), currentNetworkInfo);
+        }
+        return new ArrayList<>(deviceMap.values());
     }
 
     @SuppressLint("DefaultLocale")
@@ -336,44 +412,32 @@ public class ScanService extends Service {
         }
     }
 
-    @SuppressLint("DefaultLocale")
-    private void scanWithIcmp() {
+    private List<DeviceInfo> discoverWithIcmp() {
+        List<DeviceInfo> devices = new ArrayList<>();
         try {
             int first = networkInt + 1;
             int last = (networkInt | ~mask) - 1;
             int totalHosts = last - first + 1;
-
-            List<DeviceInfo> devices = new ArrayList<>();
             AtomicInteger scanned = new AtomicInteger(0);
             CountDownLatch latch = new CountDownLatch(totalHosts);
-
-            // Pool de hilos para ejecutar los pings en paralelo
-            ExecutorService executor = Executors.newFixedThreadPool(30); // 30 es un buen equilibrio
+            discoveryExecutor = Executors.newFixedThreadPool(30);
 
             for (int host = first; host <= last; host++) {
                 final int currentHost = host;
-
-                executor.execute(() -> {
-                    String ip = null;
+                discoveryExecutor.execute(() -> {
                     try {
-                        ip = String.format("%d.%d.%d.%d",
+                        @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
                                 (currentHost >> 24) & 0xff,
                                 (currentHost >> 16) & 0xff,
                                 (currentHost >> 8) & 0xff,
                                 currentHost & 0xff);
-
-                        // Ping con 1 paquete y timeout de 700ms
-                        boolean isReachable = pingHost(ip, 1, 700);
-
-                        if (isReachable) {
-                            // Agregamos el dispositivo encontrado (sin MAC ni puertos)
-                            devices.add(new DeviceInfo(ip, null, null, null));
+                        if (pingHost(ip, 1, 700)) {
+                            synchronized (devices) {
+                                devices.add(new DeviceInfo(ip, null, null, new ArrayList<>()));
+                            }
                         }
-
-                        // Actualizar progreso
                         int progress = (int) (scanned.incrementAndGet() * 100.0 / totalHosts);
                         repository.setScanning(progress, ip, devices, currentNetworkInfo);
-
                     } catch (Exception e) {
                         scanned.incrementAndGet();
                     } finally {
@@ -382,16 +446,13 @@ public class ScanService extends Service {
                 });
             }
 
-            // Esperamos a que termine
             latch.await();
-            executor.shutdown();
-
-            // Enviamos el resultado final
-            repository.setCompleted(devices, currentNetworkInfo);
+            if (discoveryExecutor != null) discoveryExecutor.shutdown();
 
         } catch (Exception e) {
-            repository.setError("Error durante el escaneo: " + e.getMessage());
+            Log.e("ScanService", "Error en ICMP discovery", e);
         }
+        return devices;
     }
 
     private boolean pingHost(String ip, int count, int timeoutMs) {
@@ -410,21 +471,19 @@ public class ScanService extends Service {
         }
     }
 
-    private void scanWithArp() {
+    private List<DeviceInfo> discoverWithArp() {
+        List<DeviceInfo> devices = new ArrayList<>();
         try {
             int first = networkInt + 1;
             int last = (networkInt | ~mask) - 1;
             int total = last - first + 1;
             AtomicInteger current = new AtomicInteger(0);
             CountDownLatch latch = new CountDownLatch(total);
-            List<DeviceInfo> devices = new ArrayList<>();
-
-            // We'll use the same executor for pings, but limit parallelism
-            ExecutorService pingPool = Executors.newFixedThreadPool(50);
+            discoveryExecutor = Executors.newFixedThreadPool(50);
 
             for (int host = first; host <= last; host++) {
                 final int currentHost = host;
-                pingPool.execute(() -> {
+                discoveryExecutor.execute(() -> {
                     try {
                         @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
                                 (currentHost >> 24) & 0xff,
@@ -443,9 +502,9 @@ public class ScanService extends Service {
             }
 
             latch.await();
-            pingPool.shutdown();
+            if (discoveryExecutor != null) discoveryExecutor.shutdown();
 
-            // Now read ARP table
+            // Leer tabla ARP
             BufferedReader br = new BufferedReader(new FileReader("/proc/net/arp"));
             br.readLine(); // skip header
             String line;
@@ -455,55 +514,85 @@ public class ScanService extends Service {
                     String ip = parts[0];
                     String mac = parts[3];
                     String vendor = ApiClient.getMacVendorSync(mac);
-                    List<Integer> openPorts = scanPortsNio(ip);
-                    devices.add(new DeviceInfo(ip, mac, vendor, openPorts));
+                    devices.add(new DeviceInfo(ip, mac, vendor, new ArrayList<>()));
                 }
             }
             br.close();
 
-            repository.setCompleted(devices, currentNetworkInfo);
         } catch (Exception e) {
-            repository.setError(e.getMessage());
+            Log.e("ScanService", "Error en ARP discovery", e);
         }
+        return devices;
     }
 
-    private void scanWithTcp() {
+    private List<DeviceInfo> discoverWithTcp() {
+        List<DeviceInfo> devices = new ArrayList<>();
         try {
             int first = networkInt + 1;
             int last = (networkInt | ~mask) - 1;
             int total = last - first + 1;
             AtomicInteger scanned = new AtomicInteger(0);
-            List<DeviceInfo> devices = new ArrayList<>();
-            ExecutorService hostPool = Executors.newFixedThreadPool(20);
+            discoveryExecutor = Executors.newFixedThreadPool(20);
 
             for (int host = first; host <= last; host++) {
                 final int currentHost = host;
-                hostPool.execute(() -> {
+                discoveryExecutor.execute(() -> {
                     @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
                             (currentHost >> 24) & 0xff,
                             (currentHost >> 16) & 0xff,
                             (currentHost >> 8) & 0xff,
                             currentHost & 0xff);
                     if (isAlive(ip)) {
-                        List<Integer> openPorts = scanPortsNio(ip);
-                        // We can't get MAC easily on Android 10+, so leave blank
                         synchronized (devices) {
-                            devices.add(new DeviceInfo(ip, "", "", openPorts));
+                            devices.add(new DeviceInfo(ip, "", "", new ArrayList<>()));
                         }
                     }
                     int progress = (int) (scanned.incrementAndGet() * 100.0 / total);
-                    Log.d("ScanService", "Scanned " + progress + "% of hosts, IP: " + ip);
                     repository.setScanning(progress, ip, devices, currentNetworkInfo);
                 });
             }
 
-            hostPool.shutdown();
-            // Wait for all tasks to finish (simplified: use awaitTermination with timeout)
-            hostPool.awaitTermination(5, java.util.concurrent.TimeUnit.MINUTES);
-            repository.setCompleted(devices, currentNetworkInfo);
+            discoveryExecutor.shutdown();
+            discoveryExecutor.awaitTermination(5, TimeUnit.MINUTES);
+
         } catch (Exception e) {
-            repository.setError(e.getMessage());
+            Log.e("ScanService", "Error en TCP discovery", e);
         }
+        return devices;
+    }
+
+    private List<DeviceInfo> scanPortsForDevices(List<DeviceInfo> devices) {
+        List<DeviceInfo> result = new ArrayList<>(devices);
+        int total = result.size();
+        AtomicInteger completed = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(total);
+        portScanExecutor = Executors.newFixedThreadPool(10);
+
+        for (DeviceInfo device : result) {
+            portScanExecutor.execute(() -> {
+                try {
+                    List<Integer> openPorts = scanPortsNio(device.getIp());
+                    device.setOpenPorts(openPorts);
+                } catch (Exception e) {
+                    Log.e("ScanService", "Error escaneando puertos de " + device.getIp(), e);
+                } finally {
+                    int done = completed.incrementAndGet();
+                    int progress = (int) ((done / (float) total) * 100);
+                    // Pasamos una copia de la lista para que el UI vea los cambios
+                    List<DeviceInfo> snapshot = new ArrayList<>(result);
+                    repository.setScanning(progress, device.getIp(), snapshot, currentNetworkInfo);
+                    latch.countDown();
+                }
+            });
+        }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        if (portScanExecutor != null) portScanExecutor.shutdownNow();
+        return result;
     }
 
     private List<Integer> scanPortsNio(String host) {

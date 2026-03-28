@@ -25,4 +25,5 @@
     <color name="on_error">#FF000000</color>
 
     <color name="transparent">#00FFFFFF</color>
+    <color name="button">#4a4458</color>
 </resources>

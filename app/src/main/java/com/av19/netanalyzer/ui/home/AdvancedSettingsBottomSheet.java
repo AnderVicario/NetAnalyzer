@@ -3,6 +3,7 @@ package com.av19.netanalyzer.ui.home;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +17,12 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.av19.netanalyzer.R;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Collections;
 
 public class AdvancedSettingsBottomSheet extends com.google.android.material.bottomsheet.BottomSheetDialogFragment {
 
@@ -25,7 +31,6 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Aplicamos el estilo que creamos
         setStyle(STYLE_NORMAL, R.style.AppBottomSheetDialogTheme);
     }
 
@@ -34,7 +39,7 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
         super.onStart();
         if (getDialog() != null && getDialog().getWindow() != null) {
             Window window = getDialog().getWindow();
-            // 1. Forzamos a que el layout se dibuje fuera de los límites (debajo de las barras)
+            // El layout se dibuje fuera de los límites (debajo de las barras)
             window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         }
@@ -48,12 +53,11 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
         ViewCompat.setOnApplyWindowInsetsListener(v, (view, windowInsets) -> {
             Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
 
-            // Sumamos la altura de la navigation bar al padding inferior que ya tenías (24dp)
-            // Convertimos 24dp a pixels para que sea exacto
+            // Sumar la altura de la navigation bar al padding inferior que ya tenías (24dp)
+            // Convertir 24dp a pixels para que sea exacto
             int basePaddingBottom = (int) (24 * getResources().getDisplayMetrics().density);
             view.setPadding(view.getPaddingLeft(), view.getPaddingTop(),
                     view.getPaddingRight(), basePaddingBottom + systemBars.bottom);
-
             return windowInsets;
         });
 
@@ -62,44 +66,132 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
         MaterialButtonToggleGroup groupMethod = v.findViewById(R.id.toggle_group_method);
         MaterialButtonToggleGroup groupPorts = v.findViewById(R.id.toggle_group_ports);
 
-        // 1. Cargar estado actual
+        // Lógica de exclusividad para AUTO
+        MaterialButton btnAuto = v.findViewById(R.id.btn_method_auto);
+        MaterialButton btnArp = v.findViewById(R.id.btn_method_arp);
+        MaterialButton btnIcmp = v.findViewById(R.id.btn_method_icmp);
+        MaterialButton btnTcp = v.findViewById(R.id.btn_method_tcp);
+
+        btnAuto.setOnClickListener(view -> {
+
+            Log.d("AdvancedSettingsBottomSheet", "AUTO pulsado");
+
+            groupMethod.clearChecked();
+            groupMethod.check(R.id.btn_method_auto);
+
+            btnArp.setBackgroundColor(getResources().getColor(R.color.transparent));
+            btnIcmp.setBackgroundColor(getResources().getColor(R.color.transparent));
+            btnTcp.setBackgroundColor(getResources().getColor(R.color.transparent));
+        });
+
+
+        View.OnClickListener manualListener = view -> {
+
+            int id = view.getId();
+            Log.d("AdvancedSettingsBottomSheet", "Metodo manual pulsado");
+
+            // quitar AUTO si estaba activo
+            groupMethod.uncheck(R.id.btn_method_auto);
+
+            // alternar el botón pulsado
+            MaterialButton btn = (MaterialButton) view;
+
+            if (btn.isChecked()) {
+                btn.setBackgroundColor(getResources().getColor(R.color.button));
+            } else {
+                btn.setBackgroundColor(getResources().getColor(R.color.transparent));
+            }
+        };
+
+        btnArp.setOnClickListener(manualListener);
+        btnIcmp.setOnClickListener(manualListener);
+        btnTcp.setOnClickListener(manualListener);
+
+        // Cargar estado actual
         setupInitialSelection(groupMethod, groupPorts);
 
-        // 2. Botón Guardar
+        // Botón Guardar
         v.findViewById(R.id.btn_save_config).setOnClickListener(view -> {
-            String method = getMethodFromId(groupMethod.getCheckedButtonId());
-            String ports = getPortsFromId(groupPorts.getCheckedButtonId());
-
+            // Guardar métodos seleccionados
+            Set<String> selectedMethods = new HashSet<>();
+            for (int id : groupMethod.getCheckedButtonIds()) {
+                selectedMethods.add(getMethodNameFromId(id));
+            }
+            // Convertir el conjunto en una cadena separada por comas
+            String methodsStr = String.join(",", selectedMethods);
             prefs.edit()
-                    .putString("scan_method", method)
-                    .putString("scan_level", ports)
+                    .putString("scan_methods", methodsStr)
+                    .remove("scan_method")  // Limpiar la clave antigua
+                    .putString("scan_level", getPortsFromId(groupPorts.getCheckedButtonId()))
                     .apply();
 
             dismiss();
+
+            Log.d("AdvancedSettingsBottomSheet", "Configuración guardada: " + methodsStr);
         });
 
         return v;
     }
 
-    private void setupInitialSelection(MaterialButtonToggleGroup gM, MaterialButtonToggleGroup gP) {
-        String currentMethod = prefs.getString("scan_method", "AUTO");
+    private void setupInitialSelection(MaterialButtonToggleGroup groupMethod, MaterialButtonToggleGroup groupPorts) {
+        // Cargar métodos guardados (soporta formato antiguo y nuevo)
+        Set<String> savedMethods = getStoredMethods();
+
+        // Marcar los botones correspondientes
+        for (String method : savedMethods) {
+            int id = getMethodIdFromName(method);
+            if (id != -1) {
+                groupMethod.check(id);
+            }
+        }
+
+        // Si no hay ningún método marcado (por ejemplo, si se guardó vacío), marcar AUTO por defecto
+        if (groupMethod.getCheckedButtonIds().isEmpty()) {
+            groupMethod.check(R.id.btn_method_auto);
+        }
+
+        // Cargar nivel de puertos (sigue siendo selección única)
         String currentPorts = prefs.getString("scan_level", "100");
-
-        if (currentMethod.equals("ARP")) gM.check(R.id.btn_method_arp);
-        else if (currentMethod.equals("TCP")) gM.check(R.id.btn_method_tcp);
-        else if (currentMethod.equals("ICMP")) gM.check(R.id.btn_method_icmp);
-        else gM.check(R.id.btn_method_auto);
-
-        if (currentPorts.equals("500")) gP.check(R.id.btn_ports_500);
-        else if (currentPorts.equals("1000")) gP.check(R.id.btn_ports_1000);
-        else gP.check(R.id.btn_ports_100);
+        if (currentPorts.equals("500")) groupPorts.check(R.id.btn_ports_500);
+        else if (currentPorts.equals("1000")) groupPorts.check(R.id.btn_ports_1000);
+        else groupPorts.check(R.id.btn_ports_100);
     }
 
-    private String getMethodFromId(int id) {
+    private Set<String> getStoredMethods() {
+        String methodsStr = prefs.getString("scan_methods", null);
+        if (methodsStr != null) {
+            // Nuevo formato: cadena separada por comas
+            Set<String> methods = new HashSet<>();
+            for (String part : methodsStr.split(",")) {
+                String trimmed = part.trim();
+                if (!trimmed.isEmpty()) {
+                    methods.add(trimmed);
+                }
+            }
+            return methods;
+        } else {
+            // Formato antiguo: un solo método
+            String oldMethod = prefs.getString("scan_method", "AUTO");
+            return new HashSet<>(Collections.singletonList(oldMethod));
+        }
+    }
+
+    private int getMethodIdFromName(String method) {
+        switch (method) {
+            case "ARP": return R.id.btn_method_arp;
+            case "TCP": return R.id.btn_method_tcp;
+            case "ICMP": return R.id.btn_method_icmp;
+            case "AUTO": return R.id.btn_method_auto;
+            default: return -1;
+        }
+    }
+
+    private String getMethodNameFromId(int id) {
         if (id == R.id.btn_method_arp) return "ARP";
         if (id == R.id.btn_method_tcp) return "TCP";
         if (id == R.id.btn_method_icmp) return "ICMP";
-        return "AUTO";
+        if (id == R.id.btn_method_auto) return "AUTO";
+        return "AUTO"; // fallback
     }
 
     private String getPortsFromId(int id) {

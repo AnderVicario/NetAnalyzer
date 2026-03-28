@@ -35,8 +35,8 @@
         android:id="@+id/toggle_group_method"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:singleSelection="true"
-        app:selectionRequired="true"
+        app:singleSelection="false"
+        app:selectionRequired="false"
         android:layout_marginBottom="24dp">
 
         <Button android:id="@+id/btn_method_auto" style="?attr/materialButtonOutlinedStyle" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:text="AUTO" />
