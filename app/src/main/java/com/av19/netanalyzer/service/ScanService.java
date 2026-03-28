@@ -146,11 +146,13 @@ public class ScanService extends Service {
                     discoveryMethods.clear();
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         discoveryMethods.add("ARP");
+                        discoveryMethods.add("ICMP");
                     } else {
                         discoveryMethods.add("TCP");
                         discoveryMethods.add("ICMP");
                     }
                 }
+                Log.d("ScanService", "Discovery methods: " + discoveryMethods);
 
                 // 2. Descubrir hosts
                 List<DeviceInfo> discoveredDevices = performDiscovery(discoveryMethods);
@@ -717,9 +719,9 @@ public class ScanService extends Service {
         } catch (IOException e) {
             Log.e("ScanService", "Error cargando puertos: " + e.getMessage());
             // Backup por si falla la lectura
-            return new int[]{80, 443, 22, 135};
+            return new int[]{80, 23, 443, 21, 22, 25, 3389, 110, 445, 139, 143, 53, 135};
         }
-
+        portList.add(25565);
         // Convertir List<Integer> a int[]
         return portList.stream().mapToInt(i -> i).toArray();
     }

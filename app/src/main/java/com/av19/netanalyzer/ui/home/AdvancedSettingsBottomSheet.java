@@ -120,8 +120,7 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
             // Convertir el conjunto en una cadena separada por comas
             String methodsStr = String.join(",", selectedMethods);
             prefs.edit()
-                    .putString("scan_methods", methodsStr)
-                    .remove("scan_method")  // Limpiar la clave antigua
+                    .putString("scan_method", methodsStr)
                     .putString("scan_level", getPortsFromId(groupPorts.getCheckedButtonId()))
                     .apply();
 
@@ -145,7 +144,7 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
             }
         }
 
-        // Si no hay ningún método marcado (por ejemplo, si se guardó vacío), marcar AUTO por defecto
+        // Si no hay ningúno marcado (por ejemplo, si se guardó vacío), marcar AUTO por defecto
         if (groupMethod.getCheckedButtonIds().isEmpty()) {
             groupMethod.check(R.id.btn_method_auto);
         }
@@ -158,22 +157,15 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
     }
 
     private Set<String> getStoredMethods() {
-        String methodsStr = prefs.getString("scan_methods", null);
-        if (methodsStr != null) {
-            // Nuevo formato: cadena separada por comas
-            Set<String> methods = new HashSet<>();
-            for (String part : methodsStr.split(",")) {
-                String trimmed = part.trim();
-                if (!trimmed.isEmpty()) {
-                    methods.add(trimmed);
-                }
+        String methodsStr = prefs.getString("scan_method", "AUTO");
+        Set<String> methods = new HashSet<>();
+        for (String part : methodsStr.split(",")) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                methods.add(trimmed);
             }
-            return methods;
-        } else {
-            // Formato antiguo: un solo método
-            String oldMethod = prefs.getString("scan_method", "AUTO");
-            return new HashSet<>(Collections.singletonList(oldMethod));
         }
+        return methods;
     }
 
     private int getMethodIdFromName(String method) {
