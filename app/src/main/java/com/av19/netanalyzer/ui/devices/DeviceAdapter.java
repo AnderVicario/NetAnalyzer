@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder> {
@@ -29,10 +31,37 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
     }
 
     public void updateDevices(List<DeviceInfo> newDevices) {
+        if (newDevices != null) {
+            // Ordenar la lista antes de asignarla
+            newDevices.sort((d1, d2) -> compareIps(d1.getIp(), d2.getIp()));
+        }
+
         this.devices = newDevices;
-        this.expandedStates = new boolean[newDevices.size()];
+        this.expandedStates = new boolean[newDevices != null ? newDevices.size() : 0];
         expandedPosition = -1;
         notifyDataSetChanged();
+    }
+
+    private int compareIps(String ip1, String ip2) {
+        if (ip1 == null) return (ip2 == null) ? 0 : -1;
+        if (ip2 == null) return 1;
+
+        String[] parts1 = ip1.split("\\.");
+        String[] parts2 = ip2.split("\\.");
+
+        // Comparamos octeto por octeto
+        for (int i = 0; i < Math.min(parts1.length, parts2.length); i++) {
+            try {
+                int n1 = Integer.parseInt(parts1[i]);
+                int n2 = Integer.parseInt(parts2[i]);
+                if (n1 != n2) return Integer.compare(n1, n2);
+            } catch (NumberFormatException e) {
+                // Si no es un número (ej. IPv6 o mal formato), comparamos como string
+                int res = parts1[i].compareTo(parts2[i]);
+                if (res != 0) return res;
+            }
+        }
+        return Integer.compare(parts1.length, parts2.length);
     }
 
     @NonNull
@@ -76,14 +105,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         return devices != null ? devices.size() : 0;
     }
 
-    static class DeviceViewHolder extends RecyclerView.ViewHolder {
+    public static class DeviceViewHolder extends RecyclerView.ViewHolder {
 
-        LinearLayout buttonPanel;
-        TextView titleTextView;
-        TextView subtitleTextView;
-        ImageView accessoryImageView;
-        LinearLayout detailsPanel;
-        TextView detailsTextView;
+        private LinearLayout buttonPanel;
+        private TextView titleTextView;
+        private TextView subtitleTextView;
+        private ImageView accessoryImageView;
+        private LinearLayout detailsPanel;
+        private TextView detailsTextView;
 
         private ValueAnimator currentAnimator;
 
@@ -97,7 +126,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             detailsTextView = itemView.findViewById(R.id.detailsTextView);
         }
 
-        void bind(DeviceInfo device, boolean expanded) {
+        private void bind(DeviceInfo device, boolean expanded) {
             // Título: IP
             titleTextView.setText(device.getIp() != null ? device.getIp() : "Unknown IP");
 
@@ -137,7 +166,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         }
 
         // Expand con animación
-        void expand(final View view) {
+        private void expand(final View view) {
             // 1. Hacemos el panel visible pero con altura 0 para que mantenga el layout
             view.setVisibility(View.VISIBLE);
 
@@ -176,7 +205,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         }
 
         // Collapse con animación
-        void collapse(final View view) {
+        private void collapse(final View view) {
             final int initialHeight = view.getMeasuredHeight();
 
             currentAnimator = ValueAnimator.ofInt(initialHeight, 0);
