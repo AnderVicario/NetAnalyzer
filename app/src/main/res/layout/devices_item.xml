@@ -4,18 +4,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/round_button_list"
-    android:layout_margin="8dp">
+    android:background="@drawable/round_button_list_36"
+    android:layout_margin="4dp">
 
     <LinearLayout
         android:id="@+id/buttonPanel"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="72dp"
         android:orientation="horizontal"
         android:padding="16dp"
         android:clickable="true"
         android:focusable="true"
-        android:background="?android:attr/selectableItemBackground">
+        android:background="@drawable/round_ripple_32">
 
         <ImageView
             android:id="@+id/iconImageView"
@@ -57,7 +57,7 @@
             android:layout_height="24dp"
             android:layout_gravity="center_vertical"
             android:orientation="horizontal"
-            android:background="@color/primary"
+            android:background="@drawable/round_rectangle_accent"
             android:paddingHorizontal="12dp"
             android:layout_marginEnd="12dp"
             android:gravity="center">
@@ -66,16 +66,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:textColor="@color/on_background"
+                android:textColor="@color/on_primary"
                 android:alpha="0.7"
-                android:text="ONLINE"/>
+                android:text="ONLINE"
+                android:textStyle="bold"/>
 
         </LinearLayout>
 
         <ImageView
             android:id="@+id/accessoryImageView"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:layout_gravity="center_vertical"
             app:srcCompat="@drawable/ic_arrow_forward"
             app:tint="@color/on_background" />
@@ -86,8 +87,8 @@
         android:id="@+id/details_panel"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp"
         android:paddingBottom="2dp"
         android:background="@color/transparent"
         android:orientation="vertical"
@@ -103,7 +104,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:textColor="@color/on_background"
+            android:textColor="@color/on_surface"
             android:alpha="0.8"
             android:paddingTop="8dp" />
 

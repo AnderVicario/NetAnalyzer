@@ -1,8 +1,10 @@
 package com.av19.netanalyzer.ui.devices;
 
+import android.animation.ValueAnimator;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -19,6 +21,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
     private List<DeviceInfo> devices;
     private boolean[] expandedStates;
+    private int expandedPosition = -1; // solo un panel expandido a la vez
 
     public DeviceAdapter(List<DeviceInfo> devices) {
         this.devices = devices;
@@ -28,6 +31,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
     public void updateDevices(List<DeviceInfo> newDevices) {
         this.devices = newDevices;
         this.expandedStates = new boolean[newDevices.size()];
+        expandedPosition = -1;
         notifyDataSetChanged();
     }
 
@@ -42,16 +46,34 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
     @Override
     public void onBindViewHolder(@NonNull DeviceViewHolder holder, int position) {
         DeviceInfo device = devices.get(position);
-        holder.bind(device, expandedStates[position]);
+        boolean expanded = expandedStates[position];
+        holder.bind(device, expanded);
+
         holder.buttonPanel.setOnClickListener(v -> {
-            expandedStates[position] = !expandedStates[position];
-            notifyItemChanged(position);
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) return; // item ya no existe
+
+            // cerrar previamente expandido si es otro
+            if (expandedPosition != -1 && expandedPosition != currentPosition) {
+                expandedStates[expandedPosition] = false;
+                notifyItemChanged(expandedPosition);
+            }
+
+            // toggle expand/collapse
+            if (expandedStates[currentPosition]) {
+                holder.collapse(holder.detailsPanel);
+                expandedPosition = -1;
+            } else {
+                holder.expand(holder.detailsPanel);
+                expandedPosition = currentPosition;
+            }
+            expandedStates[currentPosition] = !expandedStates[currentPosition];
         });
     }
 
     @Override
     public int getItemCount() {
-        return devices.size();
+        return devices != null ? devices.size() : 0;
     }
 
     static class DeviceViewHolder extends RecyclerView.ViewHolder {
@@ -62,6 +84,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         ImageView accessoryImageView;
         LinearLayout detailsPanel;
         TextView detailsTextView;
+
+        private ValueAnimator currentAnimator;
 
         public DeviceViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -74,10 +98,10 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         }
 
         void bind(DeviceInfo device, boolean expanded) {
-            // Title: IP address (or fallback)
+            // Título: IP
             titleTextView.setText(device.getIp() != null ? device.getIp() : "Unknown IP");
 
-            // Subtitle: MAC + Vendor if available
+            // Subtítulo: MAC + Vendor
             StringBuilder sub = new StringBuilder();
             if (device.getMac() != null && !device.getMac().isEmpty()) {
                 sub.append(device.getMac());
@@ -93,25 +117,82 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                 subtitleTextView.setVisibility(View.GONE);
             }
 
-            // Expand/collapse details panel
-            if (expanded) {
-                detailsPanel.setVisibility(View.VISIBLE);
-                accessoryImageView.setRotation(90f); // rotate arrow
-                // Build details text
-                StringBuilder details = new StringBuilder();
-                if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
-                    details.append("Open ports: ");
-                    for (int port : device.getOpenPorts()) {
-                        details.append(port).append(" ");
-                    }
-                } else {
-                    details.append("No open ports found.");
+            // Preparar detalles
+            StringBuilder details = new StringBuilder();
+            if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
+                details.append("Open ports: ");
+                for (int port : device.getOpenPorts()) {
+                    details.append(port).append(" ");
                 }
-                detailsTextView.setText(details.toString());
             } else {
-                detailsPanel.setVisibility(View.GONE);
-                accessoryImageView.setRotation(0f);
+                details.append("No open ports found.");
             }
+            detailsTextView.setText(details.toString());
+
+            // Estado inicial de detailsPanel
+            detailsPanel.setVisibility(expanded ? View.VISIBLE : View.GONE);
+            ViewGroup.LayoutParams lp = detailsPanel.getLayoutParams();
+            lp.height = expanded ? ViewGroup.LayoutParams.WRAP_CONTENT : 0;
+            detailsPanel.setLayoutParams(lp);
+        }
+
+        // Expand con animación
+        void expand(final View view) {
+            // 1. Hacemos el panel visible pero con altura 0 para que mantenga el layout
+            view.setVisibility(View.VISIBLE);
+
+            view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    view.getViewTreeObserver().removeOnPreDrawListener(this);
+
+                    // 2. SOLUCIÓN: Si el ancho es 0, usamos el ancho del padre (el item entero)
+                    int widthSpec = View.MeasureSpec.makeMeasureSpec(
+                            view.getWidth() > 0 ? view.getWidth() : ((View)view.getParent()).getWidth(),
+                            View.MeasureSpec.EXACTLY
+                    );
+                    int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+
+                    view.measure(widthSpec, heightSpec);
+                    final int targetHeight = view.getMeasuredHeight();
+
+                    // 3. Comenzar la animación desde 0
+                    ViewGroup.LayoutParams lp = view.getLayoutParams();
+                    lp.height = 0;
+                    view.setLayoutParams(lp);
+
+                    ValueAnimator animator = ValueAnimator.ofInt(0, targetHeight);
+                    animator.addUpdateListener(animation -> {
+                        lp.height = (int) animation.getAnimatedValue();
+                        view.setLayoutParams(lp);
+                    });
+
+                    animator.setDuration(300);
+                    animator.start();
+
+                    return true;
+                }
+            });
+        }
+
+        // Collapse con animación
+        void collapse(final View view) {
+            final int initialHeight = view.getMeasuredHeight();
+
+            currentAnimator = ValueAnimator.ofInt(initialHeight, 0);
+            currentAnimator.addUpdateListener(animation -> {
+                ViewGroup.LayoutParams lp = view.getLayoutParams();
+                lp.height = (int) animation.getAnimatedValue();
+                view.setLayoutParams(lp);
+            });
+            currentAnimator.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(android.animation.Animator animation) {
+                    view.setVisibility(View.GONE);
+                }
+            });
+            currentAnimator.setDuration(300);
+            currentAnimator.start();
         }
     }
 }

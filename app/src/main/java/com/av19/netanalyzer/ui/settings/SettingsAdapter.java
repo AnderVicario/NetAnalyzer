@@ -76,7 +76,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
                 holder.settingSwitch.setVisibility(View.VISIBLE);
                 holder.accessoryImageView.setVisibility(View.GONE);
                 holder.optionsPanel.setVisibility(View.GONE);
-                holder.buttonPanel.setBackgroundResource(R.drawable.round_button);
+                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_36);
 
                 // Obtener valor actual desde SharedPreferences si existe una clave
                 boolean switchValue = getSwitchValueFromPreferences(item);
@@ -113,7 +113,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
                 holder.settingSwitch.setVisibility(View.GONE);
                 holder.accessoryImageView.setVisibility(View.VISIBLE);
                 holder.optionsPanel.setVisibility(View.GONE);
-                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector);
+                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
 
                 holder.buttonPanel.setOnClickListener(v -> {
                     if (listener != null) {
@@ -125,7 +125,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
             case INFO:
                 holder.settingSwitch.setVisibility(View.GONE);
                 holder.accessoryImageView.setVisibility(View.GONE);
-                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector);
+                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
 
                 // Configurar opciones si las tiene
                 if (item.getOptions() != null && item.getOptions().length >= 3) {

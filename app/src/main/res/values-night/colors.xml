@@ -2,6 +2,7 @@
 <resources>
     <!-- Colores primarios - Modo oscuro -->
     <color name="primary">#FFBB86FC</color>
+    <color name="primary_70">#B3BB86FC</color>
     <color name="primary_variant">#FF3700B3</color>
     <color name="on_primary">#FFFFFFFF</color>
     <color name="on_primary_70">#B3FFFFFF</color>

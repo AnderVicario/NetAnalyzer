@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/round_button_list"
+    android:background="@drawable/round_button_list_36"
     android:layout_margin="4dp">
 
     <LinearLayout
         android:id="@+id/buttonPanel"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="72dp"
         android:orientation="horizontal"
         android:padding="16dp"
         android:clickable="true"
