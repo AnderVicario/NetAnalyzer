@@ -9,6 +9,7 @@ public class DeviceInfo {
     private Boolean isDNS;
     private String mac;
     private String vendor;
+    private String os;
     private List<Integer> openPorts;
 
     public DeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts) {
@@ -45,6 +46,10 @@ public class DeviceInfo {
         return vendor;
     }
 
+    public String getOs() {
+        return os;
+    }
+
     public List<Integer> getOpenPorts() {
         return openPorts;
     }
@@ -71,6 +76,10 @@ public class DeviceInfo {
 
     public void setVendor(String vendor) {
         this.vendor = vendor;
+    }
+
+    public void setOs(String os) {
+        this.os = os;
     }
 
     public void setOpenPorts(List<Integer> openPorts) {

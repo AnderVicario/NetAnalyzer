@@ -128,6 +128,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
         private void bind(DeviceInfo device, boolean expanded) {
             // Título: IP
+            titleTextView.setText(device.getOs() != null ? device.getOs() : "Desconocido");
             subtitleTextView.setText(device.getIp() != null ? device.getIp() : "Unknown IP");
 
             if (device.getIsCurrent()) {

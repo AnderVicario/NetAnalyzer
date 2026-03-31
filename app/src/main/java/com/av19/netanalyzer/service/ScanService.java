@@ -437,9 +437,10 @@ public class ScanService extends Service {
                                 (currentHost >> 16) & 0xff,
                                 (currentHost >> 8) & 0xff,
                                 currentHost & 0xff);
-                        if (pingHost(ip, 1, 700)) {
+                        PingResult pingResult = pingHostWithTTL(ip, 1, 700);
+                        if (pingResult.success) {
                             synchronized (devices) {
-                                DeviceInfo device = getDeviceInfo(ip, null, null, null);
+                                DeviceInfo device = getDeviceInfo(ip, null, null, null, pingResult.ttl);
                                 devices.add(device);
                             }
                         }
@@ -463,8 +464,9 @@ public class ScanService extends Service {
     }
 
     @NonNull
-    private DeviceInfo getDeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts) {
+    private DeviceInfo getDeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts, Integer ttl) {
         DeviceInfo device = new DeviceInfo(ip, mac, vendor, openPorts);
+        device.setOs(guessOsFromTtl(ttl));
         if (ip.equals(currentDeviceIp)) {
             device.setIsCurrent(true);
         } else if (ip.equals(currentGatewayIp)) {
@@ -475,19 +477,58 @@ public class ScanService extends Service {
         return device;
     }
 
-    private boolean pingHost(String ip, int count, int timeoutMs) {
+    private String guessOsFromTtl(Integer ttl) {
+        if (ttl == null || ttl <= 0) return "Desconocido";
+        if (ttl <= 64) {
+            return "Linux / Android / macOS / iOS";
+        } else if (ttl <= 128) {
+            return "Windows";
+        } else if (ttl <= 255) {
+            return "Solaris / AIX / Cisco";
+        }
+        return "Desconocido";
+    }
+
+    private PingResult pingHostWithTTL(String ip, int count, int timeoutMs) {
         try {
             int timeoutSec = Math.max(1, timeoutMs / 1000);
-
+            // Comando con opciones típicas en Android/Linux
             String command = "ping -c " + count + " -W " + timeoutSec + " " + ip;
-
             Process process = Runtime.getRuntime().exec(command);
+
+            // Leer la salida estándar
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
             int exitCode = process.waitFor();
 
-            return exitCode == 0;   // 0 = dispositivo respondió
-
+            if (exitCode == 0) {
+                // Extraer el TTL de la primera línea que contenga "ttl="
+                Pattern ttlPattern = Pattern.compile("ttl=(\\d+)", Pattern.CASE_INSENSITIVE);
+                Matcher matcher = ttlPattern.matcher(output.toString());
+                if (matcher.find()) {
+                    int ttl = Integer.parseInt(matcher.group(1));
+                    return new PingResult(true, ttl);
+                }
+                return new PingResult(true, null); // Respondió pero no se pudo extraer TTL
+            } else {
+                return new PingResult(false, null);
+            }
         } catch (Exception e) {
-            return false;
+            return new PingResult(false, null);
+        }
+    }
+
+    private static class PingResult {
+        public boolean success;
+        public Integer ttl;
+
+        PingResult(boolean success, Integer ttl) {
+            this.success = success;
+            this.ttl = ttl;
         }
     }
 
@@ -534,7 +575,7 @@ public class ScanService extends Service {
                     String ip = parts[0];
                     String mac = parts[3];
                     String vendor = ApiClient.getMacVendorSync(mac);
-                    DeviceInfo device = getDeviceInfo(ip, mac, vendor, null);
+                    DeviceInfo device = getDeviceInfo(ip, mac, vendor, null, null);
                     devices.add(device);
                 }
             }
@@ -565,7 +606,7 @@ public class ScanService extends Service {
                             currentHost & 0xff);
                     if (isAlive(ip)) {
                         synchronized (devices) {
-                            DeviceInfo device = getDeviceInfo(ip, null, null, null);
+                            DeviceInfo device = getDeviceInfo(ip, null, null, null, null);
                             devices.add(device);
                         }
                     }
