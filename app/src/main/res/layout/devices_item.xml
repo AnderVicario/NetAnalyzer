@@ -58,14 +58,15 @@
             android:layout_gravity="center_vertical"
             android:orientation="horizontal"
             android:background="@drawable/round_rectangle_accent"
-            android:paddingHorizontal="12dp"
+            android:paddingHorizontal="10dp"
             android:layout_marginEnd="12dp"
             android:gravity="center">
 
             <TextView
+                android:id="@+id/device_tag"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                android:textSize="10sp"
                 android:textColor="@color/on_primary"
                 android:alpha="0.7"
                 android:text="ONLINE"

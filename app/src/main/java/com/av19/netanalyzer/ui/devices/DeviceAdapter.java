@@ -109,6 +109,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
         private LinearLayout buttonPanel;
         private TextView titleTextView;
+        private TextView tagTextView;
         private TextView subtitleTextView;
         private ImageView accessoryImageView;
         private LinearLayout detailsPanel;
@@ -120,6 +121,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             super(itemView);
             buttonPanel = itemView.findViewById(R.id.buttonPanel);
             titleTextView = itemView.findViewById(R.id.titleTextView);
+            tagTextView = itemView.findViewById(R.id.device_tag);
             subtitleTextView = itemView.findViewById(R.id.subtitleTextView);
             accessoryImageView = itemView.findViewById(R.id.accessoryImageView);
             detailsPanel = itemView.findViewById(R.id.details_panel);
@@ -129,6 +131,16 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         private void bind(DeviceInfo device, boolean expanded) {
             // Título: IP
             titleTextView.setText(device.getIp() != null ? device.getIp() : "Unknown IP");
+
+            if (device.getIsCurrent()) {
+                tagTextView.setText("● ACTUAL");
+            } else if (device.getIsGateway()) {
+                tagTextView.setText("● GATEWAY");
+            } else if (device.getIsDNS()) {
+                tagTextView.setText("● DNS");
+            } else {
+                tagTextView.setText("● ONLINE");
+            }
 
             // Subtítulo: MAC + Vendor
             StringBuilder sub = new StringBuilder();

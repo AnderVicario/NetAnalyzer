@@ -3,13 +3,15 @@ package com.av19.netanalyzer.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+
 public class NetworkInfo implements Parcelable {
     private final String ip;
     private final String netmask;
     private final int prefix;
     private final String networkAddress;
     private final String gateway;
-    private final String dns;
+    private final ArrayList<String> dns;
     private final String connectionType; // WiFi, Cellular, etc.
     private final boolean hasInternet;
     private final boolean validated;
@@ -24,7 +26,7 @@ public class NetworkInfo implements Parcelable {
 
     // Constructor
     public NetworkInfo(String ip, String netmask, int prefix, String networkAddress,
-                       String gateway, String dns, String connectionType,
+                       String gateway, ArrayList<String> dns, String connectionType,
                        boolean hasInternet, boolean isValidated, boolean isMetered,
                        int downstreamBandwidth, int upstreamBandwidth,
                        String ssid, String bssid, int rssi, int linkSpeed, int frequency) {
@@ -53,7 +55,7 @@ public class NetworkInfo implements Parcelable {
         prefix = in.readInt();
         networkAddress = in.readString();
         gateway = in.readString();
-        dns = in.readString();
+        dns = in.createStringArrayList();
         connectionType = in.readString();
         hasInternet = in.readByte() != 0;
         validated = in.readByte() != 0;
@@ -73,7 +75,7 @@ public class NetworkInfo implements Parcelable {
         dest.writeInt(prefix);
         dest.writeString(networkAddress);
         dest.writeString(gateway);
-        dest.writeString(dns);
+        dest.writeStringList(dns);
         dest.writeString(connectionType);
         dest.writeByte((byte) (hasInternet ? 1 : 0));
         dest.writeByte((byte) (validated ? 1 : 0));
@@ -110,7 +112,7 @@ public class NetworkInfo implements Parcelable {
     public int getPrefix() { return prefix; }
     public String getNetworkAddress() { return networkAddress; }
     public String getGateway() { return gateway; }
-    public String getDns() { return dns; }
+    public ArrayList<String> getDns() { return dns; }
     public String getConnectionType() { return connectionType; }
     public boolean isHasInternet() { return hasInternet; }
     public boolean isValidated() { return validated; }

@@ -58,7 +58,18 @@ public class NetworkDetailsActivity extends AppCompatActivity {
         items.add(new DetailItem("Prefix Length", String.valueOf(info.getPrefix())));
         items.add(new DetailItem("Network Address", info.getNetworkAddress()));
         items.add(new DetailItem("Gateway", info.getGateway()));
-        items.add(new DetailItem("DNS Servers", info.getDns()));
+        ArrayList<String> dnsList = info.getDns();
+        if (dnsList != null && !dnsList.isEmpty()) {
+            if (dnsList.size() == 1) {
+                items.add(new DetailItem("DNS Server", dnsList.get(0)));
+            } else {
+                for (int i = 0; i < dnsList.size(); i++) {
+                    items.add(new DetailItem("DNS Server " + (i + 1), dnsList.get(i)));
+                }
+            }
+        } else {
+            items.add(new DetailItem("DNS Servers", "None"));
+        }
         items.add(new DetailItem("Connection Type", info.getConnectionType()));
         items.add(new DetailItem("Internet Access", info.isHasInternet() ? "YES" : "NO"));
         items.add(new DetailItem("Network Validated", info.isValidated() ? "YES" : "NO"));

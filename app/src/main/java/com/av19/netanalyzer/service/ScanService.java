@@ -24,6 +24,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
@@ -61,7 +62,6 @@ import java.util.regex.Pattern;
 public class ScanService extends Service {
     private static final String CHANNEL_ID = "scan_channel";
     private static final int NOTIFICATION_ID = 1;
-
     private ScanRepository repository;
     private ExecutorService mainExecutor;      // ejecutor principal del servicio
     private ExecutorService discoveryExecutor; // para descubrimiento
@@ -69,10 +69,12 @@ public class ScanService extends Service {
     private Handler mainHandler;
     private boolean isScanning = false;
     private NetworkInfo currentNetworkInfo;
-
     private int networkInt;
     private int mask;
     private int[] ports;
+    private String currentDeviceIp;
+    private String currentGatewayIp;
+    private String currentDNSIp;
     private String currentScanMethod = "AUTO";
     private String currentScanLevel = "100";
 
@@ -259,7 +261,8 @@ public class ScanService extends Service {
         NetworkCapabilities caps = cm.getNetworkCapabilities(network);
         if (lp == null || caps == null) return null;
 
-        String ip = null, netmask = null, networkAddr = null, gateway = null, dns = null;
+        String ip = null, netmask = null, networkAddr = null, gateway = null;
+        ArrayList<String> dnsServers = new ArrayList<>();
         int prefix = 0;
         String connectionType = "Unknown";
         boolean hasInternet = false, validated = false, metered = true;
@@ -272,6 +275,7 @@ public class ScanService extends Service {
             InetAddress addr = la.getAddress();
             if (addr instanceof Inet4Address) {
                 ip = addr.getHostAddress();
+                currentDeviceIp = ip;
                 prefix = la.getPrefixLength();
                 int maskInt = 0xffffffff << (32 - prefix);
                 netmask = String.format("%d.%d.%d.%d",
@@ -293,12 +297,14 @@ public class ScanService extends Service {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 if (route.hasGateway()) {
                     gateway = route.getGateway().getHostAddress();
+                    currentGatewayIp = gateway;
                     break;
                 }
             } else {
                 InetAddress gw = route.getGateway();
                 if (gw != null && !gw.isAnyLocalAddress()) {
                     gateway = gw.getHostAddress();
+                    currentGatewayIp = gateway;
                     break;
                 }
             }
@@ -306,8 +312,9 @@ public class ScanService extends Service {
 
         // --- DNS servers ---
         List<InetAddress> dnsList = lp.getDnsServers();
-        if (!dnsList.isEmpty()) {
-            dns = dnsList.get(0).getHostAddress();
+        for (InetAddress dnsAddr : dnsList) {
+            dnsServers.add(dnsAddr.getHostAddress());
+            currentDNSIp = dnsList.get(0).getHostAddress();
         }
 
         // --- Connection type and capabilities ---
@@ -362,7 +369,7 @@ public class ScanService extends Service {
         Log.d(TAG, "Netmask: " + netmask + " /" + prefix);
         Log.d(TAG, "Network: " + networkAddr);
         Log.d(TAG, "Gateway: " + gateway);
-        Log.d(TAG, "DNS: " + dns);
+        Log.d(TAG, "DNS: " + dnsServers);
         Log.d(TAG, "Type: " + connectionType);
         Log.d(TAG, "Internet: " + hasInternet + " | Validated: " + validated);
         Log.d(TAG, "Metered: " + metered);
@@ -378,7 +385,7 @@ public class ScanService extends Service {
             Log.d(TAG, "Frequency: " + frequency + " MHz");
         }
 
-        return new NetworkInfo(ip, netmask, prefix, networkAddr, gateway, dns,
+        return new NetworkInfo(ip, netmask, prefix, networkAddr, gateway, dnsServers,
                 connectionType, hasInternet, validated, metered,
                 downstream, upstream, ssid, bssid, rssi, linkSpeed, frequency);
     }
@@ -430,7 +437,8 @@ public class ScanService extends Service {
                                 currentHost & 0xff);
                         if (pingHost(ip, 1, 700)) {
                             synchronized (devices) {
-                                devices.add(new DeviceInfo(ip, null, null, new ArrayList<>()));
+                                DeviceInfo device = getDeviceInfo(ip, null, null, null);
+                                devices.add(device);
                             }
                         }
                         int progress = (int) (scanned.incrementAndGet() * 100.0 / totalHosts);
@@ -450,6 +458,21 @@ public class ScanService extends Service {
             Log.e("ScanService", "Error en ICMP discovery", e);
         }
         return devices;
+    }
+
+    @NonNull
+    private DeviceInfo getDeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts) {
+        DeviceInfo device = new DeviceInfo(ip, mac, vendor, openPorts);
+        if (ip.equals(currentDeviceIp)) {
+            device.setIsCurrent(true);
+        }
+        else if (ip.equals(currentGatewayIp)) {
+            device.setIsGateway(true);
+        }
+        else if (ip.equals(currentDNSIp)) {
+            device.setIsDNS(true);
+        }
+        return device;
     }
 
     private boolean pingHost(String ip, int count, int timeoutMs) {
@@ -511,7 +534,8 @@ public class ScanService extends Service {
                     String ip = parts[0];
                     String mac = parts[3];
                     String vendor = ApiClient.getMacVendorSync(mac);
-                    devices.add(new DeviceInfo(ip, mac, vendor, new ArrayList<>()));
+                    DeviceInfo device = getDeviceInfo(ip, mac, vendor, null);
+                    devices.add(device);
                 }
             }
             br.close();
@@ -541,7 +565,8 @@ public class ScanService extends Service {
                             currentHost & 0xff);
                     if (isAlive(ip)) {
                         synchronized (devices) {
-                            devices.add(new DeviceInfo(ip, "", "", new ArrayList<>()));
+                            DeviceInfo device = getDeviceInfo(ip, null, null, null);
+                            devices.add(device);
                         }
                     }
                     int progress = (int) (scanned.incrementAndGet() * 100.0 / total);
