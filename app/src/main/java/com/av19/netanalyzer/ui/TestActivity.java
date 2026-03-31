@@ -33,8 +33,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.av19.netanalyzer.utils.ApiClient;
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.utils.ApiClient;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -64,7 +64,7 @@ public class TestActivity extends AppCompatActivity {
     private ExecutorService executor;
     private final int[] ports = IntStream.rangeClosed(1, 1000).toArray();
     private boolean isScanning = false;
-    private AtomicInteger scannedHosts = new AtomicInteger(0);
+    private final AtomicInteger scannedHosts = new AtomicInteger(0);
     private int networkInt;
     private int mask;
 
@@ -198,7 +198,7 @@ public class TestActivity extends AppCompatActivity {
         }
     }
 
-    private void getNetworkDetails(){
+    private void getNetworkDetails() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         Network network = cm.getActiveNetwork();
@@ -309,8 +309,7 @@ public class TestActivity extends AppCompatActivity {
                 if (route.hasGateway()) {
                     append("🚪 Gateway: " + route.getGateway().getHostAddress(), R.color.on_terminal);
                 }
-            }
-            else {
+            } else {
                 InetAddress gateway = route.getGateway();
 
                 if (gateway != null && !gateway.isAnyLocalAddress()) {
@@ -488,7 +487,8 @@ public class TestActivity extends AppCompatActivity {
                                     s.connect(new InetSocketAddress(ip, port), 150);
                                     openPorts.append(port).append(" ");
                                     found = true;
-                                } catch (Exception ignored) {}
+                                } catch (Exception ignored) {
+                                }
                             }
 
                             if (found) sb.append(openPorts);
@@ -534,7 +534,8 @@ public class TestActivity extends AppCompatActivity {
                 s.connect(new InetSocketAddress(host, port), 150);
                 openPorts.append(port).append(" ");
                 foundPort = true;
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         if (foundPort) {

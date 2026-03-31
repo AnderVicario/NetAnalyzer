@@ -5,15 +5,15 @@ public class SettingsItem {
         SWITCH, NAVIGATION, INFO
     }
 
-    private int iconRes;
-    private String title;
+    private final int iconRes;
+    private final String title;
     private String subtitle;
-    private Type type;
+    private final Type type;
     private Boolean switchValue;
     private String[] options;
     private String[] optionValues;
     private int selectedOptionIndex;
-    private String settingKey; // Clave para SharedPreferences
+    private final String settingKey; // Clave para SharedPreferences
 
     public SettingsItem(int iconRes, String title, String subtitle, Type type, Boolean switchValue, String settingKey) {
         this.iconRes = iconRes;
@@ -38,18 +38,52 @@ public class SettingsItem {
     }
 
     // Getters
-    public int getIconRes() { return iconRes; }
-    public String getTitle() { return title; }
-    public String getSubtitle() { return subtitle; }
-    public Type getType() { return type; }
-    public Boolean getSwitchValue() { return switchValue; }
-    public String[] getOptions() { return options; }
-    public String[] getOptionValues() { return optionValues; }
-    public int getSelectedOptionIndex() { return selectedOptionIndex; }
-    public String getSettingKey() { return settingKey; }
+    public int getIconRes() {
+        return iconRes;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getSubtitle() {
+        return subtitle;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public Boolean getSwitchValue() {
+        return switchValue;
+    }
+
+    public String[] getOptions() {
+        return options;
+    }
+
+    public String[] getOptionValues() {
+        return optionValues;
+    }
+
+    public int getSelectedOptionIndex() {
+        return selectedOptionIndex;
+    }
+
+    public String getSettingKey() {
+        return settingKey;
+    }
 
     // Setters
-    public void setSwitchValue(Boolean value) { this.switchValue = value; }
-    public void setSelectedOptionIndex(int index) { this.selectedOptionIndex = index; }
-    public void setSubtitle(String subtitle) { this.subtitle = subtitle; }
+    public void setSwitchValue(Boolean value) {
+        this.switchValue = value;
+    }
+
+    public void setSelectedOptionIndex(int index) {
+        this.selectedOptionIndex = index;
+    }
+
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
+    }
 }

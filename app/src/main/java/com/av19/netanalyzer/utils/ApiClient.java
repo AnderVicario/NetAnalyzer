@@ -1,7 +1,10 @@
 package com.av19.netanalyzer.utils;
+
 import org.json.JSONObject;
 
-import okhttp3.*;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class ApiClient {
 

@@ -6,7 +6,9 @@ import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.NetworkInfo;
 

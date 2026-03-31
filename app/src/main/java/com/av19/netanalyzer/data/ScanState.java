@@ -27,12 +27,29 @@ public class ScanState {
         this.errorMessage = errorMessage;
     }
 
-    public Status getStatus() { return status; }
-    public int getProgress() { return progress; }
-    public String getCurrentHost() { return currentHost; }
-    public List<DeviceInfo> getDevices() { return devices; }
-    public NetworkInfo getNetworkInfo() { return networkInfo; }
-    public String getErrorMessage() { return errorMessage; }
+    public Status getStatus() {
+        return status;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public String getCurrentHost() {
+        return currentHost;
+    }
+
+    public List<DeviceInfo> getDevices() {
+        return devices;
+    }
+
+    public NetworkInfo getNetworkInfo() {
+        return networkInfo;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
 
     public static ScanState idle() {
         return new ScanState(Status.IDLE, 0, null, new ArrayList<>(), null, null);
@@ -44,7 +61,7 @@ public class ScanState {
     }
 
     public static ScanState completed(List<DeviceInfo> devices, NetworkInfo networkInfo) {
-        return new ScanState(Status.COMPLETED, 100, null, devices, networkInfo,null);
+        return new ScanState(Status.COMPLETED, 100, null, devices, networkInfo, null);
     }
 
     public static ScanState error(String error) {

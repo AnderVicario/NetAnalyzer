@@ -15,8 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder> {
@@ -107,13 +105,13 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
     public static class DeviceViewHolder extends RecyclerView.ViewHolder {
 
-        private LinearLayout buttonPanel;
-        private TextView titleTextView;
-        private TextView tagTextView;
-        private TextView subtitleTextView;
-        private ImageView accessoryImageView;
-        private LinearLayout detailsPanel;
-        private TextView detailsTextView;
+        private final LinearLayout buttonPanel;
+        private final TextView titleTextView;
+        private final TextView tagTextView;
+        private final TextView subtitleTextView;
+        private final ImageView iconImageView;
+        private final LinearLayout detailsPanel;
+        private final TextView detailsTextView;
 
         private ValueAnimator currentAnimator;
 
@@ -123,43 +121,41 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             titleTextView = itemView.findViewById(R.id.titleTextView);
             tagTextView = itemView.findViewById(R.id.device_tag);
             subtitleTextView = itemView.findViewById(R.id.subtitleTextView);
-            accessoryImageView = itemView.findViewById(R.id.accessoryImageView);
+            iconImageView = itemView.findViewById(R.id.iconImageView);
             detailsPanel = itemView.findViewById(R.id.details_panel);
             detailsTextView = itemView.findViewById(R.id.detailsTextView);
         }
 
         private void bind(DeviceInfo device, boolean expanded) {
             // Título: IP
-            titleTextView.setText(device.getIp() != null ? device.getIp() : "Unknown IP");
+            subtitleTextView.setText(device.getIp() != null ? device.getIp() : "Unknown IP");
 
             if (device.getIsCurrent()) {
                 tagTextView.setText("● ACTUAL");
+                iconImageView.setImageResource(R.drawable.ic_phone);
             } else if (device.getIsGateway()) {
                 tagTextView.setText("● GATEWAY");
+                iconImageView.setImageResource(R.drawable.ic_router);
             } else if (device.getIsDNS()) {
                 tagTextView.setText("● DNS");
+                iconImageView.setImageResource(R.drawable.ic_dns);
             } else {
                 tagTextView.setText("● ONLINE");
+                iconImageView.setImageResource(R.drawable.ic_device);
             }
 
-            // Subtítulo: MAC + Vendor
-            StringBuilder sub = new StringBuilder();
-            if (device.getMac() != null && !device.getMac().isEmpty()) {
-                sub.append(device.getMac());
-            }
-            if (device.getVendor() != null && !device.getVendor().isEmpty()) {
-                if (sub.length() > 0) sub.append(" · ");
-                sub.append(device.getVendor());
-            }
-            if (sub.length() > 0) {
-                subtitleTextView.setText(sub.toString());
-                subtitleTextView.setVisibility(View.VISIBLE);
-            } else {
-                subtitleTextView.setVisibility(View.GONE);
-            }
-
-            // Preparar detalles
+            // Preparar detalles (MAC, Vendor, Open Ports)
             StringBuilder details = new StringBuilder();
+
+            // MAC
+            if (device.getMac() != null && !device.getMac().isEmpty()) {
+                details.append("MAC: ").append(device.getMac()).append("\n");
+            }
+            // Vendor
+            if (device.getVendor() != null && !device.getVendor().isEmpty()) {
+                details.append("Vendor: ").append(device.getVendor()).append("\n");
+            }
+            // Open ports
             if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
                 details.append("Open ports: ");
                 for (int port : device.getOpenPorts()) {
@@ -189,7 +185,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
                     // 2. SOLUCIÓN: Si el ancho es 0, usamos el ancho del padre (el item entero)
                     int widthSpec = View.MeasureSpec.makeMeasureSpec(
-                            view.getWidth() > 0 ? view.getWidth() : ((View)view.getParent()).getWidth(),
+                            view.getWidth() > 0 ? view.getWidth() : ((View) view.getParent()).getWidth(),
                             View.MeasureSpec.EXACTLY
                     );
                     int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);

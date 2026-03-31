@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Parcelable;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
@@ -281,7 +280,7 @@ public class HomeFragment extends Fragment {
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(ring, View.SCALE_X, 1f, 1.6f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(ring, View.SCALE_Y, 1f, 1.6f);
         // Alpha 0.8 → 0
-        ObjectAnimator alpha  = ObjectAnimator.ofFloat(ring, View.ALPHA, 0.8f, 0f);
+        ObjectAnimator alpha = ObjectAnimator.ofFloat(ring, View.ALPHA, 0.8f, 0f);
 
         AnimatorSet ringSet = new AnimatorSet();
         ringSet.playTogether(scaleX, scaleY, alpha);

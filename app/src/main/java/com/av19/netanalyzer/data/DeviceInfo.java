@@ -21,13 +21,33 @@ public class DeviceInfo {
         this.openPorts = openPorts;
     }
 
-    public String getIp() { return ip; }
-    public Boolean getIsCurrent() { return isCurrent; }
-    public Boolean getIsGateway() { return isGateway; }
-    public Boolean getIsDNS() { return isDNS; }
-    public String getMac() { return mac; }
-    public String getVendor() { return vendor; }
-    public List<Integer> getOpenPorts() { return openPorts; }
+    public String getIp() {
+        return ip;
+    }
+
+    public Boolean getIsCurrent() {
+        return isCurrent;
+    }
+
+    public Boolean getIsGateway() {
+        return isGateway;
+    }
+
+    public Boolean getIsDNS() {
+        return isDNS;
+    }
+
+    public String getMac() {
+        return mac;
+    }
+
+    public String getVendor() {
+        return vendor;
+    }
+
+    public List<Integer> getOpenPorts() {
+        return openPorts;
+    }
 
     public void setIp(String ip) {
         this.ip = ip;

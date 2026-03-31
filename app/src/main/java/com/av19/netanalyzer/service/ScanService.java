@@ -28,11 +28,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.av19.netanalyzer.utils.ApiClient;
-import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
+import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.repository.ScanRepository;
+import com.av19.netanalyzer.utils.ApiClient;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -102,8 +102,10 @@ public class ScanService extends Service {
 
             if (currentScanLevel == null || currentScanMethod == null) {
                 android.content.SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
-                if (currentScanLevel == null) currentScanLevel = prefs.getString("scan_level", "100");
-                if (currentScanMethod == null) currentScanMethod = prefs.getString("scan_method", "AUTO");
+                if (currentScanLevel == null)
+                    currentScanLevel = prefs.getString("scan_level", "100");
+                if (currentScanMethod == null)
+                    currentScanMethod = prefs.getString("scan_method", "AUTO");
             }
 
             // 3. Cargar los puertos según el nivel seleccionado
@@ -465,11 +467,9 @@ public class ScanService extends Service {
         DeviceInfo device = new DeviceInfo(ip, mac, vendor, openPorts);
         if (ip.equals(currentDeviceIp)) {
             device.setIsCurrent(true);
-        }
-        else if (ip.equals(currentGatewayIp)) {
+        } else if (ip.equals(currentGatewayIp)) {
             device.setIsGateway(true);
-        }
-        else if (ip.equals(currentDNSIp)) {
+        } else if (ip.equals(currentDNSIp)) {
             device.setIsDNS(true);
         }
         return device;
@@ -672,7 +672,8 @@ public class ScanService extends Service {
                         SelectionKey key = entry.getKey();
                         try {
                             key.channel().close();
-                        } catch (IOException ignored) {}
+                        } catch (IOException ignored) {
+                        }
                         key.cancel();
                         it.remove();
                         inflight--; // Liberamos el hueco

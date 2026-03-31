@@ -51,20 +51,16 @@ public class LocaleManager {
     public static String getPrepRegionName(Context context, String regionName) {
         if (LocaleManager.getLanguage(context).equals("es")) {
             return "en " + regionName;
-        }
-        else if (LocaleManager.getLanguage(context).equals("eu")) {
+        } else if (LocaleManager.getLanguage(context).equals("eu")) {
             char lastChar = regionName.charAt(regionName.length() - 1);
             if (regionName.endsWith("r")) {
                 return regionName + "ren";
-            }
-            else if ("bcdfghjklmnpqstvwxyzBCDFGHJKLMNPQSTVWXYZ".indexOf(lastChar) != -1) {
+            } else if ("bcdfghjklmnpqstvwxyzBCDFGHJKLMNPQSTVWXYZ".indexOf(lastChar) != -1) {
                 return regionName + "en";
-            }
-            else {
+            } else {
                 return regionName + "n";
             }
-        }
-        else if (LocaleManager.getLanguage(context).equals("en")) {
+        } else if (LocaleManager.getLanguage(context).equals("en")) {
             return "in " + regionName;
         }
         return "";

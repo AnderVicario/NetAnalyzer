@@ -128,27 +128,38 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
 
     private int getIndexForTheme(String theme) {
         switch (theme) {
-            case "auto": return 0;
-            case "light": return 1;
-            case "dark": return 2;
-            default: return 0;
+            case "auto":
+                return 0;
+            case "light":
+                return 1;
+            case "dark":
+                return 2;
+            default:
+                return 0;
         }
     }
 
     private int getIndexForLanguage(String language) {
         switch (language) {
-            case "es": return 0;
-            case "eu": return 1;
-            case "en": return 2;
-            default: return 0;
+            case "es":
+                return 0;
+            case "eu":
+                return 1;
+            case "en":
+                return 2;
+            default:
+                return 0;
         }
     }
 
     private String getThemeOptionText(int index) {
         switch (index) {
-            case 1: return getString(R.string.settings_theme_light);
-            case 2: return getString(R.string.settings_theme_dark);
-            default: return getString(R.string.settings_theme_default);
+            case 1:
+                return getString(R.string.settings_theme_light);
+            case 2:
+                return getString(R.string.settings_theme_dark);
+            default:
+                return getString(R.string.settings_theme_default);
         }
     }
 

@@ -107,21 +107,71 @@ public class NetworkInfo implements Parcelable {
     };
 
     // Getters
-    public String getIp() { return ip; }
-    public String getNetmask() { return netmask; }
-    public int getPrefix() { return prefix; }
-    public String getNetworkAddress() { return networkAddress; }
-    public String getGateway() { return gateway; }
-    public ArrayList<String> getDns() { return dns; }
-    public String getConnectionType() { return connectionType; }
-    public boolean isHasInternet() { return hasInternet; }
-    public boolean isValidated() { return validated; }
-    public boolean isMetered() { return metered; }
-    public int getDownstreamBandwidth() { return downstreamBandwidth; }
-    public int getUpstreamBandwidth() { return upstreamBandwidth; }
-    public String getSsid() { return ssid; }
-    public String getBssid() { return bssid; }
-    public int getRssi() { return rssi; }
-    public int getLinkSpeed() { return linkSpeed; }
-    public int getFrequency() { return frequency; }
+    public String getIp() {
+        return ip;
+    }
+
+    public String getNetmask() {
+        return netmask;
+    }
+
+    public int getPrefix() {
+        return prefix;
+    }
+
+    public String getNetworkAddress() {
+        return networkAddress;
+    }
+
+    public String getGateway() {
+        return gateway;
+    }
+
+    public ArrayList<String> getDns() {
+        return dns;
+    }
+
+    public String getConnectionType() {
+        return connectionType;
+    }
+
+    public boolean isHasInternet() {
+        return hasInternet;
+    }
+
+    public boolean isValidated() {
+        return validated;
+    }
+
+    public boolean isMetered() {
+        return metered;
+    }
+
+    public int getDownstreamBandwidth() {
+        return downstreamBandwidth;
+    }
+
+    public int getUpstreamBandwidth() {
+        return upstreamBandwidth;
+    }
+
+    public String getSsid() {
+        return ssid;
+    }
+
+    public String getBssid() {
+        return bssid;
+    }
+
+    public int getRssi() {
+        return rssi;
+    }
+
+    public int getLinkSpeed() {
+        return linkSpeed;
+    }
+
+    public int getFrequency() {
+        return frequency;
+    }
 }

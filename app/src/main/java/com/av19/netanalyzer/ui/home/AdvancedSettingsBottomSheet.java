@@ -22,7 +22,6 @@ import com.google.android.material.button.MaterialButtonToggleGroup;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Collections;
 
 public class AdvancedSettingsBottomSheet extends com.google.android.material.bottomsheet.BottomSheetDialogFragment {
 
@@ -170,11 +169,16 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
 
     private int getMethodIdFromName(String method) {
         switch (method) {
-            case "ARP": return R.id.btn_method_arp;
-            case "TCP": return R.id.btn_method_tcp;
-            case "ICMP": return R.id.btn_method_icmp;
-            case "AUTO": return R.id.btn_method_auto;
-            default: return -1;
+            case "ARP":
+                return R.id.btn_method_arp;
+            case "TCP":
+                return R.id.btn_method_tcp;
+            case "ICMP":
+                return R.id.btn_method_icmp;
+            case "AUTO":
+                return R.id.btn_method_auto;
+            default:
+                return -1;
         }
     }
 

@@ -22,15 +22,17 @@ import java.util.List;
 
 public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHolder> {
 
-    private List<SettingsItem> settings;
-    private OnSettingClickListener listener;
+    private final List<SettingsItem> settings;
+    private final OnSettingClickListener listener;
     private int expandedPosition = -1;
-    private Context context;
-    private SharedPreferences prefs;
+    private final Context context;
+    private final SharedPreferences prefs;
 
     public interface OnSettingClickListener {
         void onSettingClicked(SettingsItem item, int position);
+
         void onOptionSelected(SettingsItem item, int optionIndex);
+
         void onSwitchChanged(SettingsItem item, boolean isChecked, int position);
     }
 
