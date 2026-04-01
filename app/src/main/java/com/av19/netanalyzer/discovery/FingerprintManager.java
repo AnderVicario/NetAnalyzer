@@ -24,6 +24,7 @@ public class FingerprintManager {
     @NonNull
     public DeviceInfo getDeviceInfo(NetworkInfo network, String ip, String mac, String vendor, List<Integer> openPorts, Integer ttl) {
         DeviceInfo device = new DeviceInfo(ip, mac, vendor, openPorts);
+        device.setTtl(ttl);
         device.setOs(guessOsFromTtl(ttl));
         if (ip.equals(network.getIp())) {
             device.setIsCurrent(true);
