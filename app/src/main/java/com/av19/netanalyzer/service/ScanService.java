@@ -58,6 +58,8 @@ public class ScanService extends Service {
     private CancellationToken cancellationToken;
     private NetworkScanner networkScanner;
     private Handler mainHandler;
+    private long lastNotificationUpdate = 0;
+    private static final long NOTIFICATION_THROTTLE_MS = 500;
 
     @Override
     public void onCreate() {
@@ -117,19 +119,21 @@ public class ScanService extends Service {
         networkScanner.start(cancellationToken, new NetworkScanner.Callback() {
             @Override
             public void onDiscoveryProgress(String methodName, int progressPercent) {
-                // Opcional: actualizar el repositorio con un progreso combinado
-                // Podemos mantener un mapa de progresos por método y calcular el promedio
+                // Actualizar la barra de progreso y la lista de dispositivos en el repositorio
+                // Esto restaura el comportamiento original: cada vez que se avanza en el descubrimiento,
+                // se actualiza la UI con el porcentaje y la lista actual de dispositivos.
+                // Hacemos una copia de la lista para evitar problemas de concurrencia.
+                List<DeviceInfo> snapshot = new ArrayList<>(discoveredDevices);
+                repository.setScanning(progressPercent, null, snapshot, networkInfo);
                 updateNotification("Descubrimiento " + methodName + ": " + progressPercent + "%");
-                // Si quieres mostrar el progreso en la UI, puedes llamar a repository.setScanning
-                // con un progreso calculado (por ejemplo, 0% mientras se descubre)
-                // repository.setScanning(progressPercent / methodsCount, null, discoveredDevices, networkInfo);
             }
             @Override
             public void onDeviceFound(DeviceInfo device) {
                 // Añadir dispositivo a la lista acumulada
                 discoveredDevices.add(device);
-                // Actualizar repositorio con la lista actual y progreso 0 (descubriendo)
-                repository.setScanning(0, device.getIp(), new ArrayList<>(discoveredDevices), networkInfo);
+                // No actualizamos el repositorio aquí porque ya lo hará onDiscoveryProgress con el progreso actual.
+                // Pero si quieres que aparezca inmediatamente el dispositivo, podrías llamar a setScanning
+                // con el progreso actual y la lista actualizada. Lo dejamos así para evitar llamadas redundantes.
                 updateNotification("Dispositivo encontrado: " + device.getIp());
             }
 
@@ -137,7 +141,6 @@ public class ScanService extends Service {
             public void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices) {
                 int percent = (int) ((current / (float) total) * 100);
                 updateNotification("Escaneando puertos: " + currentIp + " (" + percent + "%)");
-                // Usamos la lista completa que nos pasa el scanner (incluye los puertos ya escaneados)
                 repository.setScanning(percent, currentIp, currentDevices, networkInfo);
             }
 
@@ -330,6 +333,11 @@ public class ScanService extends Service {
     }
 
     private void updateNotification(String text) {
+        long now = System.currentTimeMillis();
+        if (now - lastNotificationUpdate < NOTIFICATION_THROTTLE_MS) {
+            return; // no actualizar tan seguido
+        }
+        lastNotificationUpdate = now;
         mainHandler.post(() -> {
             NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             nm.notify(NOTIFICATION_ID, createNotification(text));
