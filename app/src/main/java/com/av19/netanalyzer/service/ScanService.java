@@ -1,4 +1,3 @@
-// service/ScanService.java
 package com.av19.netanalyzer.service;
 
 import android.Manifest;
@@ -128,6 +127,7 @@ public class ScanService extends Service {
                 repository.setScanning(progressPercent, ScanState.Phase.DISCOVERY, methodName, null, snapshot, networkInfo);
                 updateNotification("Descubrimiento " + methodName + ": " + progressPercent + "%");
             }
+
             @Override
             public void onDeviceFound(DeviceInfo device) {
                 // Añadir dispositivo a la lista acumulada

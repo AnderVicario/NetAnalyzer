@@ -80,7 +80,7 @@ public class ScanState {
     }
 
     public static ScanState completed(List<DeviceInfo> devices, NetworkInfo networkInfo) {
-        return new ScanState(Status.COMPLETED, Phase.NONE, null,100, null, devices, networkInfo, null);
+        return new ScanState(Status.COMPLETED, Phase.NONE, null, 100, null, devices, networkInfo, null);
     }
 
     public static ScanState error(String error, Phase phase, String currentMethod) {

@@ -1,6 +1,5 @@
 package com.av19.netanalyzer.discovery;
 
-import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.av19.netanalyzer.data.DeviceInfo;

@@ -9,9 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class NetworkScanner {
@@ -27,9 +24,13 @@ public class NetworkScanner {
 
     public interface Callback {
         void onDiscoveryProgress(String methodName, int progressPercent);
+
         void onDeviceFound(DeviceInfo device);
+
         void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices);
+
         void onComplete(List<DeviceInfo> devices);
+
         void onCancelled();
     }
 

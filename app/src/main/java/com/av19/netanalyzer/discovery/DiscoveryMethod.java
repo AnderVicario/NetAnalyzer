@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface DiscoveryMethod {
     String getName();
+
     List<DeviceInfo> discover(NetworkInfo network, CancellationToken token, ProgressCallback callback);
 }

@@ -115,6 +115,7 @@ public class ICMPDiscovery implements DiscoveryMethod {
     private static class PingResult {
         boolean success;
         Integer ttl;
+
         PingResult(boolean success, Integer ttl) {
             this.success = success;
             this.ttl = ttl;
