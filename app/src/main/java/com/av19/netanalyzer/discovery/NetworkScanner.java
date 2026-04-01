@@ -28,7 +28,7 @@ public class NetworkScanner {
     public interface Callback {
         void onDiscoveryProgress(String methodName, int progressPercent);
         void onDeviceFound(DeviceInfo device);
-        void onPortScanProgress(int current, int total, String currentIp);
+        void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices);
         void onComplete(List<DeviceInfo> devices);
         void onCancelled();
     }
@@ -154,15 +154,13 @@ public class NetworkScanner {
                 try {
                     List<Integer> openPorts = portScanner.scan(device.getIp(), token);
                     device.setOpenPorts(openPorts);
-                    // Clasificación adicional por puertos (opcional)
-                    if (openPorts.contains(62078)) device.setModel("iPhone/iPad");
-                    else if (openPorts.contains(8008)) device.setModel("Chromecast");
+                    // clasificación...
                 } catch (Exception e) {
-                    Log.e(TAG, "Error escaneando puertos de " + device.getIp(), e);
+                    Log.e(TAG, "Error scanning ports for " + device.getIp(), e);
                 } finally {
                     int done = completed.incrementAndGet();
                     if (callback != null) {
-                        callback.onPortScanProgress(done, total, device.getIp());
+                        callback.onPortScanProgress(done, total, device.getIp(), devices); // <<< PASAMOS devices
                     }
                     latch.countDown();
                 }

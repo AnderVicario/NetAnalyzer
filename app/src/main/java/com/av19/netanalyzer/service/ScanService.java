@@ -45,6 +45,7 @@ import java.io.InputStreamReader;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,7 +53,7 @@ import java.util.regex.Pattern;
 public class ScanService extends Service {
     private static final String CHANNEL_ID = "scan_channel";
     private static final int NOTIFICATION_ID = 1;
-
+    private final List<DeviceInfo> discoveredDevices = Collections.synchronizedList(new ArrayList<>());
     private ScanRepository repository;
     private CancellationToken cancellationToken;
     private NetworkScanner networkScanner;
@@ -116,22 +117,28 @@ public class ScanService extends Service {
         networkScanner.start(cancellationToken, new NetworkScanner.Callback() {
             @Override
             public void onDiscoveryProgress(String methodName, int progressPercent) {
-                // No necesitamos mostrar progreso de cada método por separado, pero podemos actualizar notificación
+                // Opcional: actualizar el repositorio con un progreso combinado
+                // Podemos mantener un mapa de progresos por método y calcular el promedio
                 updateNotification("Descubrimiento " + methodName + ": " + progressPercent + "%");
+                // Si quieres mostrar el progreso en la UI, puedes llamar a repository.setScanning
+                // con un progreso calculado (por ejemplo, 0% mientras se descubre)
+                // repository.setScanning(progressPercent / methodsCount, null, discoveredDevices, networkInfo);
             }
-
             @Override
             public void onDeviceFound(DeviceInfo device) {
-                // El repositorio se actualiza desde el scanner, pero podemos mostrar en notificación
+                // Añadir dispositivo a la lista acumulada
+                discoveredDevices.add(device);
+                // Actualizar repositorio con la lista actual y progreso 0 (descubriendo)
+                repository.setScanning(0, device.getIp(), new ArrayList<>(discoveredDevices), networkInfo);
                 updateNotification("Dispositivo encontrado: " + device.getIp());
             }
 
             @Override
-            public void onPortScanProgress(int current, int total, String currentIp) {
+            public void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices) {
                 int percent = (int) ((current / (float) total) * 100);
                 updateNotification("Escaneando puertos: " + currentIp + " (" + percent + "%)");
-                // Actualizar repositorio para la UI
-                repository.setScanning(percent, currentIp, null, networkInfo);
+                // Usamos la lista completa que nos pasa el scanner (incluye los puertos ya escaneados)
+                repository.setScanning(percent, currentIp, currentDevices, networkInfo);
             }
 
             @Override
