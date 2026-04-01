@@ -1,6 +1,7 @@
 package com.av19.netanalyzer.ui.devices;
 
 import android.animation.ValueAnimator;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -127,10 +128,22 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         }
 
         private void bind(DeviceInfo device, boolean expanded) {
-            // Título: IP
-            titleTextView.setText(device.getOs() != null ? device.getOs() : "Desconocido");
-            subtitleTextView.setText(device.getIp() != null ? device.getIp() : "Unknown IP");
+            // TÍTULO: hostname > OS > "Dispositivo"
+            String title;
+            if (device.getHostname() != null && !device.getHostname().isEmpty()) {
+                title = device.getHostname();
+            } else if (device.getOs() != null && !device.getOs().isEmpty()) {
+                title = device.getOs();
+            } else {
+                title = "Dispositivo";
+            }
+            titleTextView.setText(title);
 
+            // SUBTÍTULO: siempre la IP
+            String subtitle = device.getIp() != null ? device.getIp() : "Unknown IP";
+            subtitleTextView.setText(subtitle);
+
+            // TAG e ICONO según tipo de dispositivo
             if (device.getIsCurrent()) {
                 tagTextView.setText("● ACTUAL");
                 iconImageView.setImageResource(R.drawable.ic_phone);
@@ -145,26 +158,133 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                 iconImageView.setImageResource(R.drawable.ic_device);
             }
 
-            // Preparar detalles (MAC, Vendor, Open Ports)
+            // DETALLES: toda la información adicional
             StringBuilder details = new StringBuilder();
 
-            // MAC
-            if (device.getMac() != null && !device.getMac().isEmpty()) {
-                details.append("MAC: ").append(device.getMac()).append("\n");
+            // ============================================================
+            // 1. INFORMACIÓN DE RED
+            // ============================================================
+            boolean hasInfo = false;
+
+            // Hostname (siempre en detalles, aunque sea el título)
+            if (device.getHostname() != null && !device.getHostname().isEmpty()) {
+                details.append("📡 HOSTNAME\n");
+                details.append("  ").append(device.getHostname()).append("\n\n");
+                hasInfo = true;
             }
-            // Vendor
-            if (device.getVendor() != null && !device.getVendor().isEmpty()) {
-                details.append("Vendor: ").append(device.getVendor()).append("\n");
-            }
-            // Open ports
-            if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
-                details.append("Open ports: ");
-                for (int port : device.getOpenPorts()) {
-                    details.append(port).append(" ");
+
+            // ============================================================
+            // 2. INFORMACIÓN DE HARDWARE
+            // ============================================================
+            if ((device.getMac() != null && !device.getMac().isEmpty()) ||
+                    (device.getVendor() != null && !device.getVendor().isEmpty())) {
+                details.append("🔧 HARDWARE\n");
+                if (device.getMac() != null && !device.getMac().isEmpty()) {
+                    details.append("  MAC: ").append(device.getMac()).append("\n");
                 }
-            } else {
-                details.append("No open ports found.");
+                if (device.getVendor() != null && !device.getVendor().isEmpty()) {
+                    details.append("  Vendor: ").append(device.getVendor()).append("\n");
+                }
+                details.append("\n");
+                hasInfo = true;
             }
+
+            // ============================================================
+            // 3. INFORMACIÓN DE DISPOSITIVO (OS, Modelo, TTL, etc.)
+            // ============================================================
+            boolean hasDeviceInfo = false;
+            StringBuilder deviceInfo = new StringBuilder();
+
+            // OS (siempre en detalles)
+            if (device.getOs() != null && !device.getOs().isEmpty()) {
+                deviceInfo.append("  OS: ").append(device.getOs()).append("\n");
+                hasDeviceInfo = true;
+            }
+
+            // Modelo
+            if (device.getModel() != null && !device.getModel().isEmpty()) {
+                deviceInfo.append("  Model: ").append(device.getModel()).append("\n");
+                hasDeviceInfo = true;
+            }
+
+            // TTL - siempre mostrar si está disponible
+            if (device.getTtl() != null && device.getTtl() > 0) {
+                deviceInfo.append("  TTL: ").append(device.getTtl());
+
+                // Inferir OS basado en TTL si no hay OS específico
+                if (device.getOs() == null || device.getOs().isEmpty()) {
+                    if (device.getTtl() <= 64) {
+                        deviceInfo.append(" (Linux/Android/Unix)");
+                    } else if (device.getTtl() <= 128) {
+                        deviceInfo.append(" (Windows)");
+                    } else if (device.getTtl() <= 255) {
+                        deviceInfo.append(" (Cisco/otros)");
+                    }
+                }
+                deviceInfo.append("\n");
+                hasDeviceInfo = true;
+            }
+
+            if (hasDeviceInfo) {
+                details.append("💻 DEVICE INFO\n");
+                details.append(deviceInfo.toString());
+                details.append("\n");
+                hasInfo = true;
+            }
+
+            // ============================================================
+            // 4. PUERTOS ABIERTOS
+            // ============================================================
+            if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
+                details.append("🔌 OPEN PORTS (").append(device.getOpenPorts().size()).append(")\n");
+                details.append("  ");
+                for (int i = 0; i < device.getOpenPorts().size(); i++) {
+                    int port = device.getOpenPorts().get(i);
+                    details.append(port);
+
+                    String serviceName = getPortServiceName(port);
+                    if (serviceName != null) {
+                        details.append(" (").append(serviceName).append(")");
+                    }
+
+                    if (i < device.getOpenPorts().size() - 1) {
+                        details.append(", ");
+                        if ((i + 1) % 5 == 0) {
+                            details.append("\n  ");
+                        }
+                    }
+                }
+                details.append("\n\n");
+                hasInfo = true;
+            } else {
+                details.append("🔌 OPEN PORTS\n");
+                details.append("  No open ports found.\n\n");
+                hasInfo = true;
+            }
+
+            // ============================================================
+            // 5. INFORMACIÓN ESPECIAL (Gateway, DNS, etc.)
+            // ============================================================
+            if (device.getIsCurrent() || device.getIsGateway() || device.getIsDNS()) {
+                details.append("⭐ SPECIAL\n");
+                if (device.getIsCurrent()) {
+                    details.append("  This is the current device\n");
+                }
+                if (device.getIsGateway()) {
+                    details.append("  This is the network gateway\n");
+                }
+                if (device.getIsDNS()) {
+                    details.append("  This is a DNS server\n");
+                }
+                details.append("\n");
+                hasInfo = true;
+            }
+
+            // Si no hay información adicional, mostrar mensaje
+            if (!hasInfo) {
+                details.append("ℹ️ No additional information available for this device.");
+            }
+
             detailsTextView.setText(details.toString());
 
             // Estado inicial de detailsPanel
@@ -172,6 +292,43 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             ViewGroup.LayoutParams lp = detailsPanel.getLayoutParams();
             lp.height = expanded ? ViewGroup.LayoutParams.WRAP_CONTENT : 0;
             detailsPanel.setLayoutParams(lp);
+        }
+
+        // Método auxiliar para obtener nombre del servicio por puerto
+        private String getPortServiceName(int port) {
+            switch (port) {
+                case 21: return "FTP";
+                case 22: return "SSH";
+                case 23: return "Telnet";
+                case 25: return "SMTP";
+                case 53: return "DNS";
+                case 80: return "HTTP";
+                case 88: return "Kerberos";
+                case 110: return "POP3";
+                case 111: return "RPC";
+                case 135: return "RPC";
+                case 139: return "NetBIOS";
+                case 143: return "IMAP";
+                case 443: return "HTTPS";
+                case 445: return "SMB";
+                case 465: return "SMTPS";
+                case 514: return "Syslog";
+                case 587: return "SMTP";
+                case 631: return "IPP/CUPS";
+                case 993: return "IMAPS";
+                case 995: return "POP3S";
+                case 1433: return "MSSQL";
+                case 1723: return "PPTP";
+                case 3306: return "MySQL";
+                case 3389: return "RDP";
+                case 5432: return "PostgreSQL";
+                case 5900: return "VNC";
+                case 6379: return "Redis";
+                case 8080: return "HTTP-Alt";
+                case 8443: return "HTTPS-Alt";
+                case 27017: return "MongoDB";
+                default: return null;
+            }
         }
 
         // Expand con animación

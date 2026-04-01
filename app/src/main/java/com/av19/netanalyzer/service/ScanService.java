@@ -36,6 +36,7 @@ import com.av19.netanalyzer.discovery.CancellationToken;
 import com.av19.netanalyzer.discovery.ICMPDiscovery;
 import com.av19.netanalyzer.discovery.NetworkScanner;
 import com.av19.netanalyzer.discovery.TCPDiscovery;
+import com.av19.netanalyzer.discovery.mDNSDiscovery;
 import com.av19.netanalyzer.repository.ScanRepository;
 
 import java.io.BufferedReader;
@@ -111,6 +112,9 @@ public class ScanService extends Service {
                     break;
                 case "TCP":
                     networkScanner.addMethod(new TCPDiscovery());
+                    break;
+                case "mDNS":
+                    networkScanner.addMethod(new mDNSDiscovery(this));
                     break;
                 // case "MDNS": networkScanner.addMethod(new MdnsDiscovery(this)); break;
             }
@@ -279,19 +283,23 @@ public class ScanService extends Service {
         if (method == null || method.isEmpty() || method.equals("AUTO")) {
             // Por defecto: ICMP y ARP
             methods.add("ICMP");
-            methods.add("ARP");
+            methods.add("mDNS");
+            if (android.os.Build.VERSION.SDK_INT < 29) {
+                methods.add("ARP");
+            }
             return methods;
         }
         String[] parts = method.split("[+,]");
         for (String part : parts) {
             String trimmed = part.trim().toUpperCase();
-            if (trimmed.equals("ARP") || trimmed.equals("ICMP") || trimmed.equals("TCP")) {
+            if (trimmed.equals("ARP") || trimmed.equals("ICMP") || trimmed.equals("TCP") || trimmed.equals("MDNS")) {
                 methods.add(trimmed);
             }
         }
         if (methods.isEmpty()) {
             methods.add("ICMP");
             methods.add("ARP");
+            methods.add("MDNS");
         }
         return methods;
     }

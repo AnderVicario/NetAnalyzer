@@ -6,6 +6,7 @@ import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -83,7 +84,6 @@ public class NetworkScanner {
                 List<DeviceInfo> result = method.discover(networkInfo, token, new ProgressCallback() {
                     @Override
                     public void onProgress(int percent, String currentIp) {
-                        // Progreso dentro de un método (opcional, se puede usar para UI)
                         if (callback != null) {
                             callback.onDiscoveryProgress(method.getName(), percent);
                             Log.d(TAG, "Progress: " + method.getName() + " " + percent + "%");
@@ -92,21 +92,8 @@ public class NetworkScanner {
 
                     @Override
                     public void onDeviceFound(DeviceInfo device) {
-                        // Unificar por IP
-                        deviceMap.merge(device.getIp(), device, (existing, newDevice) -> {
-                            // Si el nuevo tiene MAC y el actual no, actualizar
-                            if ((existing.getMac() == null || existing.getMac().isEmpty()) &&
-                                    newDevice.getMac() != null && !newDevice.getMac().isEmpty()) {
-                                existing.setMac(newDevice.getMac());
-                                existing.setVendor(newDevice.getVendor());
-                            }
-                            // Actualizar TTL si no lo tenía
-                            if (existing.getTtl() == null && newDevice.getTtl() != null) {
-                                existing.setTtl(newDevice.getTtl());
-                                existing.setOs(newDevice.getOs());
-                            }
-                            return existing;
-                        });
+                        // Unificar por IP con fusión COMPLETA
+                        mergeDeviceInfo(deviceMap, device);
                         if (callback != null) {
                             callback.onDeviceFound(device);
                         }
@@ -115,18 +102,7 @@ public class NetworkScanner {
 
                 // Añadir los dispositivos que quizás no se reportaron individualmente
                 for (DeviceInfo d : result) {
-                    deviceMap.merge(d.getIp(), d, (existing, newDevice) -> {
-                        if ((existing.getMac() == null || existing.getMac().isEmpty()) &&
-                                newDevice.getMac() != null && !newDevice.getMac().isEmpty()) {
-                            existing.setMac(newDevice.getMac());
-                            existing.setVendor(newDevice.getVendor());
-                        }
-                        if (existing.getTtl() == null && newDevice.getTtl() != null) {
-                            existing.setTtl(newDevice.getTtl());
-                            existing.setOs(newDevice.getOs());
-                        }
-                        return existing;
-                    });
+                    mergeDeviceInfo(deviceMap, d);
                 }
 
                 latch.countDown();
@@ -140,6 +116,104 @@ public class NetworkScanner {
             Log.e(TAG, "Espera de descubrimiento interrumpida");
         }
         return new ArrayList<>(deviceMap.values());
+    }
+
+    private void mergeDeviceInfo(ConcurrentHashMap<String, DeviceInfo> deviceMap, DeviceInfo newDevice) {
+        deviceMap.merge(newDevice.getIp(), newDevice, (existing, newDeviceInfo) -> {
+
+            // ============================================================
+            // 1. INFORMACIÓN DE RED
+            // ============================================================
+
+            // Hostname (priorizar el que no esté vacío)
+            if ((existing.getHostname() == null || existing.getHostname().isEmpty()) &&
+                    newDeviceInfo.getHostname() != null && !newDeviceInfo.getHostname().isEmpty()) {
+                existing.setHostname(newDeviceInfo.getHostname());
+            }
+
+            // ============================================================
+            // 2. INFORMACIÓN DE HARDWARE
+            // ============================================================
+
+            // MAC y Vendor (priorizar el que no esté vacío)
+            if ((existing.getMac() == null || existing.getMac().isEmpty()) &&
+                    newDeviceInfo.getMac() != null && !newDeviceInfo.getMac().isEmpty()) {
+                existing.setMac(newDeviceInfo.getMac());
+                existing.setVendor(newDeviceInfo.getVendor());
+            } else if (existing.getMac() != null && !existing.getMac().isEmpty() &&
+                    (existing.getVendor() == null || existing.getVendor().isEmpty()) &&
+                    newDeviceInfo.getVendor() != null && !newDeviceInfo.getVendor().isEmpty()) {
+                // Si ya teníamos MAC pero no vendor, y el nuevo tiene vendor, lo actualizamos
+                existing.setVendor(newDeviceInfo.getVendor());
+            }
+
+            // ============================================================
+            // 3. INFORMACIÓN DE DISPOSITIVO
+            // ============================================================
+
+            // OS (Time To Live inference or actual OS)
+            if ((existing.getOs() == null || existing.getOs().isEmpty()) &&
+                    newDeviceInfo.getOs() != null && !newDeviceInfo.getOs().isEmpty()) {
+                existing.setOs(newDeviceInfo.getOs());
+            }
+
+            // TTL (priorizar el que tenga valor)
+            if (existing.getTtl() == null && newDeviceInfo.getTtl() != null) {
+                existing.setTtl(newDeviceInfo.getTtl());
+            } else if (existing.getTtl() != null && newDeviceInfo.getTtl() != null) {
+                // Si ambos tienen TTL, usar el menor (más cercano al dispositivo real)
+                if (newDeviceInfo.getTtl() < existing.getTtl()) {
+                    existing.setTtl(newDeviceInfo.getTtl());
+                }
+            }
+
+            // Model (de mDNS, etc.)
+            if ((existing.getModel() == null || existing.getModel().isEmpty()) &&
+                    newDeviceInfo.getModel() != null && !newDeviceInfo.getModel().isEmpty()) {
+                existing.setModel(newDeviceInfo.getModel());
+            }
+
+            // ============================================================
+            // 4. PUERTOS ABIERTOS
+            // ============================================================
+
+            // Fusionar puertos sin duplicados
+            if (existing.getOpenPorts() == null || existing.getOpenPorts().isEmpty()) {
+                if (newDeviceInfo.getOpenPorts() != null && !newDeviceInfo.getOpenPorts().isEmpty()) {
+                    existing.setOpenPorts(new ArrayList<>(newDeviceInfo.getOpenPorts()));
+                }
+            } else if (newDeviceInfo.getOpenPorts() != null && !newDeviceInfo.getOpenPorts().isEmpty()) {
+                // Fusionar ambas listas sin duplicados
+                List<Integer> mergedPorts = new ArrayList<>(existing.getOpenPorts());
+                for (Integer port : newDeviceInfo.getOpenPorts()) {
+                    if (!mergedPorts.contains(port)) {
+                        mergedPorts.add(port);
+                    }
+                }
+                // Ordenar puertos para mejor visualización
+                Collections.sort(mergedPorts);
+                existing.setOpenPorts(mergedPorts);
+            }
+
+            // ============================================================
+            // 5. FLAGS ESPECIALES (Current, Gateway, DNS)
+            // ============================================================
+
+            // Estas flags son booleanos, si alguno es true, se mantiene
+            if (newDeviceInfo.getIsCurrent() != null && newDeviceInfo.getIsCurrent()) {
+                existing.setIsCurrent(true);
+            }
+
+            if (newDeviceInfo.getIsGateway() != null && newDeviceInfo.getIsGateway()) {
+                existing.setIsGateway(true);
+            }
+
+            if (newDeviceInfo.getIsDNS() != null && newDeviceInfo.getIsDNS()) {
+                existing.setIsDNS(true);
+            }
+
+            return existing;
+        });
     }
 
     private void scanPorts(List<DeviceInfo> devices) {
