@@ -31,6 +31,7 @@ import androidx.core.app.NotificationCompat;
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
+import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.discovery.ARPDiscovery;
 import com.av19.netanalyzer.discovery.CancellationToken;
 import com.av19.netanalyzer.discovery.ICMPDiscovery;
@@ -92,7 +93,7 @@ public class ScanService extends Service {
 
         NetworkInfo networkInfo = collectNetworkInfo();
         if (networkInfo == null) {
-            repository.setError("No se pudo obtener información de red");
+            repository.setError("No se pudo obtener información de red", ScanState.Phase.DISCOVERY, "Network Analysis");
             stopSelf();
             return;
         }
@@ -124,7 +125,7 @@ public class ScanService extends Service {
                 // se actualiza la UI con el porcentaje y la lista actual de dispositivos.
                 // Hacemos una copia de la lista para evitar problemas de concurrencia.
                 List<DeviceInfo> snapshot = new ArrayList<>(discoveredDevices);
-                repository.setScanning(progressPercent, null, snapshot, networkInfo);
+                repository.setScanning(progressPercent, ScanState.Phase.DISCOVERY, methodName, null, snapshot, networkInfo);
                 updateNotification("Descubrimiento " + methodName + ": " + progressPercent + "%");
             }
             @Override
@@ -141,7 +142,7 @@ public class ScanService extends Service {
             public void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices) {
                 int percent = (int) ((current / (float) total) * 100);
                 updateNotification("Escaneando puertos: " + currentIp + " (" + percent + "%)");
-                repository.setScanning(percent, currentIp, currentDevices, networkInfo);
+                repository.setScanning(percent, ScanState.Phase.PORT_SCAN, "NIO", currentIp, currentDevices, networkInfo);
             }
 
             @Override
@@ -153,7 +154,7 @@ public class ScanService extends Service {
 
             @Override
             public void onCancelled() {
-                repository.setError("Escaneo cancelado");
+                repository.setError("Escaneo cancelado", ScanState.Phase.NONE, null);
                 stopSelf();
             }
         });

@@ -11,15 +11,25 @@ public class ScanState {
         ERROR
     }
 
+    public enum Phase {
+        NONE,
+        DISCOVERY,
+        PORT_SCAN
+    }
+
     private final Status status;
-    private final int progress;          // 0-100
-    private final String currentHost;    // optional, for UI feedback
+    private final Phase phase;
+    private final String currentMethod;
+    private final int progress;
+    private final String currentHost;
     private final List<DeviceInfo> devices;
     private final NetworkInfo networkInfo;
     private final String errorMessage;
 
-    public ScanState(Status status, int progress, String currentHost, List<DeviceInfo> devices, NetworkInfo networkInfo, String errorMessage) {
+    public ScanState(Status status, Phase phase, String currentMethod, int progress, String currentHost, List<DeviceInfo> devices, NetworkInfo networkInfo, String errorMessage) {
         this.status = status;
+        this.phase = phase;
+        this.currentMethod = currentMethod;
         this.progress = progress;
         this.currentHost = currentHost;
         this.devices = new ArrayList<>(devices);
@@ -30,6 +40,15 @@ public class ScanState {
     public Status getStatus() {
         return status;
     }
+
+    public Phase getPhase() {
+        return phase;
+    }
+
+    public String getCurrentMethod() {
+        return currentMethod;
+    }
+
 
     public int getProgress() {
         return progress;
@@ -52,19 +71,19 @@ public class ScanState {
     }
 
     public static ScanState idle() {
-        return new ScanState(Status.IDLE, 0, null, new ArrayList<>(), null, null);
+        return new ScanState(Status.IDLE, Phase.NONE, null, 0, null, new ArrayList<>(), null, null);
     }
 
-    public static ScanState scanning(int progress, String currentHost,
+    public static ScanState scanning(int progress, Phase phase, String currentMethod, String currentHost,
                                      List<DeviceInfo> devices, NetworkInfo networkInfo) {
-        return new ScanState(Status.SCANNING, progress, currentHost, devices, networkInfo, null);
+        return new ScanState(Status.SCANNING, phase, currentMethod, progress, currentHost, devices, networkInfo, null);
     }
 
     public static ScanState completed(List<DeviceInfo> devices, NetworkInfo networkInfo) {
-        return new ScanState(Status.COMPLETED, 100, null, devices, networkInfo, null);
+        return new ScanState(Status.COMPLETED, Phase.NONE, null,100, null, devices, networkInfo, null);
     }
 
-    public static ScanState error(String error) {
-        return new ScanState(Status.ERROR, 0, null, new ArrayList<>(), null, error);
+    public static ScanState error(String error, Phase phase, String currentMethod) {
+        return new ScanState(Status.ERROR, phase, currentMethod, 100, null, new ArrayList<>(), null, error);
     }
 }

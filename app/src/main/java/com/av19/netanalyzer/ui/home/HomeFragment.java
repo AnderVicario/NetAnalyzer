@@ -124,7 +124,7 @@ public class HomeFragment extends Fragment {
             case SCANNING:
                 isScanning = true;
                 btnScan.setText("STOP");
-                tvStatus.setText("Escaneando red… " + state.getProgress() + "%");
+                tvStatus.setText("Escaneando red… " + state.getCurrentMethod() + " " + state.getProgress() + "%");
                 tvStatus.animate().alpha(1f).setDuration(300).start();
                 startRippleAnimation();
 

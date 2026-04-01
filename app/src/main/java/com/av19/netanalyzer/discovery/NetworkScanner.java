@@ -85,6 +85,7 @@ public class NetworkScanner {
                         // Progreso dentro de un método (opcional, se puede usar para UI)
                         if (callback != null) {
                             callback.onDiscoveryProgress(method.getName(), percent);
+                            Log.d(TAG, "Progress: " + method.getName() + " " + percent + "%");
                         }
                     }
 
