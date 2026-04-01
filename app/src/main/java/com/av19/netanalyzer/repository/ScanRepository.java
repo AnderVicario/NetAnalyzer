@@ -38,16 +38,16 @@ public class ScanRepository {
     }
 
     // Convenience methods for the service
-    public void setScanning(int progress, String currentHost, List<DeviceInfo> devices, NetworkInfo networkInfo) {
-        updateState(ScanState.scanning(progress, currentHost, devices, networkInfo));
+    public void setScanning(int progress, ScanState.Phase phase, String currentMethod, String currentHost, List<DeviceInfo> devices, NetworkInfo networkInfo) {
+        updateState(ScanState.scanning(progress, phase, currentMethod, currentHost, devices, networkInfo));
     }
 
     public void setCompleted(List<DeviceInfo> devices, NetworkInfo networkInfo) {
         updateState(ScanState.completed(devices, networkInfo));
     }
 
-    public void setError(String error) {
-        updateState(ScanState.error(error));
+    public void setError(String error, ScanState.Phase phase, String currentMethod) {
+        updateState(ScanState.error(error, phase, currentMethod));
     }
 
     public void reset() {
