@@ -1,4 +1,4 @@
-package com.av19.netanalyzer.discovery;
+package com.av19.netanalyzer.utils;
 
 import androidx.annotation.NonNull;
 

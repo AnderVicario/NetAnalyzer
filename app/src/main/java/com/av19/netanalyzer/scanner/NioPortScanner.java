@@ -1,6 +1,8 @@
-package com.av19.netanalyzer.discovery;
+package com.av19.netanalyzer.scanner;
 
 import android.util.Log;
+
+import com.av19.netanalyzer.utils.CancellationToken;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

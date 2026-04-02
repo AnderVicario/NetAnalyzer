@@ -1,4 +1,4 @@
-package com.av19.netanalyzer.discovery;
+package com.av19.netanalyzer.utils;
 
 public class CancellationToken {
     private volatile boolean cancelled = false;

@@ -1,5 +1,7 @@
 package com.av19.netanalyzer.ui.devices;
 
+import static com.av19.netanalyzer.utils.NetUtils.compareIps;
+
 import android.animation.ValueAnimator;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,27 +44,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         notifyDataSetChanged();
     }
 
-    private int compareIps(String ip1, String ip2) {
-        if (ip1 == null) return (ip2 == null) ? 0 : -1;
-        if (ip2 == null) return 1;
 
-        String[] parts1 = ip1.split("\\.");
-        String[] parts2 = ip2.split("\\.");
-
-        // Comparamos octeto por octeto
-        for (int i = 0; i < Math.min(parts1.length, parts2.length); i++) {
-            try {
-                int n1 = Integer.parseInt(parts1[i]);
-                int n2 = Integer.parseInt(parts2[i]);
-                if (n1 != n2) return Integer.compare(n1, n2);
-            } catch (NumberFormatException e) {
-                // Si no es un número (ej. IPv6 o mal formato), comparamos como string
-                int res = parts1[i].compareTo(parts2[i]);
-                if (res != 0) return res;
-            }
-        }
-        return Integer.compare(parts1.length, parts2.length);
-    }
 
     @NonNull
     @Override

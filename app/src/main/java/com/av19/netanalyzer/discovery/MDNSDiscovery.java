@@ -8,6 +8,8 @@ import android.util.Log;
 
 import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
+import com.av19.netanalyzer.utils.CancellationToken;
+import com.av19.netanalyzer.utils.ProgressCallback;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -31,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class mDNSDiscovery implements DiscoveryMethod {
+public class MDNSDiscovery implements DiscoveryMethod {
     private static final String TAG = "mDNSDiscovery";
     private final NsdManager nsdManager;
     private final Map<String, DeviceInfo> foundDevices = new ConcurrentHashMap<>();
@@ -42,7 +44,7 @@ public class mDNSDiscovery implements DiscoveryMethod {
     private static final int SERVICE_TYPE_DISCOVERY_TIME = 5000;  // 2 segundos para tipos
     private static final int INSTANCE_DISCOVERY_TIME = 5000;      // 3 segundos para instancias
 
-    public mDNSDiscovery(Context context) {
+    public MDNSDiscovery(Context context) {
         this.nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         if (nsdManager == null) {
             Log.e(TAG, "NsdManager is null! mDNS discovery will not work.");

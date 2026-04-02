@@ -1,9 +1,12 @@
-package com.av19.netanalyzer.discovery;
+package com.av19.netanalyzer.scanner;
 
 import android.util.Log;
 
 import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
+import com.av19.netanalyzer.discovery.DiscoveryMethod;
+import com.av19.netanalyzer.utils.CancellationToken;
+import com.av19.netanalyzer.utils.ProgressCallback;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -22,7 +22,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -32,25 +31,19 @@ import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.discovery.ARPDiscovery;
-import com.av19.netanalyzer.discovery.CancellationToken;
+import com.av19.netanalyzer.utils.CancellationToken;
 import com.av19.netanalyzer.discovery.ICMPDiscovery;
-import com.av19.netanalyzer.discovery.NetworkScanner;
+import com.av19.netanalyzer.scanner.NetworkScanner;
 import com.av19.netanalyzer.discovery.TCPDiscovery;
-import com.av19.netanalyzer.discovery.mDNSDiscovery;
+import com.av19.netanalyzer.discovery.MDNSDiscovery;
 import com.av19.netanalyzer.repository.ScanRepository;
 import com.av19.netanalyzer.utils.NetUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ScanService extends Service {
     private static final String CHANNEL_ID = "scan_channel";
@@ -115,7 +108,7 @@ public class ScanService extends Service {
                     networkScanner.addMethod(new TCPDiscovery());
                     break;
                 case "mDNS":
-                    networkScanner.addMethod(new mDNSDiscovery(this));
+                    networkScanner.addMethod(new MDNSDiscovery(this));
                     break;
                 // case "MDNS": networkScanner.addMethod(new MdnsDiscovery(this)); break;
             }

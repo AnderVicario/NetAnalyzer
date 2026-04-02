@@ -6,7 +6,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class ApiClient {
+public class NetApiClient {
 
     private static final String BASE_URL = "https://api.macvendors.com/v1/lookup/";
     private static final String TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImp0aSI6IjA0NjVmOTEzLTk2MDEtNDQ2ZS04OTMzLTE5MjhiYTI3ZTk0NyJ9.eyJpc3MiOiJtYWN2ZW5kb3JzIiwiYXVkIjoibWFjdmVuZG9ycyIsImp0aSI6IjA0NjVmOTEzLTk2MDEtNDQ2ZS04OTMzLTE5MjhiYTI3ZTk0NyIsImlhdCI6MTc2OTQ2NDA4NywiZXhwIjoyMDgzOTYwMDg3LCJzdWIiOiIxNzA5NCIsInR5cCI6ImFjY2VzcyJ9.-uaoPaIWXnU1psYH86aC-9S8IAsK_qPjV3YSwJy8vP0VanJ4q7ZOzP09eBalOewnoR8X2hmV5Bna5-on2Af4Uw";

@@ -4,8 +4,11 @@ import android.util.Log;
 
 import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
-import com.av19.netanalyzer.utils.ApiClient;
+import com.av19.netanalyzer.utils.CancellationToken;
+import com.av19.netanalyzer.utils.FingerprintManager;
+import com.av19.netanalyzer.utils.NetApiClient;
 import com.av19.netanalyzer.utils.NetUtils;
+import com.av19.netanalyzer.utils.ProgressCallback;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -93,7 +96,7 @@ public class ARPDiscovery implements DiscoveryMethod {
                 if (token.isCancelled()) break;
                 String ip = parts[0];
                 String mac = parts[3];
-                String vendor = ApiClient.getMacVendorSync(mac);
+                String vendor = NetApiClient.getMacVendorSync(mac);
                 DeviceInfo device = FingerprintManager.getInstance()
                         .getDeviceInfo(network, ip, mac, vendor, null, null);
                 devices.add(device);
