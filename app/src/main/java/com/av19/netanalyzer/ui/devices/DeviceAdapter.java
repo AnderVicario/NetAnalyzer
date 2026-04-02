@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
+import com.av19.netanalyzer.utils.NetUtils;
 
 import java.util.List;
 
@@ -242,7 +243,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                     int port = device.getOpenPorts().get(i);
                     details.append(port);
 
-                    String serviceName = getPortServiceName(port);
+                    String serviceName = NetUtils.getPortServiceName(itemView.getContext(), "top1000.txt", port);
                     if (serviceName != null) {
                         details.append(" (").append(serviceName).append(")");
                     }
@@ -292,43 +293,6 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             ViewGroup.LayoutParams lp = detailsPanel.getLayoutParams();
             lp.height = expanded ? ViewGroup.LayoutParams.WRAP_CONTENT : 0;
             detailsPanel.setLayoutParams(lp);
-        }
-
-        // Método auxiliar para obtener nombre del servicio por puerto
-        private String getPortServiceName(int port) {
-            switch (port) {
-                case 21: return "FTP";
-                case 22: return "SSH";
-                case 23: return "Telnet";
-                case 25: return "SMTP";
-                case 53: return "DNS";
-                case 80: return "HTTP";
-                case 88: return "Kerberos";
-                case 110: return "POP3";
-                case 111: return "RPC";
-                case 135: return "RPC";
-                case 139: return "NetBIOS";
-                case 143: return "IMAP";
-                case 443: return "HTTPS";
-                case 445: return "SMB";
-                case 465: return "SMTPS";
-                case 514: return "Syslog";
-                case 587: return "SMTP";
-                case 631: return "IPP/CUPS";
-                case 993: return "IMAPS";
-                case 995: return "POP3S";
-                case 1433: return "MSSQL";
-                case 1723: return "PPTP";
-                case 3306: return "MySQL";
-                case 3389: return "RDP";
-                case 5432: return "PostgreSQL";
-                case 5900: return "VNC";
-                case 6379: return "Redis";
-                case 8080: return "HTTP-Alt";
-                case 8443: return "HTTPS-Alt";
-                case 27017: return "MongoDB";
-                default: return null;
-            }
         }
 
         // Expand con animación

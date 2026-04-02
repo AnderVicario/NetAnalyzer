@@ -38,6 +38,7 @@ import com.av19.netanalyzer.discovery.NetworkScanner;
 import com.av19.netanalyzer.discovery.TCPDiscovery;
 import com.av19.netanalyzer.discovery.mDNSDiscovery;
 import com.av19.netanalyzer.repository.ScanRepository;
+import com.av19.netanalyzer.utils.NetUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class ScanService extends Service {
 
         String scanMethod = getScanMethod(intent);
         String scanLevel = getScanLevel(intent);
-        int[] ports = loadPortsFromAssets("top" + scanLevel + ".txt");
+        int[] ports = NetUtils.loadPortsFromAssets(this,"top" + scanLevel + ".txt");
 
         startForeground(NOTIFICATION_ID, createNotification("Iniciando escaneo..."));
         startScan(scanMethod, ports);
@@ -318,27 +319,6 @@ public class ScanService extends Service {
         }
         return getSharedPreferences("app_settings", MODE_PRIVATE)
                 .getString("scan_level", "100");
-    }
-
-    private int[] loadPortsFromAssets(String fileName) {
-        List<Integer> portList = new ArrayList<>();
-        Pattern pattern = Pattern.compile("(\\d+)/tcp");
-
-        try (InputStream is = getAssets().open(fileName);
-             BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.find()) {
-                    portList.add(Integer.parseInt(matcher.group(1)));
-                }
-            }
-        } catch (IOException e) {
-            Log.e("ScanService", "Error cargando puertos: " + e.getMessage());
-            return new int[]{80, 23, 443, 21, 22, 25, 3389, 110, 445, 139, 143, 53, 135};
-        }
-        portList.add(25565);
-        return portList.stream().mapToInt(i -> i).toArray();
     }
 
     private void updateNotification(String text) {
