@@ -28,33 +28,37 @@ import androidx.core.app.NotificationCompat;
 
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
+import com.av19.netanalyzer.data.ListDeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.discovery.ARPDiscovery;
-import com.av19.netanalyzer.utils.CancellationToken;
 import com.av19.netanalyzer.discovery.ICMPDiscovery;
-import com.av19.netanalyzer.scanner.NetworkScanner;
-import com.av19.netanalyzer.discovery.TCPDiscovery;
 import com.av19.netanalyzer.discovery.MDNSDiscovery;
+import com.av19.netanalyzer.discovery.SSDPDiscovery;
+import com.av19.netanalyzer.discovery.TCPDiscovery;
 import com.av19.netanalyzer.repository.ScanRepository;
+import com.av19.netanalyzer.scanner.NetworkScanner;
+import com.av19.netanalyzer.utils.CancellationToken;
 import com.av19.netanalyzer.utils.NetUtils;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ScanService extends Service {
     private static final String CHANNEL_ID = "scan_channel";
     private static final int NOTIFICATION_ID = 1;
-    private final List<DeviceInfo> discoveredDevices = Collections.synchronizedList(new ArrayList<>());
+    private static final long NOTIFICATION_THROTTLE_MS = 500;
+
     private ScanRepository repository;
     private CancellationToken cancellationToken;
     private NetworkScanner networkScanner;
     private Handler mainHandler;
     private long lastNotificationUpdate = 0;
-    private static final long NOTIFICATION_THROTTLE_MS = 500;
+
+    // Lista especializada que maneja la fusión de dispositivos sin duplicados
+    private final ListDeviceInfo discoveredDevices = new ListDeviceInfo();
 
     @Override
     public void onCreate() {
@@ -74,7 +78,7 @@ public class ScanService extends Service {
 
         String scanMethod = getScanMethod(intent);
         String scanLevel = getScanLevel(intent);
-        int[] ports = NetUtils.loadPortsFromAssets(this,"top" + scanLevel + ".txt");
+        int[] ports = NetUtils.loadPortsFromAssets(this, "top" + scanLevel + ".txt");
 
         startForeground(NOTIFICATION_ID, createNotification("Iniciando escaneo..."));
         startScan(scanMethod, ports);
@@ -110,36 +114,35 @@ public class ScanService extends Service {
                 case "mDNS":
                     networkScanner.addMethod(new MDNSDiscovery(this));
                     break;
-                // case "MDNS": networkScanner.addMethod(new MdnsDiscovery(this)); break;
+                case "SSDP":
+                    networkScanner.addMethod(new SSDPDiscovery());
+                    break;
             }
         }
 
         networkScanner.start(cancellationToken, new NetworkScanner.Callback() {
             @Override
             public void onDiscoveryProgress(String methodName, int progressPercent) {
-                // Actualizar la barra de progreso y la lista de dispositivos en el repositorio
-                // Esto restaura el comportamiento original: cada vez que se avanza en el descubrimiento,
-                // se actualiza la UI con el porcentaje y la lista actual de dispositivos.
-                // Hacemos una copia de la lista para evitar problemas de concurrencia.
-                List<DeviceInfo> snapshot = new ArrayList<>(discoveredDevices);
+                // Tomamos una instantánea de los dispositivos ya descubiertos y fusionados
+                List<DeviceInfo> snapshot = discoveredDevices.getDevices();
                 repository.setScanning(progressPercent, ScanState.Phase.DISCOVERY, methodName, null, snapshot, networkInfo);
                 updateNotification("Descubrimiento " + methodName + ": " + progressPercent + "%");
             }
 
             @Override
             public void onDeviceFound(DeviceInfo device) {
-                // Añadir dispositivo a la lista acumulada
-                discoveredDevices.add(device);
-                // No actualizamos el repositorio aquí porque ya lo hará onDiscoveryProgress con el progreso actual.
-                // Pero si quieres que aparezca inmediatamente el dispositivo, podrías llamar a setScanning
-                // con el progreso actual y la lista actualizada. Lo dejamos así para evitar llamadas redundantes.
-                updateNotification("Dispositivo encontrado: " + device.getIp());
+                // Añadir o fusionar el dispositivo y obtener la versión actualizada
+                DeviceInfo merged = discoveredDevices.addOrUpdate(device);
+                updateNotification("Dispositivo encontrado: " + merged.getIp());
+                // No actualizamos el repositorio aquí para evitar demasiadas notificaciones;
+                // la UI se actualizará en onDiscoveryProgress.
             }
 
             @Override
             public void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices) {
                 int percent = (int) ((current / (float) total) * 100);
                 updateNotification("Escaneando puertos: " + currentIp + " (" + percent + "%)");
+                // Usamos directamente la lista proporcionada por el scanner (ya contiene los puertos actualizados)
                 repository.setScanning(percent, ScanState.Phase.PORT_SCAN, "NIO", currentIp, currentDevices, networkInfo);
             }
 
@@ -164,7 +167,7 @@ public class ScanService extends Service {
         }
     }
 
-    // ---------- Métodos auxiliares (extraídos del original) ----------
+    // ---------- Métodos auxiliares (sin cambios) ----------
 
     @SuppressLint("DefaultLocale")
     private NetworkInfo collectNetworkInfo() {
@@ -275,9 +278,9 @@ public class ScanService extends Service {
     private List<String> parseMethods(String method) {
         List<String> methods = new ArrayList<>();
         if (method == null || method.isEmpty() || method.equals("AUTO")) {
-            // Por defecto: ICMP y ARP
             methods.add("ICMP");
             methods.add("mDNS");
+            methods.add("SSDP");
             if (android.os.Build.VERSION.SDK_INT < 29) {
                 methods.add("ARP");
             }
@@ -286,7 +289,7 @@ public class ScanService extends Service {
         String[] parts = method.split("[+,]");
         for (String part : parts) {
             String trimmed = part.trim().toUpperCase();
-            if (trimmed.equals("ARP") || trimmed.equals("ICMP") || trimmed.equals("TCP") || trimmed.equals("MDNS")) {
+            if (trimmed.equals("ARP") || trimmed.equals("ICMP") || trimmed.equals("TCP") || trimmed.equals("MDNS") || trimmed.equals("SSDP")) {
                 methods.add(trimmed);
             }
         }
@@ -294,6 +297,7 @@ public class ScanService extends Service {
             methods.add("ICMP");
             methods.add("ARP");
             methods.add("MDNS");
+            methods.add("SSDP");
         }
         return methods;
     }
@@ -317,7 +321,7 @@ public class ScanService extends Service {
     private void updateNotification(String text) {
         long now = System.currentTimeMillis();
         if (now - lastNotificationUpdate < NOTIFICATION_THROTTLE_MS) {
-            return; // no actualizar tan seguido
+            return;
         }
         lastNotificationUpdate = now;
         mainHandler.post(() -> {
