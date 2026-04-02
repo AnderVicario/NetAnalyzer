@@ -1,6 +1,8 @@
 package com.av19.netanalyzer.data;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DeviceInfo {
     private String ip;
@@ -14,6 +16,7 @@ public class DeviceInfo {
     private Integer ttl;
     private String model;
     private String hostname;
+    private Map<String, String> extraDetails;
 
     public DeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts) {
         this.ip = ip;
@@ -22,10 +25,12 @@ public class DeviceInfo {
         this.isDNS = false;
         this.mac = mac;
         this.vendor = vendor;
+        this.os = null;
         this.openPorts = openPorts;
         this.ttl = null;
         this.model = null;
         this.hostname = null;
+        this.extraDetails =  new HashMap<>();
     }
 
     // Getters
@@ -73,6 +78,10 @@ public class DeviceInfo {
         return hostname;
     }
 
+    public Map<String, String> getExtraDetails() {
+        return extraDetails;
+    }
+
     // Setters
     public void setIp(String ip) {
         this.ip = ip;
@@ -116,5 +125,9 @@ public class DeviceInfo {
 
     public void setHostname(String hostname) {
         this.hostname = hostname;
+    }
+
+    public void addDetail(String key, String value) {
+        if (value != null) extraDetails.put(key, value);
     }
 }
