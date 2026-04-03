@@ -56,6 +56,8 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
         String currentTheme = prefs.getString("tema", "auto");
         String currentLanguage = prefs.getString("idioma", "es");
         boolean locationEnabled = prefs.getBoolean("ubicacion_habilitada", false);
+        String open_router_api_key = prefs.getString("open_router_api_key", "");
+        boolean isEmptyAPIKey = open_router_api_key.isEmpty();
         String versionName = getVersionName();
 
         int themeIndex = getIndexForTheme(currentTheme);
@@ -85,6 +87,15 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                 new String[]{"auto", "light", "dark"},
                 "tema",
                 themeIndex
+        ));
+
+        settingsList.add(new SettingsItem(
+                R.drawable.ic_key,
+                getString(R.string.settings_key),
+                getThemeOptionText(isEmptyAPIKey),
+                SettingsItem.Type.KEY,
+                open_router_api_key,
+                "open_router_api_key"
         ));
 
         // Item Idioma (INFO con opciones)
@@ -163,6 +174,13 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
         }
     }
 
+    private String getThemeOptionText(boolean empty) {
+        if (empty) {
+            return getString(R.string.settings_key_empty);
+        }
+        return getString(R.string.settings_key_not_empty);
+    }
+
     /*private String getLanguageOptionText(int index) {
         switch (index) {
             case 1: return getString(R.string.settings_language_basque);
@@ -210,6 +228,17 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
             prefs.edit().putBoolean(key, isChecked).apply();
             Toast.makeText(requireContext(),
                     "Ubicación " + (isChecked ? "activada" : "desactivada"),
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onKeyChanged(SettingsItem item, String newValue) {
+        String key = item.getSettingKey();
+        if (key != null) {
+            prefs.edit().putString(key, newValue).apply();
+            Toast.makeText(requireContext(),
+                    "API key: " + newValue,
                     Toast.LENGTH_SHORT).show();
         }
     }

@@ -2,7 +2,7 @@ package com.av19.netanalyzer.ui.settings;
 
 public class SettingsItem {
     public enum Type {
-        SWITCH, NAVIGATION, INFO
+        SWITCH, NAVIGATION, INFO, KEY
     }
 
     private final int iconRes;
@@ -10,6 +10,7 @@ public class SettingsItem {
     private String subtitle;
     private final Type type;
     private Boolean switchValue;
+    private String textValue;
     private String[] options;
     private String[] optionValues;
     private int selectedOptionIndex;
@@ -21,6 +22,17 @@ public class SettingsItem {
         this.subtitle = subtitle;
         this.type = type;
         this.switchValue = switchValue;
+        this.settingKey = settingKey;
+    }
+
+    // Constructor para items con edit text
+
+    public SettingsItem(int iconRes, String title, String subtitle, Type type, String textValue, String settingKey) {
+        this.iconRes = iconRes;
+        this.title = title;
+        this.subtitle = subtitle;
+        this.type = type;
+        this.textValue = textValue;
         this.settingKey = settingKey;
     }
 

@@ -4,4 +4,7 @@
     <string name="settings_theme_default">Por defecto</string>
     <string name="settings_theme_light">Claro</string>
     <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_key">API Key</string>
+    <string name="settings_key_empty">No hay API key</string>
+    <string name="settings_key_not_empty">API key establecida</string>
 </resources>

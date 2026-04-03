@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,6 +35,8 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         void onOptionSelected(SettingsItem item, int optionIndex);
 
         void onSwitchChanged(SettingsItem item, boolean isChecked, int position);
+
+        void onKeyChanged(SettingsItem item, String newValue);
     }
 
     public SettingsAdapter(List<SettingsItem> settings, OnSettingClickListener listener, Context context) {
@@ -118,6 +121,70 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
                 holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
 
                 holder.buttonPanel.setOnClickListener(v -> {
+                    if (listener != null) {
+                        listener.onSettingClicked(item, position);
+                    }
+                });
+                break;
+
+            case KEY:
+                holder.settingSwitch.setVisibility(View.GONE);
+                holder.accessoryImageView.setVisibility(View.GONE);
+                holder.editText.setVisibility(View.VISIBLE);
+
+                holder.view1.setVisibility(View.GONE);
+                holder.view2.setVisibility(View.GONE);
+                holder.option1Layout.setVisibility(View.GONE);
+                holder.option2Layout.setVisibility(View.GONE);
+                holder.option3Layout.setVisibility(View.GONE);
+                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
+
+                preMeasureOptionsPanel(holder.optionsPanel);
+
+                holder.buttonPanel.setOnClickListener(v -> {
+                    boolean isExpanded = holder.optionsPanel.getVisibility() == View.VISIBLE;
+
+                    if (isExpanded) {
+                        // --- AL CERRAR EL PANEL (COLLAPSE) ---
+                        // Solo para el tipo KEY: capturar el nuevo valor del EditText
+                        if (item.getType() == SettingsItem.Type.KEY) {
+                            String newKey = holder.editText.getText().toString().trim();
+                            String oldKey = prefs.getString(item.getSettingKey(), "");
+
+                            if (!newKey.equals(oldKey)) {
+                                // Actualizar el subtítulo del ítem según si está vacío o no
+                                boolean isEmpty = newKey.isEmpty();
+                                String newSubtitle = isEmpty
+                                        ? context.getString(R.string.settings_key_empty)
+                                        : context.getString(R.string.settings_key_not_empty);
+                                item.setSubtitle(newSubtitle);
+                                holder.subtitleTextView.setText(newSubtitle);
+                                holder.subtitleTextView.setVisibility(View.VISIBLE);
+
+                                // Notificar al listener (SettingsFragment)
+                                if (listener != null) {
+                                    listener.onKeyChanged(item, newKey);
+                                }
+                            }
+                        }
+                        collapse(holder.optionsPanel);
+                        expandedPosition = -1;
+                    } else {
+                        // --- AL ABRIR EL PANEL (EXPAND) ---
+                        // Cargar la clave actual en el EditText
+                        if (item.getType() == SettingsItem.Type.KEY) {
+                            String currentKey = prefs.getString(item.getSettingKey(), "");
+                            holder.editText.setText(currentKey);
+                            // Mover el cursor al final para facilitar la edición
+                            holder.editText.setSelection(currentKey.length());
+                        }
+                        if (expandedPosition != -1 && expandedPosition != position) {
+                            notifyItemChanged(expandedPosition);
+                        }
+                        expand(holder.optionsPanel);
+                        expandedPosition = position;
+                    }
+
                     if (listener != null) {
                         listener.onSettingClicked(item, position);
                     }
@@ -353,6 +420,8 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
 
         // Nuevos elementos para las opciones
         LinearLayout option1Layout, option2Layout, option3Layout;
+        EditText editText;
+        View view1, view2;
         TextView option1, option2, option3;
         ImageView option1Check, option2Check, option3Check;
 
@@ -365,6 +434,10 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
             settingSwitch = itemView.findViewById(R.id.settingSwitch);
             buttonPanel = itemView.findViewById(R.id.buttonPanel);
             optionsPanel = itemView.findViewById(R.id.options_panel);
+
+            editText = itemView.findViewById(R.id.ic_edit);
+            view1 = itemView.findViewById(R.id.view1);
+            view2 = itemView.findViewById(R.id.view2);
 
             // Opción 1
             option1Layout = itemView.findViewById(R.id.option1_layout);

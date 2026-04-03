@@ -86,6 +86,16 @@
         android:orientation="vertical"
         android:visibility="invisible">
 
+        <EditText
+            android:id="@+id/ic_edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:hint="Establecer clave..."
+            android:paddingVertical="12dp"
+            android:visibility="gone">
+        </EditText>
+
         <!-- Opción 1 con indicador de selección -->
         <LinearLayout
             android:id="@+id/option1_layout"
@@ -117,6 +127,7 @@
         </LinearLayout>
 
         <View
+            android:id="@+id/view1"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/background_10" />
@@ -152,6 +163,7 @@
         </LinearLayout>
 
         <View
+            android:id="@+id/view2"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/background_10" />
