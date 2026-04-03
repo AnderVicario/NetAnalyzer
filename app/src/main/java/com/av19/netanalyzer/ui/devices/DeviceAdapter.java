@@ -3,7 +3,6 @@ package com.av19.netanalyzer.ui.devices;
 import static com.av19.netanalyzer.utils.NetUtils.compareIps;
 
 import android.animation.ValueAnimator;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +42,6 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         expandedPosition = -1;
         notifyDataSetChanged();
     }
-
 
 
     @NonNull
@@ -210,7 +208,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
             if (hasDeviceInfo) {
                 details.append("💻 DEVICE INFO\n");
-                details.append(deviceInfo.toString());
+                details.append(deviceInfo);
                 details.append("\n");
                 hasInfo = true;
             }

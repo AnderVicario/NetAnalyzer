@@ -27,9 +27,13 @@ public class NetworkScanner {
 
     public interface Callback {
         void onDiscoveryProgress(String methodName, int progressPercent);
+
         void onDeviceFound(DeviceInfo device);
+
         void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices);
+
         void onComplete(List<DeviceInfo> devices);
+
         void onCancelled();
     }
 

@@ -16,7 +16,7 @@ public class DeviceInfo {
     private Integer ttl;
     private String model;
     private String hostname;
-    private Map<String, String> extraDetails;
+    private final Map<String, String> extraDetails;
 
     public DeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts) {
         this.ip = ip;
@@ -30,7 +30,7 @@ public class DeviceInfo {
         this.ttl = null;
         this.model = null;
         this.hostname = null;
-        this.extraDetails =  new HashMap<>();
+        this.extraDetails = new HashMap<>();
     }
 
     // Getters

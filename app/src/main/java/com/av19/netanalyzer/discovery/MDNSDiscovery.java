@@ -21,6 +21,7 @@ import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -421,7 +422,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
                 n = n.substring(0, n.length() - 1);
             }
             for (String label : n.split("\\.")) {
-                byte[] bytes = label.getBytes("UTF-8");
+                byte[] bytes = label.getBytes(StandardCharsets.UTF_8);
                 dos.writeByte(bytes.length);
                 dos.write(bytes);
             }

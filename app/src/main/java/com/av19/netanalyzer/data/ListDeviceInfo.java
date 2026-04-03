@@ -1,7 +1,6 @@
 package com.av19.netanalyzer.data;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
