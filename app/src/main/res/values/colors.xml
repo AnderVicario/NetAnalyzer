@@ -26,5 +26,5 @@
     <color name="on_error">#FFFFFFFF</color>
 
     <color name="transparent">#00FFFFFF</color>
-    <color name="button">#4a4458</color>
+    <color name="button">#e8def8</color>
 </resources>

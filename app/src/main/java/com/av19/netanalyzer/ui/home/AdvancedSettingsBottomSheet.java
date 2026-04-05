@@ -20,7 +20,9 @@ import com.av19.netanalyzer.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class AdvancedSettingsBottomSheet extends com.google.android.material.bottomsheet.BottomSheetDialogFragment {
@@ -38,7 +40,6 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
         super.onStart();
         if (getDialog() != null && getDialog().getWindow() != null) {
             Window window = getDialog().getWindow();
-            // El layout se dibuje fuera de los límites (debajo de las barras)
             window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         }
@@ -51,9 +52,6 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
 
         ViewCompat.setOnApplyWindowInsetsListener(v, (view, windowInsets) -> {
             Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
-
-            // Sumar la altura de la navigation bar al padding inferior que ya tenías (24dp)
-            // Convertir 24dp a pixels para que sea exacto
             int basePaddingBottom = (int) (24 * getResources().getDisplayMetrics().density);
             view.setPadding(view.getPaddingLeft(), view.getPaddingTop(),
                     view.getPaddingRight(), basePaddingBottom + systemBars.bottom);
@@ -62,39 +60,48 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
 
         prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE);
 
-        MaterialButtonToggleGroup groupMethod = v.findViewById(R.id.toggle_group_method);
+        // Grupos de métodos (dos filas)
+        MaterialButtonToggleGroup groupRow1 = v.findViewById(R.id.toggle_group_row1);
+        MaterialButtonToggleGroup groupRow2 = v.findViewById(R.id.toggle_group_row2);
         MaterialButtonToggleGroup groupPorts = v.findViewById(R.id.toggle_group_ports);
 
-        // Lógica de exclusividad para AUTO
+        // Botones
         MaterialButton btnAuto = v.findViewById(R.id.btn_method_auto);
         MaterialButton btnArp = v.findViewById(R.id.btn_method_arp);
-        MaterialButton btnIcmp = v.findViewById(R.id.btn_method_icmp);
         MaterialButton btnTcp = v.findViewById(R.id.btn_method_tcp);
+        MaterialButton btnIcmp = v.findViewById(R.id.btn_method_icmp);
+        MaterialButton btnMdns = v.findViewById(R.id.btn_method_mdns);
+        MaterialButton btnSsdp = v.findViewById(R.id.btn_method_ssdp);
 
+        // Lista de todos los botones manuales (para resetear colores)
+        List<MaterialButton> manualButtons = List.of(btnArp, btnTcp, btnIcmp, btnMdns, btnSsdp);
+
+        // Lógica de AUTO: limpia todo, marca AUTO y resetea colores
         btnAuto.setOnClickListener(view -> {
-
             Log.d("AdvancedSettingsBottomSheet", "AUTO pulsado");
 
-            groupMethod.clearChecked();
-            groupMethod.check(R.id.btn_method_auto);
+            // Limpiar ambos grupos
+            groupRow1.clearChecked();
+            groupRow2.clearChecked();
+            // Marcar AUTO en el primer grupo
+            groupRow1.check(R.id.btn_method_auto);
 
-            btnArp.setBackgroundColor(getResources().getColor(R.color.transparent));
-            btnIcmp.setBackgroundColor(getResources().getColor(R.color.transparent));
-            btnTcp.setBackgroundColor(getResources().getColor(R.color.transparent));
+            // Resetear fondo de todos los botones manuales
+            for (MaterialButton btn : manualButtons) {
+                btn.setBackgroundColor(getResources().getColor(R.color.transparent));
+            }
         });
 
-
+        // Listener para botones manuales
         View.OnClickListener manualListener = view -> {
+            Log.d("AdvancedSettingsBottomSheet", "Método manual pulsado");
 
-            int id = view.getId();
-            Log.d("AdvancedSettingsBottomSheet", "Metodo manual pulsado");
+            // Desmarcar AUTO si estaba marcado en cualquiera de los dos grupos
+            groupRow1.uncheck(R.id.btn_method_auto);
+            groupRow2.uncheck(R.id.btn_method_auto); // por si acaso
 
-            // quitar AUTO si estaba activo
-            groupMethod.uncheck(R.id.btn_method_auto);
-
-            // alternar el botón pulsado
             MaterialButton btn = (MaterialButton) view;
-
+            // Alternar color de fondo según el nuevo estado checked
             if (btn.isChecked()) {
                 btn.setBackgroundColor(getResources().getColor(R.color.button));
             } else {
@@ -102,21 +109,28 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
             }
         };
 
+        // Asignar listener a todos los botones manuales
         btnArp.setOnClickListener(manualListener);
-        btnIcmp.setOnClickListener(manualListener);
         btnTcp.setOnClickListener(manualListener);
+        btnIcmp.setOnClickListener(manualListener);
+        btnMdns.setOnClickListener(manualListener);
+        btnSsdp.setOnClickListener(manualListener);
 
-        // Cargar estado actual
-        setupInitialSelection(groupMethod, groupPorts);
+        // Cargar estado guardado
+        setupInitialSelection(groupRow1, groupRow2, groupPorts, manualButtons);
 
         // Botón Guardar
         v.findViewById(R.id.btn_save_config).setOnClickListener(view -> {
-            // Guardar métodos seleccionados
             Set<String> selectedMethods = new HashSet<>();
-            for (int id : groupMethod.getCheckedButtonIds()) {
+
+            // Recoger selecciones de ambos grupos
+            for (int id : groupRow1.getCheckedButtonIds()) {
                 selectedMethods.add(getMethodNameFromId(id));
             }
-            // Convertir el conjunto en una cadena separada por comas
+            for (int id : groupRow2.getCheckedButtonIds()) {
+                selectedMethods.add(getMethodNameFromId(id));
+            }
+
             String methodsStr = String.join(",", selectedMethods);
             prefs.edit()
                     .putString("scan_method", methodsStr)
@@ -124,31 +138,55 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
                     .apply();
 
             dismiss();
-
             Log.d("AdvancedSettingsBottomSheet", "Configuración guardada: " + methodsStr);
         });
 
         return v;
     }
 
-    private void setupInitialSelection(MaterialButtonToggleGroup groupMethod, MaterialButtonToggleGroup groupPorts) {
-        // Cargar métodos guardados (soporta formato antiguo y nuevo)
+    private void setupInitialSelection(MaterialButtonToggleGroup groupRow1,
+                                       MaterialButtonToggleGroup groupRow2,
+                                       MaterialButtonToggleGroup groupPorts,
+                                       List<MaterialButton> manualButtons) {
         Set<String> savedMethods = getStoredMethods();
 
-        // Marcar los botones correspondientes
+        // Limpiar ambos grupos antes de marcar
+        groupRow1.clearChecked();
+        groupRow2.clearChecked();
+
+        // Marcar los botones según los métodos guardados
         for (String method : savedMethods) {
             int id = getMethodIdFromName(method);
-            if (id != -1) {
-                groupMethod.check(id);
+            if (id == -1) continue;
+
+            // Buscar en qué grupo está el botón y marcarlo
+            if (id == R.id.btn_method_auto) {
+                groupRow1.check(id);
+            } else {
+                // Intentar marcar en row1, si no está allí, en row2
+                if (groupRow1.findViewById(id) != null) {
+                    groupRow1.check(id);
+                } else if (groupRow2.findViewById(id) != null) {
+                    groupRow2.check(id);
+                }
             }
         }
 
-        // Si no hay ningúno marcado (por ejemplo, si se guardó vacío), marcar AUTO por defecto
-        if (groupMethod.getCheckedButtonIds().isEmpty()) {
-            groupMethod.check(R.id.btn_method_auto);
+        // Si no hay nada marcado (incluyendo AUTO), marcar AUTO por defecto
+        if (groupRow1.getCheckedButtonIds().isEmpty() && groupRow2.getCheckedButtonIds().isEmpty()) {
+            groupRow1.check(R.id.btn_method_auto);
         }
 
-        // Cargar nivel de puertos (sigue siendo selección única)
+        // Aplicar colores a los botones manuales según su estado checked
+        for (MaterialButton btn : manualButtons) {
+            if (btn.isChecked()) {
+                btn.setBackgroundColor(getResources().getColor(R.color.button));
+            } else {
+                btn.setBackgroundColor(getResources().getColor(R.color.transparent));
+            }
+        }
+
+        // Cargar nivel de puertos
         String currentPorts = prefs.getString("scan_level", "100");
         if (currentPorts.equals("500")) groupPorts.check(R.id.btn_ports_500);
         else if (currentPorts.equals("1000")) groupPorts.check(R.id.btn_ports_1000);
@@ -169,16 +207,13 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
 
     private int getMethodIdFromName(String method) {
         switch (method) {
-            case "ARP":
-                return R.id.btn_method_arp;
-            case "TCP":
-                return R.id.btn_method_tcp;
-            case "ICMP":
-                return R.id.btn_method_icmp;
-            case "AUTO":
-                return R.id.btn_method_auto;
-            default:
-                return -1;
+            case "ARP": return R.id.btn_method_arp;
+            case "TCP": return R.id.btn_method_tcp;
+            case "ICMP": return R.id.btn_method_icmp;
+            case "mDNS": return R.id.btn_method_mdns;
+            case "SSDP": return R.id.btn_method_ssdp;
+            case "AUTO": return R.id.btn_method_auto;
+            default: return -1;
         }
     }
 
@@ -186,8 +221,10 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
         if (id == R.id.btn_method_arp) return "ARP";
         if (id == R.id.btn_method_tcp) return "TCP";
         if (id == R.id.btn_method_icmp) return "ICMP";
+        if (id == R.id.btn_method_mdns) return "mDNS";
+        if (id == R.id.btn_method_ssdp) return "SSDP";
         if (id == R.id.btn_method_auto) return "AUTO";
-        return "AUTO"; // fallback
+        return "AUTO";
     }
 
     private String getPortsFromId(int id) {
