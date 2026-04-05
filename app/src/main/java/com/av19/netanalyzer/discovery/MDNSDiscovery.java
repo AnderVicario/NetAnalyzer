@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MDNSDiscovery implements DiscoveryMethod {
-    private static final String TAG = "mDNSDiscovery";
+    private static final String TAG = "MDNSDiscovery";
     private final NsdManager nsdManager;
     private final Map<String, DeviceInfo> foundDevices = new ConcurrentHashMap<>();
     private final Set<String> discoveredServiceTypes = Collections.synchronizedSet(new HashSet<>());
@@ -48,18 +48,18 @@ public class MDNSDiscovery implements DiscoveryMethod {
     public MDNSDiscovery(Context context) {
         this.nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
         if (nsdManager == null) {
-            Log.e(TAG, "NsdManager is null! mDNS discovery will not work.");
+            Log.e(TAG, "NsdManager is null! MDNS discovery will not work.");
         }
     }
 
     @Override
     public String getName() {
-        return "mDNS";
+        return "MDNS";
     }
 
     @Override
     public List<DeviceInfo> discover(NetworkInfo network, CancellationToken token, ProgressCallback callback) {
-        Log.d(TAG, "Starting mDNS discovery...");
+        Log.d(TAG, "Starting MDNS discovery...");
         foundDevices.clear();
         discoveredServiceTypes.clear();
         activeListeners.clear();
@@ -71,7 +71,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
 
         // Notificar progreso inicial
         if (callback != null) {
-            callback.onProgress(0, "Discovering mDNS services...");
+            callback.onProgress(0, "Discovering MDNS services...");
         }
 
         // 1. Descubrir tipos de servicio (2 segundos máximo)
@@ -84,7 +84,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
         }
 
         if (serviceTypes.isEmpty()) {
-            Log.d(TAG, "No service types found, finishing mDNS discovery");
+            Log.d(TAG, "No service types found, finishing MDNS discovery");
             return new ArrayList<>(foundDevices.values());
         }
 
@@ -109,7 +109,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
             stopAllDiscoveries();
         }
 
-        Log.d(TAG, "mDNS discovery finished. Found " + foundDevices.size() + " devices");
+        Log.d(TAG, "MDNS discovery finished. Found " + foundDevices.size() + " devices");
         return new ArrayList<>(foundDevices.values());
     }
 
@@ -120,17 +120,17 @@ public class MDNSDiscovery implements DiscoveryMethod {
         List<String> types = new ArrayList<>();
         Set<String> seen = new HashSet<>();
 
-        MulticastSocket socket = MdnsUtils.openMulticastSocket();
+        MulticastSocket socket = MDNSUtils.openMulticastSocket();
         if (socket == null) {
             Log.e(TAG, "Failed to open multicast socket for service type discovery");
             return types;
         }
 
         try {
-            byte[] query = MdnsUtils.buildQuery("_services._dns-sd._udp.local", MdnsUtils.TYPE_PTR);
+            byte[] query = MDNSUtils.buildQuery("_services._dns-sd._udp.local", MDNSUtils.TYPE_PTR);
 
             // Enviar primera consulta
-            MdnsUtils.sendQuery(socket, query);
+            MDNSUtils.sendQuery(socket, query);
 
             long startTime = System.currentTimeMillis();
             byte[] buf = new byte[4096];
@@ -142,7 +142,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
             while (System.currentTimeMillis() - startTime < SERVICE_TYPE_DISCOVERY_TIME && !token.isCancelled()) {
                 // Enviar segunda consulta a mitad del tiempo
                 if (!secondQuerySent && System.currentTimeMillis() - startTime > SERVICE_TYPE_DISCOVERY_TIME / 2) {
-                    MdnsUtils.sendQuery(socket, query);
+                    MDNSUtils.sendQuery(socket, query);
                     secondQuerySent = true;
                     Log.d(TAG, "Sent second service type query");
                 }
@@ -150,7 +150,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
                 try {
                     DatagramPacket packet = new DatagramPacket(buf, buf.length);
                     socket.receive(packet);
-                    MdnsUtils.parseServiceTypeResponse(packet.getData(), packet.getLength(), seen, type -> {
+                    MDNSUtils.parseServiceTypeResponse(packet.getData(), packet.getLength(), seen, type -> {
                         if (!types.contains(type)) {
                             types.add(type);
                             Log.d(TAG, "Found service type: " + type);
@@ -162,7 +162,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
                 } catch (java.net.SocketTimeoutException e) {
                     // Timeout esperado, continuar
                 } catch (Exception e) {
-                    Log.e(TAG, "Error receiving mDNS response", e);
+                    Log.e(TAG, "Error receiving MDNS response", e);
                 }
             }
         } catch (Exception e) {
@@ -312,9 +312,9 @@ public class MDNSDiscovery implements DiscoveryMethod {
     }
 
     // ========================
-    // Clase interna con utilidades mDNS
+    // Clase interna con utilidades MDNS
     // ========================
-    private static class MdnsUtils {
+    private static class MDNSUtils {
         private static final String MDNS_IPV4_ADDRESS = "224.0.0.251";
         private static final int MDNS_PORT = 5353;
         public static final int TYPE_PTR = 12;

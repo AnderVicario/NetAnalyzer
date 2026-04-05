@@ -40,6 +40,8 @@ public class SSDPDiscovery implements DiscoveryMethod {
     private static final int SO_TIMEOUT_MS = 1500;
     private static final int HTTP_TIMEOUT_MS = 3000;
 
+    private static final int LISTEN_PROGRESS_MAX = 20;
+
     @Override
     public String getName() {
         return "SSDP";
@@ -77,9 +79,19 @@ public class SSDPDiscovery implements DiscoveryMethod {
             DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
 
             long startTime = System.currentTimeMillis();
+            int lastProgress = -1;
             int responseCount = 0;
 
+            // ==================== FASE 1: ESCUCHA SSDP ====================
             while (!token.isCancelled() && (System.currentTimeMillis() - startTime) < TIMEOUT_MS) {
+                // Calcular progreso dentro del rango 0..LISTEN_PROGRESS_MAX
+                int elapsedPercent = (int) ((System.currentTimeMillis() - startTime) * 100 / TIMEOUT_MS);
+                int currentProgress = elapsedPercent * LISTEN_PROGRESS_MAX / 100;
+                if (currentProgress != lastProgress && callback != null) {
+                    callback.onProgress(currentProgress, null);
+                    lastProgress = currentProgress;
+                }
+
                 try {
                     socket.receive(receivePacket);
                     String response = new String(receivePacket.getData(), 0, receivePacket.getLength(), StandardCharsets.UTF_8);
@@ -107,13 +119,11 @@ public class SSDPDiscovery implements DiscoveryMethod {
                     if (usn != null) rawUsns.get(sourceIp).add(usn);
                     if (st != null) rawSts.get(sourceIp).add(st);
 
-                    // Guardar también en extraDetails (opcional)
                     if (server != null) device.addDetail("SERVER", server);
                     if (location != null) device.addDetail("LOCATION", location);
                     if (usn != null) device.addDetail("USN", usn);
                     if (st != null) device.addDetail("ST", st);
 
-                    // OS provisional desde el primer SERVER
                     if (server != null && device.getOs() == null) {
                         String[] parts = server.split(" ");
                         if (parts.length > 0) device.setOs(parts[0]);
@@ -131,19 +141,30 @@ public class SSDPDiscovery implements DiscoveryMethod {
                 }
             }
 
-            Log.i(TAG, "SSDP discovery finished. Raw devices found: " + responseCount);
+            // Asegurar que al final de la fase 1 se reporte el progreso máximo de esta fase
+            if (callback != null && lastProgress != LISTEN_PROGRESS_MAX) {
+                callback.onProgress(LISTEN_PROGRESS_MAX, null);
+                lastProgress = LISTEN_PROGRESS_MAX;
+            }
 
+            Log.i(TAG, "SSDP discovery finished. Raw devices found: " + responseCount);
             Log.i(TAG, "Is API key available? " + OpenRouterApiClient.hasToken());
 
-            // --- Enriquecimiento con OpenRouter (solo si hay token) ---
-            if (OpenRouterApiClient.hasToken()) {
+            // ==================== FASE 2: ENRIQUECIMIENTO ====================
+            if (OpenRouterApiClient.hasToken() && !deviceMap.isEmpty() && !token.isCancelled()) {
                 Log.d(TAG, "Enriching devices with OpenRouter...");
                 OkHttpClient httpClient = new OkHttpClient.Builder()
                         .connectTimeout(HTTP_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
                         .readTimeout(HTTP_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
                         .build();
 
-                for (Map.Entry<String, DeviceInfo> entry : deviceMap.entrySet()) {
+                List<Map.Entry<String, DeviceInfo>> deviceList = new ArrayList<>(deviceMap.entrySet());
+                int totalDevices = deviceList.size();
+                int enrichedCount = 0;
+
+                for (Map.Entry<String, DeviceInfo> entry : deviceList) {
+                    if (token.isCancelled()) break;
+
                     String ip = entry.getKey();
                     DeviceInfo device = entry.getValue();
 
@@ -171,7 +192,6 @@ public class SSDPDiscovery implements DiscoveryMethod {
                         for (String s : sts) combinedInfo.append("  ").append(s).append("\n");
                     }
 
-                    // Descargar XML desde la primera LOCATION
                     String xmlContent = null;
                     if (locations != null && !locations.isEmpty()) {
                         String firstLocation = locations.iterator().next();
@@ -233,7 +253,23 @@ public class SSDPDiscovery implements DiscoveryMethod {
                             Log.e(TAG, "Error parsing OpenRouter response for " + ip, e);
                         }
                     }
+
+                    enrichedCount++;
+                    // Actualizar progreso global: desde LISTEN_PROGRESS_MAX hasta 100
+                    if (callback != null) {
+                        int enrichmentProgress = LISTEN_PROGRESS_MAX +
+                                (enrichedCount * (100 - LISTEN_PROGRESS_MAX) / totalDevices);
+                        if (enrichmentProgress != lastProgress) {
+                            callback.onProgress(enrichmentProgress, null);
+                            lastProgress = enrichmentProgress;
+                        }
+                    }
                 }
+            }
+
+            // Asegurar 100% al finalizar (si no se alcanzó antes)
+            if (callback != null && lastProgress != 100) {
+                callback.onProgress(100, null);
             }
 
         } catch (Exception e) {

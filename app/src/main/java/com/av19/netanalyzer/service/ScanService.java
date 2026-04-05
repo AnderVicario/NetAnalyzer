@@ -113,7 +113,7 @@ public class ScanService extends Service {
                 case "TCP":
                     networkScanner.addMethod(new TCPDiscovery());
                     break;
-                case "mDNS":
+                case "MDNS":
                     networkScanner.addMethod(new MDNSDiscovery(this));
                     break;
                 case "SSDP":
@@ -281,7 +281,7 @@ public class ScanService extends Service {
         List<String> methods = new ArrayList<>();
         if (method == null || method.isEmpty() || method.equals("AUTO")) {
             methods.add("ICMP");
-            methods.add("mDNS");
+            methods.add("MDNS");
             methods.add("SSDP");
             if (android.os.Build.VERSION.SDK_INT < 29) {
                 methods.add("ARP");

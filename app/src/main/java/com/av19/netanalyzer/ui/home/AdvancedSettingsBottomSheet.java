@@ -210,7 +210,7 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
             case "ARP": return R.id.btn_method_arp;
             case "TCP": return R.id.btn_method_tcp;
             case "ICMP": return R.id.btn_method_icmp;
-            case "mDNS": return R.id.btn_method_mdns;
+            case "MDNS": return R.id.btn_method_mdns;
             case "SSDP": return R.id.btn_method_ssdp;
             case "AUTO": return R.id.btn_method_auto;
             default: return -1;
@@ -221,7 +221,7 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
         if (id == R.id.btn_method_arp) return "ARP";
         if (id == R.id.btn_method_tcp) return "TCP";
         if (id == R.id.btn_method_icmp) return "ICMP";
-        if (id == R.id.btn_method_mdns) return "mDNS";
+        if (id == R.id.btn_method_mdns) return "MDNS";
         if (id == R.id.btn_method_ssdp) return "SSDP";
         if (id == R.id.btn_method_auto) return "AUTO";
         return "AUTO";
