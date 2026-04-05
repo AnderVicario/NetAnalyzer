@@ -39,11 +39,13 @@ public class MDNSDiscovery implements DiscoveryMethod {
     private final NsdManager nsdManager;
     private final Map<String, DeviceInfo> foundDevices = new ConcurrentHashMap<>();
     private final Set<String> discoveredServiceTypes = Collections.synchronizedSet(new HashSet<>());
-    private final List<NsdManager.DiscoveryListener> activeListeners = new ArrayList<>();
+    private final Set<NsdManager.DiscoveryListener> activeListeners = Collections.synchronizedSet(new HashSet<>());
 
-    // Tiempos optimizados para escaneo rápido
-    private static final int SERVICE_TYPE_DISCOVERY_TIME = 5000;  // 2 segundos para tipos
-    private static final int INSTANCE_DISCOVERY_TIME = 5000;      // 3 segundos para instancias
+    private static final int SERVICE_TYPE_DISCOVERY_TIME = 5000;
+    private static final int INSTANCE_DISCOVERY_TIME = 5000;
+
+    // Porcentajes: fase1 (tipos) 30%, fase2 (instancias) 70%
+    private static final int PHASE1_MAX_PROGRESS = 30;
 
     public MDNSDiscovery(Context context) {
         this.nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
@@ -69,116 +71,65 @@ public class MDNSDiscovery implements DiscoveryMethod {
             return new ArrayList<>();
         }
 
-        // Notificar progreso inicial
-        if (callback != null) {
-            callback.onProgress(0, "Discovering MDNS services...");
-        }
+        if (callback != null) callback.onProgress(0, "Discovering MDNS service types...");
 
-        // 1. Descubrir tipos de servicio (2 segundos máximo)
+        // ==================== FASE 1: DESCUBRIR TIPOS DE SERVICIO ====================
         List<String> serviceTypes = discoverServiceTypes(token, callback);
-        Log.i(TAG, "Discovered " + serviceTypes.size() + " service types in " + SERVICE_TYPE_DISCOVERY_TIME + "ms");
+        Log.i(TAG, "Discovered " + serviceTypes.size() + " service types");
 
         if (token.isCancelled()) {
-            stopAllDiscoveries();
             return new ArrayList<>(foundDevices.values());
+        }
+
+        if (callback != null) {
+            callback.onProgress(PHASE1_MAX_PROGRESS, "Found " + serviceTypes.size() + " service types");
         }
 
         if (serviceTypes.isEmpty()) {
             Log.d(TAG, "No service types found, finishing MDNS discovery");
+            if (callback != null) callback.onProgress(100, "No services found");
             return new ArrayList<>(foundDevices.values());
         }
 
-        // 2. Descubrir instancias para cada tipo (3 segundos máximo)
+        // ==================== FASE 2: DESCUBRIR INSTANCIAS ====================
         CountDownLatch latch = new CountDownLatch(serviceTypes.size());
+        AtomicInteger completedTypes = new AtomicInteger(0);
+        int totalTypes = serviceTypes.size();
+        int phase2Range = 100 - PHASE1_MAX_PROGRESS;
 
         for (String serviceType : serviceTypes) {
             if (token.isCancelled()) break;
-            startSubDiscovery(serviceType, token, latch, callback);
+            startSubDiscovery(serviceType, token, latch, completedTypes, totalTypes, phase2Range, callback);
         }
 
-        // Esperar a que terminen los descubrimientos o se cumpla el timeout
+        // Esperar a que TODOS los tipos terminen (no solo 5 segundos)
         try {
-            boolean completed = latch.await(INSTANCE_DISCOVERY_TIME, TimeUnit.MILLISECONDS);
+            // Esperar hasta que todos los tipos hayan terminado, con un timeout máximo extendido
+            boolean completed = latch.await(INSTANCE_DISCOVERY_TIME + 2000, TimeUnit.MILLISECONDS);
             if (!completed) {
-                Log.d(TAG, "Instance discovery completed partially after " + INSTANCE_DISCOVERY_TIME + "ms");
+                Log.w(TAG, "Not all service types completed within timeout, forcing stop");
+                stopAllDiscoveries();
+            } else {
+                Log.d(TAG, "All service types completed successfully");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             Log.w(TAG, "Discovery interrupted");
-        } finally {
             stopAllDiscoveries();
+        }
+
+        // Asegurar 100% solo después de que todo haya terminado
+        if (callback != null && completedTypes.get() >= totalTypes) {
+            callback.onProgress(100, "MDNS discovery finished");
         }
 
         Log.d(TAG, "MDNS discovery finished. Found " + foundDevices.size() + " devices");
         return new ArrayList<>(foundDevices.values());
     }
 
-    /**
-     * Descubre tipos de servicio de forma rápida (2 segundos, enviando consultas al inicio y a la mitad)
-     */
-    private List<String> discoverServiceTypes(CancellationToken token, ProgressCallback callback) {
-        List<String> types = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-
-        MulticastSocket socket = MDNSUtils.openMulticastSocket();
-        if (socket == null) {
-            Log.e(TAG, "Failed to open multicast socket for service type discovery");
-            return types;
-        }
-
-        try {
-            byte[] query = MDNSUtils.buildQuery("_services._dns-sd._udp.local", MDNSUtils.TYPE_PTR);
-
-            // Enviar primera consulta
-            MDNSUtils.sendQuery(socket, query);
-
-            long startTime = System.currentTimeMillis();
-            byte[] buf = new byte[4096];
-            socket.setSoTimeout(500); // Timeout corto para ser reactivo
-
-            // Enviar segunda consulta después de 1 segundo para capturar respuestas tardías
-            boolean secondQuerySent = false;
-
-            while (System.currentTimeMillis() - startTime < SERVICE_TYPE_DISCOVERY_TIME && !token.isCancelled()) {
-                // Enviar segunda consulta a mitad del tiempo
-                if (!secondQuerySent && System.currentTimeMillis() - startTime > SERVICE_TYPE_DISCOVERY_TIME / 2) {
-                    MDNSUtils.sendQuery(socket, query);
-                    secondQuerySent = true;
-                    Log.d(TAG, "Sent second service type query");
-                }
-
-                try {
-                    DatagramPacket packet = new DatagramPacket(buf, buf.length);
-                    socket.receive(packet);
-                    MDNSUtils.parseServiceTypeResponse(packet.getData(), packet.getLength(), seen, type -> {
-                        if (!types.contains(type)) {
-                            types.add(type);
-                            Log.d(TAG, "Found service type: " + type);
-                            if (callback != null) {
-                                callback.onProgress(0, "Found: " + type);
-                            }
-                        }
-                    });
-                } catch (java.net.SocketTimeoutException e) {
-                    // Timeout esperado, continuar
-                } catch (Exception e) {
-                    Log.e(TAG, "Error receiving MDNS response", e);
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error in service type discovery", e);
-        } finally {
-            socket.close();
-        }
-
-        return types;
-    }
-
-    /**
-     * Inicia descubrimiento rápido de instancias (3 segundos)
-     */
     private void startSubDiscovery(String serviceType, CancellationToken token,
-                                   CountDownLatch latch, ProgressCallback callback) {
+                                   CountDownLatch latch, AtomicInteger completedTypes,
+                                   int totalTypes, int phase2Range, ProgressCallback callback) {
         AtomicBoolean stopped = new AtomicBoolean(false);
         AtomicInteger instancesFound = new AtomicInteger(0);
 
@@ -186,17 +137,14 @@ public class MDNSDiscovery implements DiscoveryMethod {
             @Override
             public void onServiceFound(NsdServiceInfo serviceInfo) {
                 if (token.isCancelled() || stopped.get()) return;
-
                 instancesFound.incrementAndGet();
 
-                // Resolver inmediatamente para obtener la IP
                 nsdManager.resolveService(serviceInfo, new NsdManager.ResolveListener() {
                     @Override
                     public void onServiceResolved(NsdServiceInfo resolvedInfo) {
                         if (token.isCancelled() || stopped.get()) return;
                         processResolvedService(resolvedInfo, callback);
                     }
-
                     @Override
                     public void onResolveFailed(NsdServiceInfo info, int errorCode) {
                         Log.d(TAG, "Resolve failed for " + info.getServiceName() + ": " + errorCode);
@@ -213,19 +161,30 @@ public class MDNSDiscovery implements DiscoveryMethod {
             public void onDiscoveryStopped(String serviceType) {
                 Log.d(TAG, "Stopped: " + serviceType + " (" + instancesFound.get() + " instances)");
                 if (!stopped.getAndSet(true)) {
+                    int completed = completedTypes.incrementAndGet();
+                    // Calcular y reportar progreso
+                    int progress = PHASE1_MAX_PROGRESS + (completed * phase2Range / totalTypes);
+                    if (callback != null) {
+                        callback.onProgress(progress, "Completed: " + serviceType);
+                    }
+                    activeListeners.remove(this);
                     latch.countDown();
                 }
             }
 
             @Override
-            public void onServiceLost(NsdServiceInfo serviceInfo) {
-                // No necesario para escaneo rápido
-            }
+            public void onServiceLost(NsdServiceInfo serviceInfo) { }
 
             @Override
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
                 Log.e(TAG, "Start failed: " + serviceType + " error=" + errorCode);
                 if (!stopped.getAndSet(true)) {
+                    int completed = completedTypes.incrementAndGet();
+                    int progress = PHASE1_MAX_PROGRESS + (completed * phase2Range / totalTypes);
+                    if (callback != null) {
+                        callback.onProgress(progress, "Failed: " + serviceType);
+                    }
+                    activeListeners.remove(this);
                     latch.countDown();
                 }
             }
@@ -234,18 +193,21 @@ public class MDNSDiscovery implements DiscoveryMethod {
             public void onStopDiscoveryFailed(String serviceType, int errorCode) {
                 Log.e(TAG, "Stop failed: " + serviceType + " error=" + errorCode);
                 if (!stopped.getAndSet(true)) {
+                    int completed = completedTypes.incrementAndGet();
+                    int progress = PHASE1_MAX_PROGRESS + (completed * phase2Range / totalTypes);
+                    if (callback != null) {
+                        callback.onProgress(progress, "Stop failed: " + serviceType);
+                    }
+                    activeListeners.remove(this);
                     latch.countDown();
                 }
             }
         };
 
-        synchronized (activeListeners) {
-            activeListeners.add(listener);
-        }
-
+        activeListeners.add(listener);
         nsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, listener);
 
-        // Detener después del tiempo configurado
+        // Temporizador para detener automáticamente después de INSTANCE_DISCOVERY_TIME
         new Thread(() -> {
             try {
                 Thread.sleep(INSTANCE_DISCOVERY_TIME);
@@ -253,31 +215,111 @@ public class MDNSDiscovery implements DiscoveryMethod {
                 Thread.currentThread().interrupt();
             } finally {
                 if (!stopped.get() && !token.isCancelled()) {
+                    Log.d(TAG, "Auto-stopping discovery for " + serviceType + " after timeout");
                     stopDiscovery(listener);
                 }
             }
         }).start();
     }
 
+    /**
+     * Descubre tipos de servicio (0% -> PHASE1_MAX_PROGRESS% basado en tiempo)
+     */
+    private List<String> discoverServiceTypes(CancellationToken token, ProgressCallback callback) {
+        List<String> types = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+
+        MulticastSocket socket = MDNSUtils.openMulticastSocket();
+        if (socket == null) {
+            Log.e(TAG, "Failed to open multicast socket for service type discovery");
+            return types;
+        }
+
+        try {
+            byte[] query = MDNSUtils.buildQuery("_services._dns-sd._udp.local", MDNSUtils.TYPE_PTR);
+            MDNSUtils.sendQuery(socket, query);
+
+            long startTime = System.currentTimeMillis();
+            byte[] buf = new byte[4096];
+            socket.setSoTimeout(500);
+            boolean secondQuerySent = false;
+            int lastProgress = -1;
+
+            while (System.currentTimeMillis() - startTime < SERVICE_TYPE_DISCOVERY_TIME && !token.isCancelled()) {
+                // Actualizar progreso de fase 1 (0 a PHASE1_MAX_PROGRESS)
+                int elapsedPercent = (int) ((System.currentTimeMillis() - startTime) * 100 / SERVICE_TYPE_DISCOVERY_TIME);
+                int currentProgress = elapsedPercent * PHASE1_MAX_PROGRESS / 100;
+                if (currentProgress != lastProgress && callback != null) {
+                    callback.onProgress(currentProgress, "Discovering service types...");
+                    lastProgress = currentProgress;
+                }
+
+                // Capturar el valor actual de lastProgress para usar en la lambda
+                final int progressForLambda = lastProgress;
+
+                if (!secondQuerySent && System.currentTimeMillis() - startTime > SERVICE_TYPE_DISCOVERY_TIME / 2) {
+                    MDNSUtils.sendQuery(socket, query);
+                    secondQuerySent = true;
+                    Log.d(TAG, "Sent second service type query");
+                }
+
+                try {
+                    DatagramPacket packet = new DatagramPacket(buf, buf.length);
+                    socket.receive(packet);
+                    MDNSUtils.parseServiceTypeResponse(packet.getData(), packet.getLength(), seen, type -> {
+                        if (!types.contains(type)) {
+                            types.add(type);
+                            Log.d(TAG, "Found service type: " + type);
+                            if (callback != null) {
+                                // Usar la variable final capturada
+                                callback.onProgress(progressForLambda, "Found: " + type);
+                            }
+                        }
+                    });
+                } catch (java.net.SocketTimeoutException e) {
+                    // esperado
+                } catch (Exception e) {
+                    Log.e(TAG, "Error receiving MDNS response", e);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in service type discovery", e);
+        } finally {
+            socket.close();
+        }
+
+        return types;
+    }
+
     private void stopDiscovery(NsdManager.DiscoveryListener listener) {
         try {
-            nsdManager.stopServiceDiscovery(listener);
+            // Solo intentamos detener si el listener aún está en el conjunto activo
+            if (activeListeners.contains(listener)) {
+                nsdManager.stopServiceDiscovery(listener);
+                // No lo removemos aquí porque onDiscoveryStopped o onStopDiscoveryFailed lo harán
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error stopping discovery", e);
         }
     }
 
     private void stopAllDiscoveries() {
+        // Copia para evitar ConcurrentModificationException
+        List<NsdManager.DiscoveryListener> listenersCopy;
         synchronized (activeListeners) {
-            for (NsdManager.DiscoveryListener listener : activeListeners) {
-                try {
-                    nsdManager.stopServiceDiscovery(listener);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error stopping discovery", e);
-                }
-            }
-            activeListeners.clear();
+            listenersCopy = new ArrayList<>(activeListeners);
         }
+        for (NsdManager.DiscoveryListener listener : listenersCopy) {
+            try {
+                nsdManager.stopServiceDiscovery(listener);
+            } catch (IllegalArgumentException e) {
+                // El listener ya no estaba registrado, ignoramos
+                Log.d(TAG, "Listener already unregistered");
+            } catch (Exception e) {
+                Log.e(TAG, "Error stopping discovery", e);
+            }
+        }
+        activeListeners.clear();
     }
 
     private void processResolvedService(NsdServiceInfo info, ProgressCallback callback) {
@@ -292,7 +334,6 @@ public class MDNSDiscovery implements DiscoveryMethod {
             foundDevices.put(ip, device);
         }
 
-        // Actualizar información del dispositivo
         if (info.getServiceName() != null && (device.getHostname() == null || device.getHostname().isEmpty())) {
             device.setHostname(info.getServiceName());
         }
@@ -311,9 +352,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
         }
     }
 
-    // ========================
-    // Clase interna con utilidades MDNS
-    // ========================
+    // ======================== CLASE INTERNA MDNSUtils (sin cambios) ========================
     private static class MDNSUtils {
         private static final String MDNS_IPV4_ADDRESS = "224.0.0.251";
         private static final int MDNS_PORT = 5353;
@@ -326,7 +365,6 @@ public class MDNSDiscovery implements DiscoveryMethod {
                 Log.e(TAG, "No suitable multicast interface found");
                 return null;
             }
-
             MulticastSocket socket = null;
             try {
                 socket = new MulticastSocket(null);
@@ -346,7 +384,6 @@ public class MDNSDiscovery implements DiscoveryMethod {
                         Log.w(TAG, "Failed to join IPv6 multicast: " + e.getMessage());
                     }
                 }
-
                 return socket;
             } catch (Exception e) {
                 if (socket != null) socket.close();
@@ -381,18 +418,15 @@ public class MDNSDiscovery implements DiscoveryMethod {
             try {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(baos);
-
                 dos.writeShort(0);      // ID
                 dos.writeShort(0);      // Flags
                 dos.writeShort(1);      // QDCOUNT
                 dos.writeShort(0);      // ANCOUNT
                 dos.writeShort(0);      // NSCOUNT
                 dos.writeShort(0);      // ARCOUNT
-
                 writeDnsName(dos, name);
                 dos.writeShort(type);
                 dos.writeShort(CLASS_IN);
-
                 dos.flush();
                 return baos.toByteArray();
             } catch (IOException e) {
@@ -407,20 +441,14 @@ public class MDNSDiscovery implements DiscoveryMethod {
             } catch (IOException e) {
                 Log.w(TAG, "Failed to send IPv4 query: " + e.getMessage());
             }
-
             try {
                 InetAddress ipv6Group = InetAddress.getByName("ff02::fb");
                 socket.send(new DatagramPacket(query, query.length, ipv6Group, MDNS_PORT));
-            } catch (IOException e) {
-                // IPv6 puede fallar si no está disponible
-            }
+            } catch (IOException e) { }
         }
 
         private static void writeDnsName(DataOutputStream dos, String name) throws IOException {
-            String n = name;
-            if (n.endsWith(".")) {
-                n = n.substring(0, n.length() - 1);
-            }
+            String n = name.endsWith(".") ? name.substring(0, name.length() - 1) : name;
             for (String label : n.split("\\.")) {
                 byte[] bytes = label.getBytes(StandardCharsets.UTF_8);
                 dos.writeByte(bytes.length);
@@ -433,11 +461,9 @@ public class MDNSDiscovery implements DiscoveryMethod {
             StringBuilder sb = new StringBuilder();
             boolean first = true;
             int savedPos = -1;
-
             while (buf.remaining() > 0) {
                 int len = buf.get() & 0xFF;
                 if (len == 0) break;
-
                 if ((len & 0xC0) == 0xC0) {
                     if (buf.remaining() < 1) break;
                     int offset = ((len & 0x3F) << 8) | (buf.get() & 0xFF);
@@ -445,20 +471,14 @@ public class MDNSDiscovery implements DiscoveryMethod {
                     buf.position(offset);
                     continue;
                 }
-
                 if (buf.remaining() < len) break;
-
                 if (!first) sb.append('.');
                 byte[] labelBytes = new byte[len];
                 buf.get(labelBytes);
                 sb.append(new String(labelBytes));
                 first = false;
             }
-
-            if (savedPos != -1) {
-                buf.position(savedPos);
-            }
-
+            if (savedPos != -1) buf.position(savedPos);
             return sb.toString();
         }
 
@@ -467,7 +487,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
                 int len = buf.get() & 0xFF;
                 if (len == 0) break;
                 if ((len & 0xC0) == 0xC0) {
-                    buf.get(); // saltar segundo byte
+                    buf.get();
                     break;
                 }
                 if (buf.remaining() < len) break;
@@ -477,10 +497,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
 
         private static String extractServiceType(String target) {
             if (target == null) return null;
-            String t = target;
-            if (t.endsWith(".")) {
-                t = t.substring(0, t.length() - 1);
-            }
+            String t = target.endsWith(".") ? target.substring(0, target.length() - 1) : target;
             String[] parts = t.split("\\.");
             if (parts.length < 2) return null;
             String name = parts[0];
@@ -495,25 +512,21 @@ public class MDNSDiscovery implements DiscoveryMethod {
                                                     java.util.function.Consumer<String> callback) {
             if (length < 12) return;
             ByteBuffer buf = ByteBuffer.wrap(data, 0, length);
-
             buf.getShort(); // ID
             buf.getShort(); // Flags
             int qdCount = buf.getShort() & 0xFFFF;
             int anCount = buf.getShort() & 0xFFFF;
             int nsCount = buf.getShort() & 0xFFFF;
             int arCount = buf.getShort() & 0xFFFF;
-
             for (int i = 0; i < qdCount; i++) {
                 skipDnsName(buf);
                 if (buf.remaining() < 4) return;
                 buf.getShort(); // type
                 buf.getShort(); // class
             }
-
             int totalRecords = anCount + nsCount + arCount;
             for (int i = 0; i < totalRecords; i++) {
                 if (buf.remaining() < 1) return;
-
                 String name = readDnsName(buf);
                 if (buf.remaining() < 10) return;
                 int type = buf.getShort() & 0xFFFF;
@@ -521,7 +534,6 @@ public class MDNSDiscovery implements DiscoveryMethod {
                 buf.getInt();   // TTL
                 int rdLength = buf.getShort() & 0xFFFF;
                 if (buf.remaining() < rdLength) return;
-
                 if (type == TYPE_PTR) {
                     int rdStart = buf.position();
                     String target = readDnsName(buf);
