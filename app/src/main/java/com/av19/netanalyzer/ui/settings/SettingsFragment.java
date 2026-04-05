@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -204,20 +205,14 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
 
     @Override
     public void onOptionSelected(SettingsItem item, int optionIndex) {
-        // Cambio de opción (tema, idioma, etc.) – sin funcionalidad real, solo guardamos en prefs y mostramos un toast
         String settingKey = item.getSettingKey();
         String value = item.getOptionValues()[optionIndex];
 
-        prefs.edit().putString(settingKey, value).apply();
-
-        // Actualizar subtítulo del item
-        String newSubtitle = item.getOptions()[optionIndex];
-        item.setSubtitle(newSubtitle);
-        adapter.notifyItemChanged(settingsList.indexOf(item));
-
-        Toast.makeText(requireContext(),
-                settingKey + " cambiado a " + value,
-                Toast.LENGTH_SHORT).show();
+        if ("tema".equals(settingKey)) {
+            if (getActivity() instanceof AppCompatActivity) {
+                SettingsOperations.setAppTheme((AppCompatActivity) getActivity(), value);
+            }
+        }
     }
 
     @Override

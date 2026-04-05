@@ -1,11 +1,13 @@
 package com.av19.netanalyzer.ui.main;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applySavedTheme();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setupWindow();
@@ -69,5 +72,24 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
 
         return true;
+    }
+
+    private void applySavedTheme() {
+        SharedPreferences prefs = getSharedPreferences("MiAppPrefs", MODE_PRIVATE);
+        String themeMode = prefs.getString("tema", "auto");
+
+        int nightMode;
+        switch (themeMode) {
+            case "light":
+                nightMode = AppCompatDelegate.MODE_NIGHT_NO;
+                break;
+            case "dark":
+                nightMode = AppCompatDelegate.MODE_NIGHT_YES;
+                break;
+            default:
+                nightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+                break;
+        }
+        AppCompatDelegate.setDefaultNightMode(nightMode);
     }
 }
