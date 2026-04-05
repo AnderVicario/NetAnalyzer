@@ -96,6 +96,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.okhttp)
+    implementation(libs.json)
     implementation(libs.material.icons.extended)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

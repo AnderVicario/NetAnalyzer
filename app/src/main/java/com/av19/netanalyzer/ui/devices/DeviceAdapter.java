@@ -244,7 +244,17 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             }
 
             // ============================================================
-            // 5. INFORMACIÓN ESPECIAL (Gateway, DNS, etc.)
+            // 5. EXTRA
+            // ============================================================
+            if (device.getExtraDetails() != null) {
+                for (String key : device.getExtraDetails().keySet()) {
+                    details.append("ℹ️ ").append(key).append(": ").append(device.getExtraDetails().get(key)).append("\n");
+                }
+            }
+
+
+            // ============================================================
+            // 6. INFORMACIÓN ESPECIAL (Gateway, DNS, etc.)
             // ============================================================
             if (device.getIsCurrent() || device.getIsGateway() || device.getIsDNS()) {
                 details.append("⭐ SPECIAL\n");

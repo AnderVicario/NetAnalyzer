@@ -40,6 +40,7 @@ import com.av19.netanalyzer.repository.ScanRepository;
 import com.av19.netanalyzer.scanner.NetworkScanner;
 import com.av19.netanalyzer.utils.CancellationToken;
 import com.av19.netanalyzer.utils.NetUtils;
+import com.av19.netanalyzer.utils.OpenRouterApiClient;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -87,6 +88,7 @@ public class ScanService extends Service {
     }
 
     private void startScan(String scanMethod, int[] ports) {
+        OpenRouterApiClient.getInstance(this);
         cancellationToken = new CancellationToken();
 
         NetworkInfo networkInfo = collectNetworkInfo();
