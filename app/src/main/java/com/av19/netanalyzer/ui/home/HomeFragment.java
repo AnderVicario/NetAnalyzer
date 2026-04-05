@@ -1,5 +1,7 @@
 package com.av19.netanalyzer.ui.home;
 
+import static com.av19.netanalyzer.utils.OpenRouterApiClient.hasToken;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
@@ -17,6 +19,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -24,6 +27,7 @@ import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.service.ScanService;
+import com.av19.netanalyzer.utils.OpenRouterApiClient;
 import com.av19.netanalyzer.viewmodel.ScanViewModel;
 import com.google.android.material.button.MaterialButton;
 
@@ -79,6 +83,14 @@ public class HomeFragment extends Fragment {
         tvDevicesCount = view.findViewById(R.id.tv_devices_count);
         tvTimeElapsed = view.findViewById(R.id.tv_time_elapsed);
         tvHistoryTime = view.findViewById(R.id.tv_history_time);
+
+        OpenRouterApiClient.getInstance(requireContext());
+
+        if (!hasToken()){
+            btnScan.setIcon(null);
+        } else {
+            btnScan.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_ai));
+        }
 
         SharedPreferences prefs = requireContext().getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
         long lastScanTime = prefs.getLong("last_scan_time", 0);
