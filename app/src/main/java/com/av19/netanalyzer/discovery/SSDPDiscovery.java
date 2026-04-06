@@ -126,7 +126,7 @@ public class SSDPDiscovery implements DiscoveryMethod {
 
                     if (server != null && device.getOs() == null) {
                         String[] parts = server.split(" ");
-                        if (parts.length > 0) device.setOs(parts[0]);
+                        if (parts.length > 0) device.setOs(new DeviceInfo.PriorityValue(0, parts[0]));
                     }
 
                     if (isNew && callback != null) {
@@ -217,13 +217,13 @@ public class SSDPDiscovery implements DiscoveryMethod {
                                     if (!devObj.isNull("manufacturer") && !manufacturer.isEmpty()) device.setVendor(manufacturer);
 
                                     String os = devObj.optString("os", null);
-                                    if (!devObj.isNull("os") && !os.isEmpty()) device.setOs(os);
+                                    if (!devObj.isNull("os") && !os.isEmpty()) device.setOs(new DeviceInfo.PriorityValue(1, os));
 
                                     String model = devObj.optString("model", null);
-                                    if (!devObj.isNull("model") && !model.isEmpty()) device.setModel(model);
+                                    if (!devObj.isNull("model") && !model.isEmpty()) device.setModel(new DeviceInfo.PriorityValue(1, model));
 
                                     String hostname = devObj.optString("friendly_name", null);
-                                    if (!devObj.isNull("friendly_name") && !hostname.isEmpty()) device.setHostname(hostname);
+                                    if (!devObj.isNull("friendly_name") && !hostname.isEmpty()) device.setHostname(new DeviceInfo.PriorityValue(1,hostname));
 
                                     String udn = devObj.optString("udn", null);
                                     if (!devObj.isNull("udn") && !udn.isEmpty()) device.addDetail("udn", udn);

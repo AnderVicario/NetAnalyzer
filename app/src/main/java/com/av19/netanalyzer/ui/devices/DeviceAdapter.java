@@ -111,10 +111,10 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         private void bind(DeviceInfo device, boolean expanded) {
             // TÍTULO: hostname > OS > "Dispositivo"
             String title;
-            if (device.getHostname() != null && !device.getHostname().isEmpty()) {
-                title = device.getHostname();
-            } else if (device.getOs() != null && !device.getOs().isEmpty()) {
-                title = device.getOs();
+            if (device.getHostname() != null && !device.getHostname().getValue().isEmpty()) {
+                title = device.getHostname().getValue();
+            } else if (device.getOs() != null && !device.getOs().getValue().isEmpty()) {
+                title = device.getOs().getValue();
             } else {
                 title = "Dispositivo";
             }
@@ -148,9 +148,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             boolean hasInfo = false;
 
             // Hostname (siempre en detalles, aunque sea el título)
-            if (device.getHostname() != null && !device.getHostname().isEmpty()) {
+            if (device.getHostname() != null && !device.getHostname().getValue().isEmpty()) {
                 details.append("📡 HOSTNAME\n");
-                details.append("  ").append(device.getHostname()).append("\n\n");
+                details.append("  ").append(device.getHostname().getValue()).append("\n\n");
                 hasInfo = true;
             }
 
@@ -177,14 +177,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             StringBuilder deviceInfo = new StringBuilder();
 
             // OS (siempre en detalles)
-            if (device.getOs() != null && !device.getOs().isEmpty()) {
-                deviceInfo.append("  OS: ").append(device.getOs()).append("\n");
+            if (device.getOs() != null && !device.getOs().getValue().isEmpty()) {
+                deviceInfo.append("  OS: ").append(device.getOs().getValue()).append("\n");
                 hasDeviceInfo = true;
             }
 
             // Modelo
-            if (device.getModel() != null && !device.getModel().isEmpty()) {
-                deviceInfo.append("  Model: ").append(device.getModel()).append("\n");
+            if (device.getModel() != null && !device.getModel().getValue().isEmpty()) {
+                deviceInfo.append("  Model: ").append(device.getModel().getValue()).append("\n");
                 hasDeviceInfo = true;
             }
 
@@ -193,7 +193,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                 deviceInfo.append("  TTL: ").append(device.getTtl());
 
                 // Inferir OS basado en TTL si no hay OS específico
-                if (device.getOs() == null || device.getOs().isEmpty()) {
+                if (device.getOs() == null || device.getOs().getValue().isEmpty()) {
                     if (device.getTtl() <= 64) {
                         deviceInfo.append(" (Linux/Android/Unix)");
                     } else if (device.getTtl() <= 128) {

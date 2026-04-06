@@ -334,16 +334,16 @@ public class MDNSDiscovery implements DiscoveryMethod {
             foundDevices.put(ip, device);
         }
 
-        if (info.getServiceName() != null && (device.getHostname() == null || device.getHostname().isEmpty())) {
-            device.setHostname(info.getServiceName());
+        if (info.getServiceName() != null) {
+            device.setHostname(new DeviceInfo.PriorityValue(0, info.getServiceName()));
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Map<String, byte[]> attributes = info.getAttributes();
             if (attributes.containsKey("md") && device.getModel() == null) {
-                device.setModel(new String(attributes.get("md")));
+                device.setModel(new DeviceInfo.PriorityValue(0, new String(attributes.get("md"))) );
             } else if (attributes.containsKey("modelid") && device.getModel() == null) {
-                device.setModel(new String(attributes.get("modelid")));
+                device.setModel(new DeviceInfo.PriorityValue(0, new String(attributes.get("modelid"))));
             }
         }
 

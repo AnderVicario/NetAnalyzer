@@ -11,11 +11,11 @@ public class DeviceInfo {
     private Boolean isDNS;
     private String mac;
     private String vendor;
-    private String os;
+    private PriorityValue os;
     private List<Integer> openPorts;
     private Integer ttl;
-    private String model;
-    private String hostname;
+    private PriorityValue model;
+    private PriorityValue hostname;
     private final Map<String, String> extraDetails;
 
     public DeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts) {
@@ -58,7 +58,7 @@ public class DeviceInfo {
         return vendor;
     }
 
-    public String getOs() {
+    public PriorityValue getOs() {
         return os;
     }
 
@@ -70,11 +70,11 @@ public class DeviceInfo {
         return ttl;
     }
 
-    public String getModel() {
+    public PriorityValue getModel() {
         return model;
     }
 
-    public String getHostname() {
+    public PriorityValue getHostname() {
         return hostname;
     }
 
@@ -107,7 +107,7 @@ public class DeviceInfo {
         this.vendor = vendor;
     }
 
-    public void setOs(String os) {
+    public void setOs(PriorityValue os) {
         this.os = os;
     }
 
@@ -119,15 +119,33 @@ public class DeviceInfo {
         this.ttl = ttl;
     }
 
-    public void setModel(String model) {
+    public void setModel(PriorityValue model) {
         this.model = model;
     }
 
-    public void setHostname(String hostname) {
+    public void setHostname(PriorityValue hostname) {
         this.hostname = hostname;
     }
 
     public void addDetail(String key, String value) {
         if (value != null) extraDetails.put(key, value);
+    }
+
+    public static class PriorityValue {
+        private int priority;
+        private String value;
+
+        public PriorityValue(int priority, String value) {
+            this.priority = priority;
+            this.value = value;
+        }
+
+        public int getPriority() {
+            return priority;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 }

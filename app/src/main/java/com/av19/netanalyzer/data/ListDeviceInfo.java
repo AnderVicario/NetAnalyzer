@@ -1,5 +1,7 @@
 package com.av19.netanalyzer.data;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ public class ListDeviceInfo {
      */
     private DeviceInfo merge(DeviceInfo existing, DeviceInfo newDevice) {
         // Hostname
-        if (isEmpty(existing.getHostname()) && !isEmpty(newDevice.getHostname())) {
+        if (newDevice.getHostname() != null && (existing.getHostname() == null || newDevice.getHostname().getPriority() > existing.getHostname().getPriority())) {
             existing.setHostname(newDevice.getHostname());
         }
         // MAC
@@ -41,7 +43,7 @@ public class ListDeviceInfo {
             existing.setVendor(newDevice.getVendor());
         }
         // OS
-        if (isEmpty(existing.getOs()) && !isEmpty(newDevice.getOs())) {
+        if (newDevice.getOs() != null && (existing.getOs() == null || newDevice.getOs().getPriority() > existing.getOs().getPriority())) {
             existing.setOs(newDevice.getOs());
         }
         // TTL (el menor, más fiable)
@@ -51,7 +53,7 @@ public class ListDeviceInfo {
             existing.setTtl(newDevice.getTtl());
         }
         // Modelo
-        if (isEmpty(existing.getModel()) && !isEmpty(newDevice.getModel())) {
+        if (newDevice.getModel() != null && (existing.getModel() == null || newDevice.getModel().getPriority() > existing.getModel().getPriority())) {
             existing.setModel(newDevice.getModel());
         }
         // Puertos abiertos (fusión sin duplicados)

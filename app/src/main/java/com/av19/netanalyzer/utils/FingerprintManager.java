@@ -26,7 +26,7 @@ public class FingerprintManager {
         DeviceInfo device = new DeviceInfo(ip, mac, vendor, openPorts);
         device.setTtl(ttl);
         if (device.getOs() == null) {
-            device.setOs(guessOsFromTtl(ttl));
+            device.setOs(new DeviceInfo.PriorityValue(-1, guessOsFromTtl(ttl)));
         }
         if (ip.equals(network.getIp())) {
             device.setIsCurrent(true);
