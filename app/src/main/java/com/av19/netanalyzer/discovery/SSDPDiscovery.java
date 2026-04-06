@@ -62,19 +62,38 @@ public class SSDPDiscovery implements DiscoveryMethod {
             socket.setSoTimeout(SO_TIMEOUT_MS);
             socket.setReuseAddress(true);
 
-            String search = "M-SEARCH * HTTP/1.1\r\n" +
-                    "HOST: " + SSDP_ADDR + ":" + SSDP_PORT + "\r\n" +
-                    "MAN: \"ssdp:discover\"\r\n" +
-                    "MX: 3\r\n" +
-                    "ST: ssdp:all\r\n" +
-                    "\r\n";
+            // ==================== MÚLTIPLES M-SEARCH ====================
+            String[] searchTypes = {
+                    "ssdp:all",
+                    "upnp:rootdevice",
+                    "urn:schemas-upnp-org:device:Basic:1",
+                    "urn:schemas-upnp-org:service:ContentDirectory:1",
+                    "urn:dial-multiscreen-org:service:dial:1",
+                    "urn:schemas-upnp-org:device:MediaRenderer:1",
+                    "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+            };
 
-            byte[] sendData = search.getBytes(StandardCharsets.UTF_8);
             InetAddress group = InetAddress.getByName(SSDP_ADDR);
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, group, SSDP_PORT);
-            socket.send(sendPacket);
-            Log.d(TAG, "M-SEARCH sent");
+            for (String st : searchTypes) {
+                if (token.isCancelled()) break;
 
+                String search = "M-SEARCH * HTTP/1.1\r\n" +
+                        "HOST: " + SSDP_ADDR + ":" + SSDP_PORT + "\r\n" +
+                        "MAN: \"ssdp:discover\"\r\n" +
+                        "MX: 3\r\n" +
+                        "ST: " + st + "\r\n" +
+                        "\r\n";
+
+                byte[] sendData = search.getBytes(StandardCharsets.UTF_8);
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, group, SSDP_PORT);
+                socket.send(sendPacket);
+                Log.d(TAG, "M-SEARCH sent for ST: " + st);
+
+                // Pequeña pausa para evitar saturar la red
+                try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            }
+
+            // ==================== FASE 1: ESCUCHA SSDP ====================
             byte[] buffer = new byte[8192];
             DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
 
@@ -82,9 +101,7 @@ public class SSDPDiscovery implements DiscoveryMethod {
             int lastProgress = -1;
             int responseCount = 0;
 
-            // ==================== FASE 1: ESCUCHA SSDP ====================
             while (!token.isCancelled() && (System.currentTimeMillis() - startTime) < TIMEOUT_MS) {
-                // Calcular progreso dentro del rango 0..LISTEN_PROGRESS_MAX
                 int elapsedPercent = (int) ((System.currentTimeMillis() - startTime) * 100 / TIMEOUT_MS);
                 int currentProgress = elapsedPercent * LISTEN_PROGRESS_MAX / 100;
                 if (currentProgress != lastProgress && callback != null) {
@@ -141,7 +158,6 @@ public class SSDPDiscovery implements DiscoveryMethod {
                 }
             }
 
-            // Asegurar que al final de la fase 1 se reporte el progreso máximo de esta fase
             if (callback != null && lastProgress != LISTEN_PROGRESS_MAX) {
                 callback.onProgress(LISTEN_PROGRESS_MAX, null);
                 lastProgress = LISTEN_PROGRESS_MAX;
@@ -255,7 +271,6 @@ public class SSDPDiscovery implements DiscoveryMethod {
                     }
 
                     enrichedCount++;
-                    // Actualizar progreso global: desde LISTEN_PROGRESS_MAX hasta 100
                     if (callback != null) {
                         int enrichmentProgress = LISTEN_PROGRESS_MAX +
                                 (enrichedCount * (100 - LISTEN_PROGRESS_MAX) / totalDevices);
@@ -267,7 +282,6 @@ public class SSDPDiscovery implements DiscoveryMethod {
                 }
             }
 
-            // Asegurar 100% al finalizar (si no se alcanzó antes)
             if (callback != null && lastProgress != 100) {
                 callback.onProgress(100, null);
             }
