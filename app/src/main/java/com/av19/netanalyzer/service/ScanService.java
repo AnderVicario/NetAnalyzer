@@ -34,6 +34,7 @@ import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.discovery.ARPDiscovery;
 import com.av19.netanalyzer.discovery.ICMPDiscovery;
 import com.av19.netanalyzer.discovery.MDNSDiscovery;
+import com.av19.netanalyzer.discovery.NetBIOSDiscovery;
 import com.av19.netanalyzer.discovery.SSDPDiscovery;
 import com.av19.netanalyzer.discovery.TCPDiscovery;
 import com.av19.netanalyzer.repository.ScanRepository;
@@ -118,6 +119,9 @@ public class ScanService extends Service {
                     break;
                 case "SSDP":
                     networkScanner.addMethod(new SSDPDiscovery());
+                    break;
+                case "NETBIOS":
+                    networkScanner.addMethod(new NetBIOSDiscovery());
                     break;
             }
         }
@@ -283,6 +287,7 @@ public class ScanService extends Service {
             methods.add("ICMP");
             methods.add("MDNS");
             methods.add("SSDP");
+            methods.add("NETBIOS");
             if (android.os.Build.VERSION.SDK_INT < 29) {
                 methods.add("ARP");
             }
@@ -291,7 +296,7 @@ public class ScanService extends Service {
         String[] parts = method.split("[+,]");
         for (String part : parts) {
             String trimmed = part.trim().toUpperCase();
-            if (trimmed.equals("ARP") || trimmed.equals("ICMP") || trimmed.equals("TCP") || trimmed.equals("MDNS") || trimmed.equals("SSDP")) {
+            if (trimmed.equals("ARP") || trimmed.equals("ICMP") || trimmed.equals("TCP") || trimmed.equals("MDNS") || trimmed.equals("SSDP") || trimmed.equals("NETBIOS")) {
                 methods.add(trimmed);
             }
         }
@@ -300,6 +305,7 @@ public class ScanService extends Service {
             methods.add("ARP");
             methods.add("MDNS");
             methods.add("SSDP");
+            methods.add("NETBIOS");
         }
         return methods;
     }
