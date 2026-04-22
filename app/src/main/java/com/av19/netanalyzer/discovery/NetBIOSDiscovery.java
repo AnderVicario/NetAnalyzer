@@ -28,8 +28,8 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
 
     private static final String TAG = "NetBIOSDiscovery";
     private static final int NETBIOS_PORT = 137;
-    private static final int TIMEOUT_MS = 12000;
-    private static final int THREAD_POOL_SIZE = 30;
+    private static final int TIMEOUT_MS = 8000;
+    private static final int THREAD_POOL_SIZE = 40;
 
     @Override
     public String getName() {
@@ -44,7 +44,7 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
         int networkInt = NetUtils.ipToInt(network.getNetworkAddress());
         int mask = NetUtils.ipToInt(network.getNetmask());
         int first = networkInt + 1;
-        int last = (networkInt | ~mask) - 200;
+        int last = (networkInt | ~mask) - 1;
         int totalHosts = last - first + 1;
 
         if (totalHosts <= 0) return devices;
