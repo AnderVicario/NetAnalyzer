@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.utils.SnackbarUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
@@ -27,6 +29,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import android.widget.Toast;
+import java.io.File;
 
 public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
 
@@ -104,6 +109,12 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         View.OnClickListener clickListener = vw -> {
             MaterialButton btn = (MaterialButton) vw;
             if (btn.isChecked()) {
+                if (btn.getId() == R.id.btn_method_arp) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isRootAvailable()) {
+                        SnackbarUtils.showWarning(requireView(), requireContext(),
+                                "ARP discovery may not work on Android 10+ without root access");
+                    }
+                }
                 if (btnAuto.isChecked()) btnAuto.setChecked(false);
             } else {
                 boolean anyChecked = false;
@@ -285,5 +296,13 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         if (id == R.id.btn_ports_500) return "500";
         if (id == R.id.btn_ports_1000) return "1000";
         return "100";
+    }
+
+    private boolean isRootAvailable() {
+        String[] paths = {"/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/su/xbin", "/su/bin/su"};
+        for (String path : paths) {
+            if (new File(path).exists()) return true;
+        }
+        return false;
     }
 }

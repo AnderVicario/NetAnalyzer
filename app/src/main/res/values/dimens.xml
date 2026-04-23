@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="padding_icon">16dp</dimen>
+    <dimen name="single_row_height">156dp</dimen>
+    <dimen name="two_row_height">312dp</dimen>
+</resources>
