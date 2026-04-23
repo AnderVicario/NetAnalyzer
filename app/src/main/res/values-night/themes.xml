@@ -40,4 +40,13 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
+
+    <style name="RoundedDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Dialog.Rounded</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.Dialog.Rounded" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
 </resources>

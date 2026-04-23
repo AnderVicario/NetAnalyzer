@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/tcp_port"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Port (default 80)"
+        android:inputType="number"
+        android:padding="12dp"
+        android:background="@drawable/edit_text_border" />
+
+    <EditText
+        android:id="@+id/tcp_timeout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Timeout (ms)"
+        android:inputType="number"
+        android:text="200"
+        android:layout_marginTop="8dp"
+        android:padding="12dp"
+        android:background="@drawable/edit_text_border" />
+
+</LinearLayout>

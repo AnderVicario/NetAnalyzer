@@ -8,11 +8,11 @@
     android:background="@color/surface">
 
     <View
-    android:layout_width="40dp"
-    android:layout_height="2dp"
-    android:layout_gravity="center_horizontal"
-    android:layout_marginBottom="16dp"
-    android:background="@color/on_surface" />
+        android:layout_width="40dp"
+        android:layout_height="2dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@color/on_surface" />
 
     <TextView
         android:layout_width="match_parent"
@@ -26,39 +26,91 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan Method"
+        android:text="Scan Methods (long press for options)"
         android:alpha="0.7"
         android:textSize="12sp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="12dp" />
 
-    <LinearLayout
+    <!-- Matriz 3 columnas -->
+    <GridLayout
+        android:id="@+id/grid_methods"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:columnCount="3"
+        android:alignmentMode="alignMargins"
+        android:columnOrderPreserved="false">
 
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/toggle_group_row1"
-            android:layout_width="match_parent"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_method_auto"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:singleSelection="false">
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:text="AUTO"
+            android:checkable="true" />
 
-            <Button android:id="@+id/btn_method_auto" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="AUTO" />
-            <Button android:id="@+id/btn_method_arp" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="ARP" />
-            <Button android:id="@+id/btn_method_tcp" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="TCP" />
-        </com.google.android.material.button.MaterialButtonToggleGroup>
-
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/toggle_group_row2"
-            android:layout_width="match_parent"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_method_arp"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="-1dp"
-            app:singleSelection="false">
-            <Button android:id="@+id/btn_method_icmp" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="ICMP" />
-            <Button android:id="@+id/btn_method_mdns" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="mDNS" />
-            <Button android:id="@+id/btn_method_ssdp" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="SSDP" />
-        </com.google.android.material.button.MaterialButtonToggleGroup>
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:text="ARP"
+            android:checkable="true" />
 
-    </LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_method_tcp"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:text="TCP"
+            android:checkable="true" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_method_icmp"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:text="ICMP"
+            android:checkable="true" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_method_mdns"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:text="mDNS"
+            android:checkable="true" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_method_ssdp"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:text="SSDP"
+            android:checkable="true" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_method_netbios"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:text="NetBIOS"
+            android:checkable="true" />
+
+    </GridLayout>
 
     <TextView
         android:layout_width="match_parent"
@@ -66,6 +118,7 @@
         android:text="Ports to Scan"
         android:alpha="0.7"
         android:textSize="12sp"
+        android:layout_marginTop="24dp"
         android:layout_marginBottom="8dp" />
 
     <com.google.android.material.button.MaterialButtonToggleGroup
@@ -76,9 +129,24 @@
         app:selectionRequired="true"
         android:layout_marginBottom="32dp">
 
-        <Button android:id="@+id/btn_ports_100" style="?attr/materialButtonOutlinedStyle" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:text="100" />
-        <Button android:id="@+id/btn_ports_500" style="?attr/materialButtonOutlinedStyle" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:text="500" />
-        <Button android:id="@+id/btn_ports_1000" style="?attr/materialButtonOutlinedStyle" android:layout_height="wrap_content" android:layout_width="0dp" android:layout_weight="1" android:text="1000" />
+        <Button android:id="@+id/btn_ports_100"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="100" />
+        <Button android:id="@+id/btn_ports_500"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="500" />
+        <Button android:id="@+id/btn_ports_1000"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="1000" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <Button

@@ -2,13 +2,14 @@ package com.av19.netanalyzer.ui.home;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,17 +18,21 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.av19.netanalyzer.R;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class AdvancedSettingsBottomSheet extends com.google.android.material.bottomsheet.BottomSheetDialogFragment {
+public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
 
     private SharedPreferences prefs;
+    private List<MaterialButton> methodButtons;
+    private MaterialButton btnAuto;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,172 +64,221 @@ public class AdvancedSettingsBottomSheet extends com.google.android.material.bot
         });
 
         prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE);
-
-        // Grupos de métodos (dos filas)
-        MaterialButtonToggleGroup groupRow1 = v.findViewById(R.id.toggle_group_row1);
-        MaterialButtonToggleGroup groupRow2 = v.findViewById(R.id.toggle_group_row2);
-        MaterialButtonToggleGroup groupPorts = v.findViewById(R.id.toggle_group_ports);
-
-        // Botones
-        MaterialButton btnAuto = v.findViewById(R.id.btn_method_auto);
+        btnAuto = v.findViewById(R.id.btn_method_auto);
         MaterialButton btnArp = v.findViewById(R.id.btn_method_arp);
         MaterialButton btnTcp = v.findViewById(R.id.btn_method_tcp);
         MaterialButton btnIcmp = v.findViewById(R.id.btn_method_icmp);
         MaterialButton btnMdns = v.findViewById(R.id.btn_method_mdns);
         MaterialButton btnSsdp = v.findViewById(R.id.btn_method_ssdp);
+        MaterialButton btnNetbios = v.findViewById(R.id.btn_method_netbios);
 
-        // Lista de todos los botones manuales (para resetear colores)
-        List<MaterialButton> manualButtons = List.of(btnArp, btnTcp, btnIcmp, btnMdns, btnSsdp);
+        methodButtons = Arrays.asList(btnArp, btnTcp, btnIcmp, btnMdns, btnSsdp, btnNetbios);
 
-        // Lógica de AUTO: limpia todo, marca AUTO y resetea colores
-        btnAuto.setOnClickListener(view -> {
-            Log.d("AdvancedSettingsBottomSheet", "AUTO pulsado");
+        // Tooltips para indicar long click (Android 8+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            btnTcp.setTooltipText("Long press to configure");
+            btnIcmp.setTooltipText("Long press to configure");
+            btnSsdp.setTooltipText("Long press to configure");
+        }
 
-            // Limpiar ambos grupos
-            groupRow1.clearChecked();
-            groupRow2.clearChecked();
-            // Marcar AUTO en el primer grupo
-            groupRow1.check(R.id.btn_method_auto);
-
-            // Resetear fondo de todos los botones manuales
-            for (MaterialButton btn : manualButtons) {
-                btn.setBackgroundColor(getResources().getColor(R.color.transparent));
+        // Listener para AUTO
+        btnAuto.setOnClickListener(vw -> {
+            if (btnAuto.isChecked()) {
+                for (MaterialButton btn : methodButtons) {
+                    btn.setChecked(false);
+                    updateButtonStyle(btn, false);
+                }
+            } else {
+                boolean anyChecked = false;
+                for (MaterialButton btn : methodButtons) {
+                    if (btn.isChecked()) {
+                        anyChecked = true;
+                        break;
+                    }
+                }
+                if (!anyChecked) btnAuto.setChecked(true);
             }
         });
 
-        // Listener para botones manuales
-        View.OnClickListener manualListener = view -> {
-            Log.d("AdvancedSettingsBottomSheet", "Método manual pulsado");
-
-            // Desmarcar AUTO si estaba marcado en cualquiera de los dos grupos
-            groupRow1.uncheck(R.id.btn_method_auto);
-            groupRow2.uncheck(R.id.btn_method_auto); // por si acaso
-
-            MaterialButton btn = (MaterialButton) view;
-            // Alternar color de fondo según el nuevo estado checked
+        // Listener para métodos manuales
+        View.OnClickListener clickListener = vw -> {
+            MaterialButton btn = (MaterialButton) vw;
             if (btn.isChecked()) {
-                btn.setBackgroundColor(getResources().getColor(R.color.button));
+                if (btnAuto.isChecked()) btnAuto.setChecked(false);
             } else {
-                btn.setBackgroundColor(getResources().getColor(R.color.transparent));
+                boolean anyChecked = false;
+                for (MaterialButton b : methodButtons) {
+                    if (b.isChecked()) {
+                        anyChecked = true;
+                        break;
+                    }
+                }
+                if (!anyChecked && !btnAuto.isChecked()) {
+                    btnAuto.setChecked(true);
+                }
             }
+            updateButtonStyle(btn, btn.isChecked());
         };
 
-        // Asignar listener a todos los botones manuales
-        btnArp.setOnClickListener(manualListener);
-        btnTcp.setOnClickListener(manualListener);
-        btnIcmp.setOnClickListener(manualListener);
-        btnMdns.setOnClickListener(manualListener);
-        btnSsdp.setOnClickListener(manualListener);
+        // Long click para abrir diálogo de configuración
+        View.OnLongClickListener longClickListener = vw -> {
+            MaterialButton btn = (MaterialButton) vw;
+            String methodName = getMethodNameFromButton(btn);
+            showConfigDialog(methodName);
+            return true;
+        };
 
-        // Cargar estado guardado
-        setupInitialSelection(groupRow1, groupRow2, groupPorts, manualButtons);
+        for (MaterialButton btn : methodButtons) {
+            btn.setOnClickListener(clickListener);
+        }
+        btnTcp.setOnLongClickListener(longClickListener);
+        btnIcmp.setOnLongClickListener(longClickListener);
+        btnSsdp.setOnLongClickListener(longClickListener);
+        // Añadir más si otros métodos tienen opciones
 
-        // Botón Guardar
+        // Cargar selección guardada
+        loadSavedSelection();
+
+        // Grupo de puertos
+        MaterialButtonToggleGroup groupPorts = v.findViewById(R.id.toggle_group_ports);
+        String currentPorts = prefs.getString("scan_level", "100");
+        if (currentPorts.equals("500")) groupPorts.check(R.id.btn_ports_500);
+        else if (currentPorts.equals("1000")) groupPorts.check(R.id.btn_ports_1000);
+        else groupPorts.check(R.id.btn_ports_100);
+
         v.findViewById(R.id.btn_save_config).setOnClickListener(view -> {
-            Set<String> selectedMethods = new HashSet<>();
-
-            // Recoger selecciones de ambos grupos
-            for (int id : groupRow1.getCheckedButtonIds()) {
-                selectedMethods.add(getMethodNameFromId(id));
-            }
-            for (int id : groupRow2.getCheckedButtonIds()) {
-                selectedMethods.add(getMethodNameFromId(id));
-            }
-
-            String methodsStr = String.join(",", selectedMethods);
-            prefs.edit()
-                    .putString("scan_method", methodsStr)
-                    .putString("scan_level", getPortsFromId(groupPorts.getCheckedButtonId()))
-                    .apply();
-
+            saveConfiguration(groupPorts);
             dismiss();
-            Log.d("AdvancedSettingsBottomSheet", "Configuración guardada: " + methodsStr);
         });
 
         return v;
     }
 
-    private void setupInitialSelection(MaterialButtonToggleGroup groupRow1,
-                                       MaterialButtonToggleGroup groupRow2,
-                                       MaterialButtonToggleGroup groupPorts,
-                                       List<MaterialButton> manualButtons) {
-        Set<String> savedMethods = getStoredMethods();
+    private void showConfigDialog(String methodName) {
+        View dialogView = null;
+        switch (methodName) {
+            case "TCP":
+                dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_tcp_config, null);
+                break;
+            case "ICMP":
+                dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_icmp_config, null);
+                break;
+            case "SSDP":
+                dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ssdp_config, null);
+                break;
+            default:
+                return;
+        }
 
-        // Limpiar ambos grupos antes de marcar
-        groupRow1.clearChecked();
-        groupRow2.clearChecked();
+        final String finalMethodName = methodName;
+        final View finalDialogView = dialogView;
 
-        // Marcar los botones según los métodos guardados
-        for (String method : savedMethods) {
-            int id = getMethodIdFromName(method);
-            if (id == -1) continue;
+        loadConfigValues(finalMethodName, finalDialogView);
 
-            // Buscar en qué grupo está el botón y marcarlo
-            if (id == R.id.btn_method_auto) {
-                groupRow1.check(id);
-            } else {
-                // Intentar marcar en row1, si no está allí, en row2
-                if (groupRow1.findViewById(id) != null) {
-                    groupRow1.check(id);
-                } else if (groupRow2.findViewById(id) != null) {
-                    groupRow2.check(id);
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(finalMethodName + " Configuration")
+                .setView(finalDialogView)
+                .setPositiveButton("Save", (d, which) -> saveConfigValues(finalMethodName, finalDialogView))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void loadConfigValues(String methodName, View view) {
+        switch (methodName) {
+            case "TCP":
+                ((EditText) view.findViewById(R.id.tcp_port)).setText(prefs.getString("tcp_port", ""));
+                ((EditText) view.findViewById(R.id.tcp_timeout)).setText(prefs.getString("tcp_timeout", "200"));
+                break;
+            case "ICMP":
+                ((EditText) view.findViewById(R.id.icmp_count)).setText(prefs.getString("icmp_count", "1"));
+                ((EditText) view.findViewById(R.id.icmp_timeout)).setText(prefs.getString("icmp_timeout", "700"));
+                break;
+            case "SSDP":
+                ((EditText) view.findViewById(R.id.ssdp_timeout)).setText(prefs.getString("ssdp_timeout", "5000"));
+                break;
+        }
+    }
+
+    private void saveConfigValues(String methodName, View view) {
+        SharedPreferences.Editor editor = prefs.edit();
+        switch (methodName) {
+            case "TCP":
+                editor.putString("tcp_port", ((EditText) view.findViewById(R.id.tcp_port)).getText().toString());
+                editor.putString("tcp_timeout", ((EditText) view.findViewById(R.id.tcp_timeout)).getText().toString());
+                break;
+            case "ICMP":
+                editor.putString("icmp_count", ((EditText) view.findViewById(R.id.icmp_count)).getText().toString());
+                editor.putString("icmp_timeout", ((EditText) view.findViewById(R.id.icmp_timeout)).getText().toString());
+                break;
+            case "SSDP":
+                editor.putString("ssdp_timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());
+                break;
+        }
+        editor.apply();
+    }
+
+    private void loadSavedSelection() {
+        Set<String> savedMethods = getStoredMethodsSet();
+        boolean autoSelected = savedMethods.contains("AUTO") || savedMethods.isEmpty();
+
+        btnAuto.setChecked(autoSelected);
+        for (MaterialButton btn : methodButtons) {
+            String methodName = getMethodNameFromButton(btn);
+            boolean checked = savedMethods.contains(methodName);
+            btn.setChecked(checked);
+            updateButtonStyle(btn, checked);
+        }
+
+        if (!autoSelected && !savedMethods.isEmpty()) {
+            btnAuto.setChecked(false);
+        } else if (autoSelected && savedMethods.size() > 1) {
+            btnAuto.setChecked(false);
+        }
+    }
+
+    private void saveConfiguration(MaterialButtonToggleGroup groupPorts) {
+        Set<String> selectedMethods = new HashSet<>();
+        if (btnAuto.isChecked()) {
+            selectedMethods.add("AUTO");
+        } else {
+            for (MaterialButton btn : methodButtons) {
+                if (btn.isChecked()) {
+                    selectedMethods.add(getMethodNameFromButton(btn));
                 }
             }
         }
-
-        // Si no hay nada marcado (incluyendo AUTO), marcar AUTO por defecto
-        if (groupRow1.getCheckedButtonIds().isEmpty() && groupRow2.getCheckedButtonIds().isEmpty()) {
-            groupRow1.check(R.id.btn_method_auto);
-        }
-
-        // Aplicar colores a los botones manuales según su estado checked
-        for (MaterialButton btn : manualButtons) {
-            if (btn.isChecked()) {
-                btn.setBackgroundColor(getResources().getColor(R.color.button));
-            } else {
-                btn.setBackgroundColor(getResources().getColor(R.color.transparent));
-            }
-        }
-
-        // Cargar nivel de puertos
-        String currentPorts = prefs.getString("scan_level", "100");
-        if (currentPorts.equals("500")) groupPorts.check(R.id.btn_ports_500);
-        else if (currentPorts.equals("1000")) groupPorts.check(R.id.btn_ports_1000);
-        else groupPorts.check(R.id.btn_ports_100);
+        String methodsStr = String.join(",", selectedMethods);
+        prefs.edit()
+                .putString("scan_method", methodsStr)
+                .putString("scan_level", getPortsFromId(groupPorts.getCheckedButtonId()))
+                .apply();
     }
 
-    private Set<String> getStoredMethods() {
+    private Set<String> getStoredMethodsSet() {
         String methodsStr = prefs.getString("scan_method", "AUTO");
         Set<String> methods = new HashSet<>();
         for (String part : methodsStr.split(",")) {
             String trimmed = part.trim();
-            if (!trimmed.isEmpty()) {
-                methods.add(trimmed);
-            }
+            if (!trimmed.isEmpty()) methods.add(trimmed);
         }
+        if (methods.isEmpty()) methods.add("AUTO");
         return methods;
     }
 
-    private int getMethodIdFromName(String method) {
-        switch (method) {
-            case "ARP": return R.id.btn_method_arp;
-            case "TCP": return R.id.btn_method_tcp;
-            case "ICMP": return R.id.btn_method_icmp;
-            case "MDNS": return R.id.btn_method_mdns;
-            case "SSDP": return R.id.btn_method_ssdp;
-            case "AUTO": return R.id.btn_method_auto;
-            default: return -1;
-        }
-    }
-
-    private String getMethodNameFromId(int id) {
+    private String getMethodNameFromButton(MaterialButton btn) {
+        int id = btn.getId();
         if (id == R.id.btn_method_arp) return "ARP";
         if (id == R.id.btn_method_tcp) return "TCP";
         if (id == R.id.btn_method_icmp) return "ICMP";
         if (id == R.id.btn_method_mdns) return "MDNS";
         if (id == R.id.btn_method_ssdp) return "SSDP";
-        if (id == R.id.btn_method_auto) return "AUTO";
+        if (id == R.id.btn_method_netbios) return "NETBIOS";
         return "AUTO";
+    }
+
+    private void updateButtonStyle(MaterialButton btn, boolean checked) {
+        int color = checked ? getResources().getColor(R.color.button) : getResources().getColor(R.color.transparent);
+        btn.setBackgroundColor(color);
     }
 
     private String getPortsFromId(int id) {
