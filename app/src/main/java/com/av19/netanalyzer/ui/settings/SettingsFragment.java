@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.utils.SnackbarUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -232,9 +233,7 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
         String key = item.getSettingKey();
         if (key != null) {
             prefs.edit().putString(key, newValue).apply();
-            Toast.makeText(requireContext(),
-                    "API key: " + newValue,
-                    Toast.LENGTH_SHORT).show();
+            SnackbarUtils.showSuccess(requireView(), requireContext(),"Nueva API key establecida. ");
         }
     }
 }
