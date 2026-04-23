@@ -1,16 +1,16 @@
 package com.av19.netanalyzer.ui.home;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,30 +19,29 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.utils.PreferencesManager;
 import com.av19.netanalyzer.utils.SnackbarUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import android.widget.Toast;
-import java.io.File;
 
 public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
 
-    private SharedPreferences prefs;
+    private PreferencesManager pm;
     private List<MaterialButton> methodButtons;
     private MaterialButton btnAuto;
+    private MaterialButtonToggleGroup groupPorts;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(STYLE_NORMAL, R.style.AppBottomSheetDialogTheme);
+        pm = new PreferencesManager(requireContext());
     }
 
     @Override
@@ -57,7 +56,8 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.layout_advanced_settings, container, false);
 
         ViewCompat.setOnApplyWindowInsetsListener(v, (view, windowInsets) -> {
@@ -68,7 +68,6 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             return windowInsets;
         });
 
-        prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE);
         btnAuto = v.findViewById(R.id.btn_method_auto);
         MaterialButton btnArp = v.findViewById(R.id.btn_method_arp);
         MaterialButton btnTcp = v.findViewById(R.id.btn_method_tcp);
@@ -76,17 +75,20 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         MaterialButton btnMdns = v.findViewById(R.id.btn_method_mdns);
         MaterialButton btnSsdp = v.findViewById(R.id.btn_method_ssdp);
         MaterialButton btnNetbios = v.findViewById(R.id.btn_method_netbios);
+        ImageButton btnImport = v.findViewById(R.id.btn_import);
+        ImageButton btnExport = v.findViewById(R.id.btn_export);
+        groupPorts = v.findViewById(R.id.toggle_group_ports);
 
         methodButtons = Arrays.asList(btnArp, btnTcp, btnIcmp, btnMdns, btnSsdp, btnNetbios);
 
-        // Tooltips para indicar long click (Android 8+)
+        // Tooltips
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             btnTcp.setTooltipText("Long press to configure");
             btnIcmp.setTooltipText("Long press to configure");
             btnSsdp.setTooltipText("Long press to configure");
         }
 
-        // Listener para AUTO
+        // AUTO listener
         btnAuto.setOnClickListener(vw -> {
             if (btnAuto.isChecked()) {
                 for (MaterialButton btn : methodButtons) {
@@ -105,7 +107,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             }
         });
 
-        // Listener para métodos manuales
+        // Manual method listener
         View.OnClickListener clickListener = vw -> {
             MaterialButton btn = (MaterialButton) vw;
             if (btn.isChecked()) {
@@ -131,7 +133,6 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             updateButtonStyle(btn, btn.isChecked());
         };
 
-        // Long click para abrir diálogo de configuración
         View.OnLongClickListener longClickListener = vw -> {
             MaterialButton btn = (MaterialButton) vw;
             String methodName = getMethodNameFromButton(btn);
@@ -145,110 +146,68 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         btnTcp.setOnLongClickListener(longClickListener);
         btnIcmp.setOnLongClickListener(longClickListener);
         btnSsdp.setOnLongClickListener(longClickListener);
-        // Añadir más si otros métodos tienen opciones
 
-        // Cargar selección guardada
+        // Export / Import (solo ajustes avanzados)
+        btnExport.setOnClickListener(view -> {
+            String json = pm.exportAdvancedSettings();
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, json);
+            startActivity(Intent.createChooser(shareIntent, "Export advanced settings"));
+        });
+
+        btnImport.setOnClickListener(view -> {
+            final EditText input = new EditText(requireContext());
+            input.setHint("Paste JSON here...");
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Import advanced settings")
+                    .setView(input)
+                    .setPositiveButton("Import", (dialog, which) -> {
+                        String json = input.getText().toString();
+                        if (pm.importAdvancedSettings(json)) {
+                            SnackbarUtils.showSuccess(requireView(), requireContext(), "Settings imported successfully");
+                            loadSavedSelection();
+                        } else {
+                            SnackbarUtils.showError(requireView(), requireContext(), "Invalid JSON");
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
+        // Load saved selection
         loadSavedSelection();
 
-        // Grupo de puertos
-        MaterialButtonToggleGroup groupPorts = v.findViewById(R.id.toggle_group_ports);
-        String currentPorts = prefs.getString("scan_level", "100");
-        if (currentPorts.equals("500")) groupPorts.check(R.id.btn_ports_500);
-        else if (currentPorts.equals("1000")) groupPorts.check(R.id.btn_ports_1000);
-        else groupPorts.check(R.id.btn_ports_100);
-
         v.findViewById(R.id.btn_save_config).setOnClickListener(view -> {
-            saveConfiguration(groupPorts);
+            saveConfiguration();
+            pm.println();
             dismiss();
         });
 
         return v;
     }
 
-    private void showConfigDialog(String methodName) {
-        View dialogView = null;
-        switch (methodName) {
-            case "TCP":
-                dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_tcp_config, null);
-                break;
-            case "ICMP":
-                dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_icmp_config, null);
-                break;
-            case "SSDP":
-                dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ssdp_config, null);
-                break;
-            default:
-                return;
-        }
-
-        final String finalMethodName = methodName;
-        final View finalDialogView = dialogView;
-
-        loadConfigValues(finalMethodName, finalDialogView);
-
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(finalMethodName + " Configuration")
-                .setView(finalDialogView)
-                .setPositiveButton("Save", (d, which) -> saveConfigValues(finalMethodName, finalDialogView))
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void loadConfigValues(String methodName, View view) {
-        switch (methodName) {
-            case "TCP":
-                ((EditText) view.findViewById(R.id.tcp_port)).setText(prefs.getString("tcp_port", ""));
-                ((EditText) view.findViewById(R.id.tcp_timeout)).setText(prefs.getString("tcp_timeout", "200"));
-                break;
-            case "ICMP":
-                ((EditText) view.findViewById(R.id.icmp_count)).setText(prefs.getString("icmp_count", "1"));
-                ((EditText) view.findViewById(R.id.icmp_timeout)).setText(prefs.getString("icmp_timeout", "700"));
-                break;
-            case "SSDP":
-                ((EditText) view.findViewById(R.id.ssdp_timeout)).setText(prefs.getString("ssdp_timeout", "5000"));
-                break;
-        }
-    }
-
-    private void saveConfigValues(String methodName, View view) {
-        SharedPreferences.Editor editor = prefs.edit();
-        switch (methodName) {
-            case "TCP":
-                editor.putString("tcp_port", ((EditText) view.findViewById(R.id.tcp_port)).getText().toString());
-                editor.putString("tcp_timeout", ((EditText) view.findViewById(R.id.tcp_timeout)).getText().toString());
-                break;
-            case "ICMP":
-                editor.putString("icmp_count", ((EditText) view.findViewById(R.id.icmp_count)).getText().toString());
-                editor.putString("icmp_timeout", ((EditText) view.findViewById(R.id.icmp_timeout)).getText().toString());
-                break;
-            case "SSDP":
-                editor.putString("ssdp_timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());
-                break;
-        }
-        editor.apply();
-    }
-
     private void loadSavedSelection() {
-        Set<String> savedMethods = getStoredMethodsSet();
-        boolean autoSelected = savedMethods.contains("AUTO") || savedMethods.isEmpty();
+        List<String> activeMethods = pm.getActiveMethods();
+        boolean autoSelected = activeMethods.contains("AUTO");
 
         btnAuto.setChecked(autoSelected);
         for (MaterialButton btn : methodButtons) {
             String methodName = getMethodNameFromButton(btn);
-            boolean checked = savedMethods.contains(methodName);
+            boolean checked = activeMethods.contains(methodName);
             btn.setChecked(checked);
             updateButtonStyle(btn, checked);
         }
 
-        if (!autoSelected && !savedMethods.isEmpty()) {
-            btnAuto.setChecked(false);
-        } else if (autoSelected && savedMethods.size() > 1) {
-            btnAuto.setChecked(false);
-        }
+        String level = pm.getScanLevel();
+        int portId = R.id.btn_ports_100;
+        if ("500".equals(level)) portId = R.id.btn_ports_500;
+        else if ("1000".equals(level)) portId = R.id.btn_ports_1000;
+        groupPorts.check(portId);
     }
 
-    private void saveConfiguration(MaterialButtonToggleGroup groupPorts) {
-        Set<String> selectedMethods = new HashSet<>();
+    private void saveConfiguration() {
+        List<String> selectedMethods = new ArrayList<>();
         if (btnAuto.isChecked()) {
             selectedMethods.add("AUTO");
         } else {
@@ -258,22 +217,77 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
                 }
             }
         }
-        String methodsStr = String.join(",", selectedMethods);
-        prefs.edit()
-                .putString("scan_method", methodsStr)
-                .putString("scan_level", getPortsFromId(groupPorts.getCheckedButtonId()))
-                .apply();
+        pm.setActiveMethods(selectedMethods);
+        pm.setScanLevel(getPortsFromId(groupPorts.getCheckedButtonId()));
     }
 
-    private Set<String> getStoredMethodsSet() {
-        String methodsStr = prefs.getString("scan_method", "AUTO");
-        Set<String> methods = new HashSet<>();
-        for (String part : methodsStr.split(",")) {
-            String trimmed = part.trim();
-            if (!trimmed.isEmpty()) methods.add(trimmed);
+    private void showConfigDialog(String methodName) {
+        Context context = getContext();
+        if (context == null) return;
+
+        final View dialogView = createConfigView(methodName, context);
+        if (dialogView == null) return;
+
+        final String finalMethodName = methodName;
+        loadConfigValues(finalMethodName, dialogView);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(finalMethodName + " Configuration")
+                .setView(dialogView)
+                .setPositiveButton("Save", (d, which) -> saveConfigValues(finalMethodName, dialogView))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    @Nullable
+    private View createConfigView(String methodName, Context context) {
+        int layoutRes;
+        switch (methodName) {
+            case "TCP":
+                layoutRes = R.layout.dialog_tcp_config;
+                break;
+            case "ICMP":
+                layoutRes = R.layout.dialog_icmp_config;
+                break;
+            case "SSDP":
+                layoutRes = R.layout.dialog_ssdp_config;
+                break;
+            default:
+                return null;
         }
-        if (methods.isEmpty()) methods.add("AUTO");
-        return methods;
+        return LayoutInflater.from(context).inflate(layoutRes, null);
+    }
+
+    private void loadConfigValues(String methodName, View view) {
+        switch (methodName) {
+            case "TCP":
+                ((EditText) view.findViewById(R.id.tcp_port)).setText(pm.getMethodParam("tcp", "port", ""));
+                ((EditText) view.findViewById(R.id.tcp_timeout)).setText(pm.getMethodParam("tcp", "timeout", "200"));
+                break;
+            case "ICMP":
+                ((EditText) view.findViewById(R.id.icmp_count)).setText(pm.getMethodParam("icmp", "count", "1"));
+                ((EditText) view.findViewById(R.id.icmp_timeout)).setText(pm.getMethodParam("icmp", "timeout", "700"));
+                break;
+            case "SSDP":
+                ((EditText) view.findViewById(R.id.ssdp_timeout)).setText(pm.getMethodParam("ssdp", "timeout", "5000"));
+                break;
+        }
+    }
+
+    private void saveConfigValues(String methodName, View view) {
+        switch (methodName) {
+            case "TCP":
+                pm.setMethodParam("tcp", "port", ((EditText) view.findViewById(R.id.tcp_port)).getText().toString());
+                pm.setMethodParam("tcp", "timeout", ((EditText) view.findViewById(R.id.tcp_timeout)).getText().toString());
+                break;
+            case "ICMP":
+                pm.setMethodParam("icmp", "count", ((EditText) view.findViewById(R.id.icmp_count)).getText().toString());
+                pm.setMethodParam("icmp", "timeout", ((EditText) view.findViewById(R.id.icmp_timeout)).getText().toString());
+                break;
+            case "SSDP":
+                pm.setMethodParam("ssdp", "timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());
+                break;
+        }
     }
 
     private String getMethodNameFromButton(MaterialButton btn) {
@@ -301,7 +315,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
     private boolean isRootAvailable() {
         String[] paths = {"/system/bin/su", "/system/xbin/su", "/sbin/su", "/system/su/xbin", "/su/bin/su"};
         for (String path : paths) {
-            if (new File(path).exists()) return true;
+            if (new java.io.File(path).exists()) return true;
         }
         return false;
     }

@@ -18,6 +18,10 @@ public class DeviceInfo {
     private PriorityValue hostname;
     private final Map<String, String> extraDetails;
 
+    public DeviceInfo() {
+        this.extraDetails = new HashMap<>();
+    }
+
     public DeviceInfo(String ip, String mac, String vendor, List<Integer> openPorts) {
         this.ip = ip;
         this.isCurrent = false;
@@ -139,6 +143,8 @@ public class DeviceInfo {
             this.priority = priority;
             this.value = value;
         }
+
+        public PriorityValue() {}
 
         public int getPriority() {
             return priority;

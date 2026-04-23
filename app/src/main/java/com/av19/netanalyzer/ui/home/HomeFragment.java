@@ -6,16 +6,19 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,14 +28,20 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.NetworkInfo;
+import com.av19.netanalyzer.data.ScanRecord;
 import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.service.ScanService;
 import com.av19.netanalyzer.utils.OpenRouterApiClient;
+import com.av19.netanalyzer.utils.PreferencesManager;
+import com.av19.netanalyzer.utils.SnackbarUtils;
 import com.av19.netanalyzer.viewmodel.ScanViewModel;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.gson.GsonBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class HomeFragment extends Fragment {
@@ -92,18 +101,20 @@ public class HomeFragment extends Fragment {
             btnScan.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_ai));
         }
 
-        SharedPreferences prefs = requireContext().getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
-        long lastScanTime = prefs.getLong("last_scan_time", 0);
-        int lastDeviceCount = prefs.getInt("last_device_count", 0);
-        long lastDuration = prefs.getLong("last_duration", 0);
-        if (lastScanTime != 0) {
-            updateHistoryCard(lastScanTime, lastDeviceCount, lastDuration);
+        PreferencesManager pm = new PreferencesManager(requireContext());
+        List<ScanRecord> history = pm.getScanHistory();
+        if (!history.isEmpty()) {
+            ScanRecord last = history.get(0);
+            updateHistoryCard(last.getTimestamp(), last.getDeviceCount(), last.getDurationSec());
         } else {
-            // Placeholder si no hay resumen
             tvHistoryTime.setText("Never");
             tvDevicesCount.setText("0");
             tvTimeElapsed.setText("0 s");
         }
+
+        // NUEVO: copiar último escaneo al portapapeles al pulsar la tarjeta de historial
+        MaterialCardView cardHistory = view.findViewById(R.id.card_history);
+        cardHistory.setOnClickListener(v -> copyLastScanToClipboard());
 
         btnScan.setOnClickListener(v -> {
             if (isScanning) stopScan();
@@ -127,7 +138,27 @@ public class HomeFragment extends Fragment {
         viewModel.getScanState().observe(getViewLifecycleOwner(), this::updateUi);
     }
 
+    private void copyLastScanToClipboard() {
+        PreferencesManager pm = new PreferencesManager(requireContext());
+        List<ScanRecord> history = pm.getScanHistory();
+        if (history.isEmpty()) {
+            SnackbarUtils.showSuccess(requireView(), requireContext(), "No scan history to copy");
+            return;
+        }
+
+        ScanRecord last = history.get(0);
+        // Serializar el ScanRecord a JSON con formato legible
+        String json = new GsonBuilder().setPrettyPrinting().create().toJson(last);
+
+        ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("scan_record", json);
+        clipboard.setPrimaryClip(clip);
+
+        SnackbarUtils.showSuccess(requireView(), requireContext(), "Last scan copied to clipboard");
+    }
+
     private void updateUi(ScanState state) {
+        // ... (sin cambios)
         if (state == null) return;
 
         updateNetworkInfo(state.getNetworkInfo());
@@ -140,30 +171,22 @@ public class HomeFragment extends Fragment {
                 tvStatus.animate().alpha(1f).setDuration(300).start();
                 startRippleAnimation();
 
-                // Si es el inicio real (start time es 0), lo fijamos
                 if (viewModel.getScanStartTime() <= 0) {
                     viewModel.setScanStartTime(System.currentTimeMillis());
                 }
 
-                startTimer(); // El timer actualiza el UI en tiempo real
+                startTimer();
                 updateDeviceCount(state.getDevices().size());
                 tvHistoryTime.setText("In progress");
                 break;
 
             case COMPLETED:
-                // 1. Actualizar banderas y estado
                 isScanning = false;
-
-                // 2. Limpiar el start time en el ViewModel
                 viewModel.setScanStartTime(-1);
-
-                // 3. UI de estado detenido
                 btnScan.setText("SCAN");
                 tvStatus.animate().alpha(0f).setDuration(200).start();
                 stopRippleAnimation();
                 stopTimer();
-
-                // 4. Mostrar lo que el ScanService acaba de guardar en SharedPreferences
                 loadLastScanSummary();
                 break;
 
@@ -175,7 +198,7 @@ public class HomeFragment extends Fragment {
                 stopRippleAnimation();
                 stopTimer();
                 viewModel.setScanStartTime(0);
-                loadLastScanSummary(); // Mostrar el último escaneo exitoso
+                loadLastScanSummary();
                 break;
         }
     }
@@ -210,18 +233,16 @@ public class HomeFragment extends Fragment {
     }
 
     private void startScan() {
-        SharedPreferences p = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE);
-
+        PreferencesManager pm = new PreferencesManager(requireContext());
         Intent intent = new Intent(requireContext(), ScanService.class);
-        intent.putExtra("SCAN_LEVEL", p.getString("scan_level", "100"));
-        intent.putExtra("SCAN_METHOD", p.getString("scan_method", "AUTO"));
+        intent.putExtra("SCAN_LEVEL", pm.getScanLevel());
+        List<String> activeMethods = pm.getActiveMethods();
+        String methodStr = activeMethods.contains("AUTO") ? "AUTO" : TextUtils.join(",", activeMethods);
+        intent.putExtra("SCAN_METHOD", methodStr);
 
-        // Handle foreground service based on Android version
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Android 8.0+ (API 26+)
             requireContext().startForegroundService(intent);
         } else {
-            // Android 7.0 and below (API 24-25)
             requireContext().startService(intent);
         }
     }
@@ -230,7 +251,6 @@ public class HomeFragment extends Fragment {
         Intent intent = new Intent(requireContext(), ScanService.class);
         intent.setAction("STOP_SCAN");
         requireContext().startService(intent);
-        // Optionally also reset state in ViewModel
         viewModel.resetScan();
     }
 
@@ -248,7 +268,6 @@ public class HomeFragment extends Fragment {
         resetRings();
     }
 
-    // ── Animación de ondas concéntricas ───────────────────────────────────────
     private AnimatorSet buildRippleAnimator() {
         long duration = 1800L;
         long delay1 = 0L;
@@ -262,7 +281,6 @@ public class HomeFragment extends Fragment {
                 buildSingleRipple(ring3, duration, delay3)
         );
 
-        // Repetición infinita manual: al terminar el ciclo, lo relanzamos
         set.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -277,10 +295,8 @@ public class HomeFragment extends Fragment {
     }
 
     private AnimatorSet buildSingleRipple(View ring, long duration, long startDelay) {
-        // Scale 1 → 1.6
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(ring, View.SCALE_X, 1f, 1.6f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(ring, View.SCALE_Y, 1f, 1.6f);
-        // Alpha 0.8 → 0
         ObjectAnimator alpha = ObjectAnimator.ofFloat(ring, View.ALPHA, 0.8f, 0f);
 
         AnimatorSet ringSet = new AnimatorSet();
@@ -299,7 +315,6 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    // ── Limpieza al destruir la vista ─────────────────────────────────────────
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -311,24 +326,17 @@ public class HomeFragment extends Fragment {
 
     private void checkAndApplyGlitch(TextView textView, String newText) {
         String lastTarget = (String) textView.getTag(R.id.tag_glitch_target);
-
-        if (newText.equals(lastTarget)) {
-            return;
-        }
-
+        if (newText.equals(lastTarget)) return;
         applyGlitchEffect(textView, newText);
     }
 
     private void applyGlitchEffect(final TextView textView, final String targetText) {
         textView.setTag(R.id.tag_glitch_target, targetText);
-
-        final int duration = 120; // Algo muy rápido
+        final int duration = 120;
         final int totalFrames = 4;
-
         android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(0, totalFrames);
         animator.setDuration(duration);
         animator.setInterpolator(new android.view.animation.LinearInterpolator());
-
         animator.addUpdateListener(animation -> {
             int frame = (int) animation.getAnimatedValue();
             if (frame == totalFrames) {
@@ -380,15 +388,6 @@ public class HomeFragment extends Fragment {
         tvDevicesCount.setText(String.valueOf(count));
     }
 
-    private void saveScanSummary(long timestamp, int deviceCount, long durationSeconds) {
-        SharedPreferences prefs = requireContext().getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
-        prefs.edit()
-                .putLong("last_scan_time", timestamp)
-                .putInt("last_device_count", deviceCount)
-                .putLong("last_duration", durationSeconds)
-                .apply();
-    }
-
     private void updateHistoryCard(long timestamp, int deviceCount, long durationSeconds) {
         String dateStr = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 .format(new Date(timestamp));
@@ -397,19 +396,16 @@ public class HomeFragment extends Fragment {
         tvTimeElapsed.setText(durationSeconds + " s");
     }
 
-    private String formatTimestamp(long timestamp) {
-        return new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                .format(new Date(timestamp));
-    }
-
     private void loadLastScanSummary() {
-        SharedPreferences prefs = requireContext().getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
-        long lastScanTime = prefs.getLong("last_scan_time", 0);
-        int lastDeviceCount = prefs.getInt("last_device_count", 0);
-        long lastDuration = prefs.getLong("last_duration", 0);
-
-        if (lastScanTime != 0) {
-            updateHistoryCard(lastScanTime, lastDeviceCount, lastDuration);
+        PreferencesManager pm = new PreferencesManager(requireContext());
+        List<ScanRecord> history = pm.getScanHistory();
+        if (!history.isEmpty()) {
+            ScanRecord last = history.get(0);
+            updateHistoryCard(last.getTimestamp(), last.getDeviceCount(), last.getDurationSec());
+        } else {
+            tvHistoryTime.setText("Never");
+            tvDevicesCount.setText("0");
+            tvTimeElapsed.setText("0 s");
         }
     }
 }

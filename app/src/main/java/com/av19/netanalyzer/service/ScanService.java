@@ -10,6 +10,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import com.av19.netanalyzer.utils.PreferencesManager;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
@@ -161,12 +162,8 @@ public class ScanService extends Service {
                 long duration = (System.currentTimeMillis() - scanStartTime) / 1000;
                 int deviceCount = devices.size();
 
-                SharedPreferences prefs = getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
-                prefs.edit()
-                        .putLong("last_scan_time", System.currentTimeMillis())
-                        .putInt("last_device_count", deviceCount)
-                        .putLong("last_duration", duration)
-                        .apply();
+                PreferencesManager pm = new PreferencesManager(getApplicationContext());
+                pm.addScanRecord(System.currentTimeMillis(), duration, deviceCount, devices);
 
                 // Notificar a la UI (repositorio)
                 repository.setCompleted(devices, networkInfo);
