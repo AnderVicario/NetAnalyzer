@@ -151,22 +151,11 @@ public class HomeFragment extends Fragment {
                 break;
 
             case COMPLETED:
-                // Si estábamos escaneando y acabamos de terminar
-                if (isScanning) {
-                    long duration = (System.currentTimeMillis() - viewModel.getScanStartTime()) / 1000;
-                    if (viewModel.getScanStartTime() <= 0) duration = 0; // Seguridad
+                // 1. Actualizar banderas y estado
+                isScanning = false;
 
-                    int deviceCount = state.getDevices().size();
-                    long completionTime = System.currentTimeMillis();
-
-                    // 1. Guardar de forma persistente
-                    saveScanSummary(completionTime, deviceCount, duration);
-
-                    // 2. Limpiar el start time en el ViewModel para que no se vuelva a calcular
-                    viewModel.setScanStartTime(-1);
-
-                    isScanning = false;
-                }
+                // 2. Limpiar el start time en el ViewModel
+                viewModel.setScanStartTime(-1);
 
                 // 3. UI de estado detenido
                 btnScan.setText("SCAN");
@@ -174,7 +163,7 @@ public class HomeFragment extends Fragment {
                 stopRippleAnimation();
                 stopTimer();
 
-                // 4. Mostrar siempre lo que hay en SharedPreferences (el último resultado real)
+                // 4. Mostrar lo que el ScanService acaba de guardar en SharedPreferences
                 loadLastScanSummary();
                 break;
 

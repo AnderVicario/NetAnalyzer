@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
@@ -58,6 +59,7 @@ public class ScanService extends Service {
     private NetworkScanner networkScanner;
     private Handler mainHandler;
     private long lastNotificationUpdate = 0;
+    private long scanStartTime;
 
     // Lista especializada que maneja la fusión de dispositivos sin duplicados
     private final ListDeviceInfo discoveredDevices = new ListDeviceInfo();
@@ -91,6 +93,7 @@ public class ScanService extends Service {
     private void startScan(String scanMethod, int[] ports) {
         OpenRouterApiClient.getInstance(this);
         cancellationToken = new CancellationToken();
+        this.scanStartTime = System.currentTimeMillis();
 
         NetworkInfo networkInfo = collectNetworkInfo();
         if (networkInfo == null) {
@@ -154,8 +157,19 @@ public class ScanService extends Service {
 
             @Override
             public void onComplete(List<DeviceInfo> devices) {
+                // Calcular resumen (duración desde que se inició el servicio, número de dispositivos)
+                long duration = (System.currentTimeMillis() - scanStartTime) / 1000;
+                int deviceCount = devices.size();
+
+                SharedPreferences prefs = getSharedPreferences("scan_summary", Context.MODE_PRIVATE);
+                prefs.edit()
+                        .putLong("last_scan_time", System.currentTimeMillis())
+                        .putInt("last_device_count", deviceCount)
+                        .putLong("last_duration", duration)
+                        .apply();
+
+                // Notificar a la UI (repositorio)
                 repository.setCompleted(devices, networkInfo);
-                updateNotification("Escaneo completado: " + devices.size() + " dispositivos");
                 stopSelf();
             }
 
