@@ -103,7 +103,7 @@
     <string name="ip_placeholder">X.X.X.X</string>
     <string name="network_placeholder">X.X.X.X/X</string>
     <string name="more">MÁS</string>
-    <string name="scan">ESCANEAR</string>
+    <string name="scan">SCAN</string>
     <string name="ready">LISTO</string>
     <string name="advanced_settings">CONFIGURACIÓN AVANZADA</string>
     <string name="last_scan_summary">ÚLTIMO ESCANEO</string>
@@ -150,4 +150,11 @@
     <string name="option1">Opción 1</string>
     <string name="option2">Opción 2</string>
     <string name="option3">Opción 3</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_language_spanish">Castellano</string>
+    <string name="settings_language_english">Inglés</string>
+    <string name="settings_language_basque">Euskera</string>
+    <string name="bottom_nav_menu_settings">Ajustes</string>
+    <string name="bottom_nav_menu_devices">Dispositivos</string>
+    <string name="bottom_nav_menu_home">Inicio</string>
 </resources>

@@ -151,4 +151,11 @@
     <string name="option1">Option 1</string>
     <string name="option2">Option 2</string>
     <string name="option3">Option 3</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_spanish">Spanish</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_basque">Basque</string>
+    <string name="bottom_nav_menu_settings">Settings</string>
+    <string name="bottom_nav_menu_devices">Devices</string>
+    <string name="bottom_nav_menu_home">Home</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.av19.netanalyzer.ui.main;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Window;
@@ -17,11 +18,17 @@ import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.ui.devices.DevicesFragment;
 import com.av19.netanalyzer.ui.home.HomeFragment;
 import com.av19.netanalyzer.ui.settings.SettingsFragment;
+import com.av19.netanalyzer.utils.LocaleManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigationView;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleManager.setLocale(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

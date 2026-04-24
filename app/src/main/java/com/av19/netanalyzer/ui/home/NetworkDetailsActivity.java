@@ -1,5 +1,6 @@
 package com.av19.netanalyzer.ui.home;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
@@ -11,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.NetworkInfo;
+import com.av19.netanalyzer.utils.LocaleManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,11 @@ public class NetworkDetailsActivity extends AppCompatActivity {
 
     private boolean isMosaicMode = false;
     private List<DetailItem> detailItems;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(LocaleManager.setLocale(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.utils.LocaleManager;
 
 public class SettingsOperations {
 
@@ -54,11 +55,11 @@ public class SettingsOperations {
         AppCompatDelegate.setDefaultNightMode(targetNightMode);
     }
 
-    /*public static void setLanguageChange(AppCompatActivity activity, String languageCode) {
+    public static void setLanguageChange(AppCompatActivity activity, String languageCode) {
         LocaleManager.setNewLocale(activity, languageCode);
 
         new Handler(Looper.getMainLooper()).postDelayed(activity::recreate, 300);
-    }*/
+    }
 
     /*public static void showInfoDialog(AppCompatActivity activity) {
         new MaterialAlertDialogBuilder(activity, R.style.RoundedDialog)

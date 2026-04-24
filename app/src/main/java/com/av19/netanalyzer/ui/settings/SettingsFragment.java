@@ -101,7 +101,7 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
         ));
 
         // Item Idioma (INFO con opciones)
-        /*settingsList.add(new SettingsItem(
+        settingsList.add(new SettingsItem(
                 R.drawable.ic_language,
                 getString(R.string.settings_language),
                 getLanguageOptionText(languageIndex),
@@ -114,7 +114,7 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                 new String[]{"es", "eu", "en"},
                 "idioma",
                 languageIndex
-        ));*/
+        ));
 
         // Item Acerca de (NAVIGATION)
         /*settingsList.add(new SettingsItem(
@@ -183,13 +183,13 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
         return getString(R.string.settings_key_not_empty);
     }
 
-    /*private String getLanguageOptionText(int index) {
+    private String getLanguageOptionText(int index) {
         switch (index) {
             case 1: return getString(R.string.settings_language_basque);
             case 2: return getString(R.string.settings_language_english);
             default: return getString(R.string.settings_language_spanish);
         }
-    }*/
+    }
 
     // ---------------- OnSettingClickListener implementation ----------------
 
@@ -212,6 +212,11 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
         if ("tema".equals(settingKey)) {
             if (getActivity() instanceof AppCompatActivity) {
                 SettingsOperations.setAppTheme((AppCompatActivity) getActivity(), value);
+            }
+        }
+        else if ("idioma".equals(settingKey)) {
+            if (getActivity() instanceof AppCompatActivity) {
+                SettingsOperations.setLanguageChange((AppCompatActivity) getActivity(), value);
             }
         }
     }
