@@ -83,9 +83,9 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
 
         // Tooltips
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            btnTcp.setTooltipText("Long press to configure");
-            btnIcmp.setTooltipText("Long press to configure");
-            btnSsdp.setTooltipText("Long press to configure");
+            btnTcp.setTooltipText(getString(R.string.adv_settings_long_press));
+            btnIcmp.setTooltipText(getString(R.string.adv_settings_long_press));
+            btnSsdp.setTooltipText(getString(R.string.adv_settings_long_press));
         }
 
         // AUTO listener
@@ -114,7 +114,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
                 if (btn.getId() == R.id.btn_method_arp) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !isRootAvailable()) {
                         SnackbarUtils.showWarning(requireView(), requireContext(),
-                                "ARP discovery may not work on Android 10+ without root access");
+                                getString(R.string.adv_settings_arp_warning));
                     }
                 }
                 if (btnAuto.isChecked()) btnAuto.setChecked(false);
@@ -153,25 +153,25 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
             shareIntent.putExtra(Intent.EXTRA_TEXT, json);
-            startActivity(Intent.createChooser(shareIntent, "Export advanced settings"));
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.adv_settings_export_title)));
         });
 
         btnImport.setOnClickListener(view -> {
             final EditText input = new EditText(requireContext());
-            input.setHint("Paste JSON here...");
+            input.setHint(getString(R.string.adv_settings_import_hint));
             new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Import advanced settings")
+                    .setTitle(getString(R.string.adv_settings_import_title))
                     .setView(input)
-                    .setPositiveButton("Import", (dialog, which) -> {
+                    .setPositiveButton(getString(R.string.adv_settings_import_btn_positive), (dialog, which) -> {
                         String json = input.getText().toString();
                         if (pm.importAdvancedSettings(json)) {
-                            SnackbarUtils.showSuccess(requireView(), requireContext(), "Settings imported successfully");
+                            SnackbarUtils.showSuccess(requireView(), requireContext(), getString(R.string.adv_settings_import_res_positive));
                             loadSavedSelection();
                         } else {
-                            SnackbarUtils.showError(requireView(), requireContext(), "Invalid JSON");
+                            SnackbarUtils.showError(requireView(), requireContext(), getString(R.string.adv_settings_import_res_negative));
                         }
                     })
-                    .setNegativeButton("Cancel", null)
+                    .setNegativeButton(getString(R.string.adv_settings_import_btn_negative), null)
                     .show();
         });
 
@@ -232,10 +232,10 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         loadConfigValues(finalMethodName, dialogView);
 
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(finalMethodName + " Configuration")
+                .setTitle(getString(R.string.adv_settings_method_config_title, finalMethodName))
                 .setView(dialogView)
-                .setPositiveButton("Save", (d, which) -> saveConfigValues(finalMethodName, dialogView))
-                .setNegativeButton("Cancel", null)
+                .setPositiveButton(getString(R.string.adv_settings_method_config_btn_positive), (d, which) -> saveConfigValues(finalMethodName, dialogView))
+                .setNegativeButton(getString(R.string.adv_settings_method_config_btn_negative), null)
                 .show();
     }
 

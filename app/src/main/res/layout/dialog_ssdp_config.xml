@@ -9,9 +9,9 @@
         android:id="@+id/ssdp_timeout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Listen timeout (ms)"
+        android:hint="@string/listen_timeout_hint"
         android:inputType="number"
-        android:text="5000"
+        android:text="@string/default_ssdp_timeout"
         android:padding="12dp"
         android:background="@drawable/edit_text_border" />
 

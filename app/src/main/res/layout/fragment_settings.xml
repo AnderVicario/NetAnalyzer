@@ -11,7 +11,7 @@
         android:id="@+id/tvSettingsTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ajustes"
+        android:text="@string/settings_title"
         android:textSize="26sp"
         android:textColor="@color/on_background"
         android:textStyle="bold"

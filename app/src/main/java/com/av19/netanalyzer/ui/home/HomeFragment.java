@@ -18,7 +18,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -107,12 +106,12 @@ public class HomeFragment extends Fragment {
             ScanRecord last = history.get(0);
             updateHistoryCard(last.getTimestamp(), last.getDeviceCount(), last.getDurationSec());
         } else {
-            tvHistoryTime.setText("Never");
+            tvHistoryTime.setText(getString(R.string.history_time_default));
             tvDevicesCount.setText("0");
             tvTimeElapsed.setText("0 s");
         }
 
-        // NUEVO: copiar último escaneo al portapapeles al pulsar la tarjeta de historial
+        // Copiar último escaneo al portapapeles al pulsar la tarjeta de historial
         MaterialCardView cardHistory = view.findViewById(R.id.card_history);
         cardHistory.setOnClickListener(v -> copyLastScanToClipboard());
 
@@ -142,7 +141,7 @@ public class HomeFragment extends Fragment {
         PreferencesManager pm = new PreferencesManager(requireContext());
         List<ScanRecord> history = pm.getScanHistory();
         if (history.isEmpty()) {
-            SnackbarUtils.showSuccess(requireView(), requireContext(), "No scan history to copy");
+            SnackbarUtils.showSuccess(requireView(), requireContext(), getString(R.string.history_none_copy));
             return;
         }
 
@@ -154,11 +153,10 @@ public class HomeFragment extends Fragment {
         ClipData clip = ClipData.newPlainText("scan_record", json);
         clipboard.setPrimaryClip(clip);
 
-        SnackbarUtils.showSuccess(requireView(), requireContext(), "Last scan copied to clipboard");
+        SnackbarUtils.showSuccess(requireView(), requireContext(), getString(R.string.history_copied_to_clipboard));
     }
 
     private void updateUi(ScanState state) {
-        // ... (sin cambios)
         if (state == null) return;
 
         updateNetworkInfo(state.getNetworkInfo());
@@ -167,7 +165,9 @@ public class HomeFragment extends Fragment {
             case SCANNING:
                 isScanning = true;
                 btnScan.setText("STOP");
-                tvStatus.setText("Escaneando red… " + state.getCurrentMethod() + " " + state.getProgress() + "%");
+                tvStatus.setText(getString(R.string.scanning_network,
+                        state.getCurrentMethod(),
+                        state.getProgress()));
                 tvStatus.animate().alpha(1f).setDuration(300).start();
                 startRippleAnimation();
 
@@ -177,7 +177,7 @@ public class HomeFragment extends Fragment {
 
                 startTimer();
                 updateDeviceCount(state.getDevices().size());
-                tvHistoryTime.setText("In progress");
+                tvHistoryTime.setText(getString(R.string.scanning_in_progress));
                 break;
 
             case COMPLETED:
@@ -389,7 +389,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void updateHistoryCard(long timestamp, int deviceCount, long durationSeconds) {
-        String dateStr = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        String dateStr = new SimpleDateFormat(getString(R.string.date_format), Locale.getDefault())
                 .format(new Date(timestamp));
         tvHistoryTime.setText(dateStr);
         tvDevicesCount.setText(String.valueOf(deviceCount));
@@ -403,7 +403,7 @@ public class HomeFragment extends Fragment {
             ScanRecord last = history.get(0);
             updateHistoryCard(last.getTimestamp(), last.getDeviceCount(), last.getDurationSec());
         } else {
-            tvHistoryTime.setText("Never");
+            tvHistoryTime.setText(getString(R.string.history_time_default));
             tvDevicesCount.setText("0");
             tvTimeElapsed.setText("0 s");
         }

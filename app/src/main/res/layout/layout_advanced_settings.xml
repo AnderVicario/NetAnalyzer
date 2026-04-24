@@ -24,7 +24,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ADVANCED CONFIGURATION"
+            android:text="@string/advanced_configuration"
             android:textColor="@color/on_surface"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -61,7 +61,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan Methods (long press for options)"
+        android:text="@string/scan_methods_long_press"
         android:alpha="0.7"
         android:textSize="12sp"
         android:layout_marginBottom="12dp" />
@@ -82,7 +82,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="AUTO"
+            android:text="@string/auto"
             android:checkable="true" />
 
         <com.google.android.material.button.MaterialButton
@@ -92,7 +92,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="ARP"
+            android:text="@string/arp"
             android:checkable="true" />
 
         <com.google.android.material.button.MaterialButton
@@ -102,7 +102,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="TCP"
+            android:text="@string/tcp"
             android:checkable="true" />
 
         <com.google.android.material.button.MaterialButton
@@ -112,7 +112,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="ICMP"
+            android:text="@string/icmp"
             android:checkable="true" />
 
         <com.google.android.material.button.MaterialButton
@@ -122,7 +122,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="mDNS"
+            android:text="@string/mdns"
             android:checkable="true" />
 
         <com.google.android.material.button.MaterialButton
@@ -132,7 +132,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="SSDP"
+            android:text="@string/ssdp"
             android:checkable="true" />
 
         <com.google.android.material.button.MaterialButton
@@ -142,7 +142,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="NetBIOS"
+            android:text="@string/netbios"
             android:checkable="true" />
 
     </GridLayout>
@@ -150,7 +150,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ports to Scan"
+        android:text="@string/ports_to_scan"
         android:alpha="0.7"
         android:textSize="12sp"
         android:layout_marginTop="24dp"
@@ -169,26 +169,26 @@
             android:layout_height="wrap_content"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="100" />
+            android:text="@string/ports_100" />
         <Button android:id="@+id/btn_ports_500"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_height="wrap_content"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="500" />
+            android:text="@string/ports_500" />
         <Button android:id="@+id/btn_ports_1000"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_height="wrap_content"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="1000" />
+            android:text="@string/ports_1000" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <Button
         android:id="@+id/btn_save_config"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="APPLY SETTINGS"
+        android:text="@string/apply_settings"
         app:cornerRadius="12dp" />
 
 </LinearLayout>

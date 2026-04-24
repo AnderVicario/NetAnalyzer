@@ -9,7 +9,7 @@
         android:id="@+id/tcp_port"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Port (default 80)"
+        android:hint="@string/port_default_hint"
         android:inputType="number"
         android:padding="12dp"
         android:background="@drawable/edit_text_border" />
@@ -18,9 +18,9 @@
         android:id="@+id/tcp_timeout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Timeout (ms)"
+        android:hint="@string/timeout_ms_hint"
         android:inputType="number"
-        android:text="200"
+        android:text="@string/default_tcp_timeout"
         android:layout_marginTop="8dp"
         android:padding="12dp"
         android:background="@drawable/edit_text_border" />

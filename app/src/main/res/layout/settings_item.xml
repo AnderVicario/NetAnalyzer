@@ -91,7 +91,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@null"
-            android:hint="Establecer clave..."
+            android:hint="@string/set_key_hint"
             android:paddingVertical="12dp"
             android:visibility="gone">
         </EditText>
@@ -111,7 +111,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Opcion1"
+                android:text="@string/option1"
                 android:textColor="@color/on_surface"
                 android:textSize="14sp" />
 
@@ -147,7 +147,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Opcion2"
+                android:text="@string/option2"
                 android:textColor="@color/on_surface"
                 android:textSize="14sp" />
 
@@ -183,7 +183,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Opcion3"
+                android:text="@string/option3"
                 android:textColor="@color/on_surface"
                 android:textSize="14sp" />
 

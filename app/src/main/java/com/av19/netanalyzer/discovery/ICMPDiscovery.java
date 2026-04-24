@@ -57,8 +57,8 @@ public class ICMPDiscovery implements DiscoveryMethod {
                 try {
                     PingResult result = pingHostWithTTL(ip, 1, 700);
                     if (result.success) {
-                        DeviceInfo device = FingerprintManager.getInstance()
-                                .getDeviceInfo(network, ip, null, null, null, result.ttl);
+                        DeviceInfo device = new DeviceInfo(ip, null, null, null);
+                        device.setTtl(result.ttl);
                         synchronized (devices) {
                             devices.add(device);
                         }

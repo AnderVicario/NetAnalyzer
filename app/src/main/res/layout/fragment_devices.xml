@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Dispositivos en la red"
+        android:text="@string/devices_title"
         android:textSize="26sp"
         android:textStyle="bold"
         android:paddingBottom="20dp"
@@ -26,7 +26,7 @@
         android:id="@+id/emptyView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="No devices discovered yet.\nStart a scan from Home."
+        android:text="@string/empty_devices"
         android:textSize="14sp"
         android:gravity="center"
         android:visibility="gone" />

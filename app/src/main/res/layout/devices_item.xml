@@ -70,7 +70,7 @@
                 android:textSize="10sp"
                 android:textColor="@color/on_primary"
                 android:alpha="0.7"
-                android:text="ONLINE"
+                android:text="@string/online"
                 android:textStyle="bold"/>
 
         </LinearLayout>

@@ -10,6 +10,8 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+
+import com.av19.netanalyzer.utils.FingerprintManager;
 import com.av19.netanalyzer.utils.PreferencesManager;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
@@ -85,7 +87,7 @@ public class ScanService extends Service {
         String scanLevel = getScanLevel(intent);
         int[] ports = NetUtils.loadPortsFromAssets(this, "top" + scanLevel + ".txt");
 
-        startForeground(NOTIFICATION_ID, createNotification("Iniciando escaneo..."));
+        startForeground(NOTIFICATION_ID, createNotification(getString(R.string.scan_starting)));
         startScan(scanMethod, ports);
 
         return START_STICKY;
@@ -98,7 +100,7 @@ public class ScanService extends Service {
 
         NetworkInfo networkInfo = collectNetworkInfo();
         if (networkInfo == null) {
-            repository.setError("No se pudo obtener información de red", ScanState.Phase.DISCOVERY, "Network Analysis");
+            repository.setError(getString(R.string.scan_network_info_error), ScanState.Phase.DISCOVERY, "Network Analysis");
             stopSelf();
             return;
         }
@@ -136,14 +138,18 @@ public class ScanService extends Service {
                 // Tomamos una instantánea de los dispositivos ya descubiertos y fusionados
                 List<DeviceInfo> snapshot = discoveredDevices.getDevices();
                 repository.setScanning(progressPercent, ScanState.Phase.DISCOVERY, methodName, null, snapshot, networkInfo);
-                updateNotification("Descubrimiento " + methodName + ": " + progressPercent + "%");
+                String text = String.format(getString(R.string.scan_discovery_progress), methodName, progressPercent);
+                updateNotification(text);
             }
 
             @Override
             public void onDeviceFound(DeviceInfo device) {
                 // Añadir o fusionar el dispositivo y obtener la versión actualizada
                 DeviceInfo merged = discoveredDevices.addOrUpdate(device);
-                updateNotification("Dispositivo encontrado: " + merged.getIp());
+                // Enriquecimiento común (roles, OS por TTL, etc.)
+                FingerprintManager.getInstance().enrichDevice(merged, networkInfo);
+                String text = String.format(getString(R.string.scan_device_found), merged.getIp());
+                updateNotification(text);
                 // No actualizamos el repositorio aquí para evitar demasiadas notificaciones;
                 // la UI se actualizará en onDiscoveryProgress.
             }
@@ -151,7 +157,8 @@ public class ScanService extends Service {
             @Override
             public void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices) {
                 int percent = (int) ((current / (float) total) * 100);
-                updateNotification("Escaneando puertos: " + currentIp + " (" + percent + "%)");
+                String text = String.format(getString(R.string.scan_port_scan_progress), currentIp, percent);
+                updateNotification(text);
                 // Usamos directamente la lista proporcionada por el scanner (ya contiene los puertos actualizados)
                 repository.setScanning(percent, ScanState.Phase.PORT_SCAN, "NIO", currentIp, currentDevices, networkInfo);
             }
@@ -172,7 +179,7 @@ public class ScanService extends Service {
 
             @Override
             public void onCancelled() {
-                repository.setError("Escaneo cancelado", ScanState.Phase.NONE, null);
+                repository.setError(getString(R.string.scan_cancelled), ScanState.Phase.NONE, null);
                 stopSelf();
             }
         });
@@ -356,10 +363,10 @@ public class ScanService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Network Scanner")
+                .setContentTitle(getString(R.string.notification_title))
                 .setContentText(content)
                 .setSmallIcon(R.drawable.ic_notification)
-                .addAction(R.drawable.ic_stop, "Stop", stopPendingIntent)
+                .addAction(R.drawable.ic_stop, getString(R.string.notification_stop_action), stopPendingIntent)
                 .setOngoing(true)
                 .build();
     }
@@ -368,7 +375,7 @@ public class ScanService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Scan Service",
+                    getString(R.string.notification_channel_name),
                     NotificationManager.IMPORTANCE_LOW);
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);

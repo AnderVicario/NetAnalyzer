@@ -55,8 +55,7 @@ public class TCPDiscovery implements DiscoveryMethod {
                 String ip = NetUtils.intToIp(currentHost);
                 try {
                     if (isAlive(ip)) {
-                        DeviceInfo device = FingerprintManager.getInstance()
-                                .getDeviceInfo(network, ip, null, null, null, null);
+                        DeviceInfo device = new DeviceInfo(ip, null, null, null);
                         synchronized (devices) {
                             devices.add(device);
                         }

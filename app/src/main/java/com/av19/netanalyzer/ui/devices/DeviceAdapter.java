@@ -3,6 +3,7 @@ package com.av19.netanalyzer.ui.devices;
 import static com.av19.netanalyzer.utils.NetUtils.compareIps;
 
 import android.animation.ValueAnimator;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +25,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
     private List<DeviceInfo> devices;
     private boolean[] expandedStates;
-    private int expandedPosition = -1; // solo un panel expandido a la vez
+    private int expandedPosition = -1;
 
     public DeviceAdapter(List<DeviceInfo> devices) {
         this.devices = devices;
@@ -60,7 +61,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
         holder.buttonPanel.setOnClickListener(v -> {
             int currentPosition = holder.getAdapterPosition();
-            if (currentPosition == RecyclerView.NO_POSITION) return; // item ya no existe
+            if (currentPosition == RecyclerView.NO_POSITION) return;
 
             // cerrar previamente expandido si es otro
             if (expandedPosition != -1 && expandedPosition != currentPosition) {
@@ -94,7 +95,6 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         private final ImageView iconImageView;
         private final LinearLayout detailsPanel;
         private final TextView detailsTextView;
-
         private ValueAnimator currentAnimator;
 
         public DeviceViewHolder(@NonNull View itemView) {
@@ -109,6 +109,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         }
 
         private void bind(DeviceInfo device, boolean expanded) {
+            Context ctx = itemView.getContext();
+
             // TÍTULO: hostname > OS > "Dispositivo"
             String title;
             if (device.getHostname() != null && !device.getHostname().getValue().isEmpty()) {
@@ -116,26 +118,26 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             } else if (device.getOs() != null && !device.getOs().getValue().isEmpty()) {
                 title = device.getOs().getValue();
             } else {
-                title = "Dispositivo";
+                title = ctx.getString(R.string.device_default_title);
             }
             titleTextView.setText(title);
 
-            // SUBTÍTULO: siempre la IP
-            String subtitle = device.getIp() != null ? device.getIp() : "Unknown IP";
+            // Subtítulo (IP)
+            String subtitle = device.getIp() != null ? device.getIp() : ctx.getString(R.string.unknown_ip);
             subtitleTextView.setText(subtitle);
 
             // TAG e ICONO según tipo de dispositivo
             if (device.getIsCurrent()) {
-                tagTextView.setText("● ACTUAL");
+                tagTextView.setText(ctx.getString(R.string.tag_current));
                 iconImageView.setImageResource(R.drawable.ic_phone);
             } else if (device.getIsGateway()) {
-                tagTextView.setText("● GATEWAY");
+                tagTextView.setText(ctx.getString(R.string.tag_gateway));
                 iconImageView.setImageResource(R.drawable.ic_router);
             } else if (device.getIsDNS()) {
-                tagTextView.setText("● DNS");
+                tagTextView.setText(ctx.getString(R.string.tag_dns));
                 iconImageView.setImageResource(R.drawable.ic_dns);
             } else {
-                tagTextView.setText("● ONLINE");
+                tagTextView.setText(ctx.getString(R.string.tag_online));
                 iconImageView.setImageResource(R.drawable.ic_device);
             }
 
@@ -149,7 +151,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
             // Hostname (siempre en detalles, aunque sea el título)
             if (device.getHostname() != null && !device.getHostname().getValue().isEmpty()) {
-                details.append("📡 HOSTNAME\n");
+                details.append(ctx.getString(R.string.section_hostname)).append("\n");
                 details.append("  ").append(device.getHostname().getValue()).append("\n\n");
                 hasInfo = true;
             }
@@ -159,12 +161,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             // ============================================================
             if ((device.getMac() != null && !device.getMac().isEmpty()) ||
                     (device.getVendor() != null && !device.getVendor().isEmpty())) {
-                details.append("🔧 HARDWARE\n");
+                details.append(ctx.getString(R.string.section_hardware)).append("\n");
                 if (device.getMac() != null && !device.getMac().isEmpty()) {
-                    details.append("  MAC: ").append(device.getMac()).append("\n");
+                    details.append("  ").append(ctx.getString(R.string.label_mac))
+                            .append(" ").append(device.getMac()).append("\n");
                 }
                 if (device.getVendor() != null && !device.getVendor().isEmpty()) {
-                    details.append("  Vendor: ").append(device.getVendor()).append("\n");
+                    details.append("  ").append(ctx.getString(R.string.label_vendor))
+                            .append(" ").append(device.getVendor()).append("\n");
                 }
                 details.append("\n");
                 hasInfo = true;
@@ -178,36 +182,24 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
             // OS (siempre en detalles)
             if (device.getOs() != null && !device.getOs().getValue().isEmpty()) {
-                deviceInfo.append("  OS: ").append(device.getOs().getValue()).append("\n");
+                deviceInfo.append("  ").append(ctx.getString(R.string.label_os)).append(" ").append(device.getOs().getValue()).append("\n");
                 hasDeviceInfo = true;
             }
 
             // Modelo
             if (device.getModel() != null && !device.getModel().getValue().isEmpty()) {
-                deviceInfo.append("  Model: ").append(device.getModel().getValue()).append("\n");
+                deviceInfo.append("  ").append(ctx.getString(R.string.label_model)).append(" ").append(device.getModel().getValue()).append("\n");
                 hasDeviceInfo = true;
             }
 
             // TTL - siempre mostrar si está disponible
             if (device.getTtl() != null && device.getTtl() > 0) {
-                deviceInfo.append("  TTL: ").append(device.getTtl());
-
-                // Inferir OS basado en TTL si no hay OS específico
-                if (device.getOs() == null || device.getOs().getValue().isEmpty()) {
-                    if (device.getTtl() <= 64) {
-                        deviceInfo.append(" (Linux/Android/Unix)");
-                    } else if (device.getTtl() <= 128) {
-                        deviceInfo.append(" (Windows)");
-                    } else if (device.getTtl() <= 255) {
-                        deviceInfo.append(" (Cisco/otros)");
-                    }
-                }
-                deviceInfo.append("\n");
-                hasDeviceInfo = true;
+                String ttlText = ctx.getString(R.string.format_ttl_no_hint, device.getTtl());
+                deviceInfo.append("  ").append(ctx.getString(R.string.label_ttl)).append(" ").append(ttlText).append("\n");
             }
 
             if (hasDeviceInfo) {
-                details.append("💻 DEVICE INFO\n");
+                details.append(ctx.getString(R.string.section_device_info)).append("\n");
                 details.append(deviceInfo);
                 details.append("\n");
                 hasInfo = true;
@@ -217,29 +209,27 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             // 4. PUERTOS ABIERTOS
             // ============================================================
             if (device.getOpenPorts() != null && !device.getOpenPorts().isEmpty()) {
-                details.append("🔌 OPEN PORTS (").append(device.getOpenPorts().size()).append(")\n");
-                details.append("  ");
-                for (int i = 0; i < device.getOpenPorts().size(); i++) {
+                int portCount = device.getOpenPorts().size();
+                String portHeader = ctx.getResources().getQuantityString(R.plurals.open_ports_count, portCount, portCount);
+                details.append(portHeader).append("\n  ");
+                for (int i = 0; i < portCount; i++) {
                     int port = device.getOpenPorts().get(i);
-                    details.append(port);
-
-                    String serviceName = NetUtils.getPortServiceName(itemView.getContext(), "top1000.txt", port);
+                    String serviceName = NetUtils.getPortServiceName(ctx, "top1000.txt", port);
                     if (serviceName != null) {
-                        details.append(" (").append(serviceName).append(")");
+                        details.append(ctx.getString(R.string.format_port_with_service, port, serviceName));
+                    } else {
+                        details.append(port);
                     }
-
-                    if (i < device.getOpenPorts().size() - 1) {
+                    if (i < portCount - 1) {
                         details.append(", ");
-                        if ((i + 1) % 5 == 0) {
-                            details.append("\n  ");
-                        }
+                        if ((i + 1) % 5 == 0) details.append("\n  ");
                     }
                 }
                 details.append("\n\n");
                 hasInfo = true;
             } else {
-                details.append("🔌 OPEN PORTS\n");
-                details.append("  No open ports found.\n\n");
+                details.append(ctx.getString(R.string.section_open_ports)).append("\n");
+                details.append(ctx.getString(R.string.label_open_ports_none)).append("\n\n");
                 hasInfo = true;
             }
 
@@ -257,15 +247,15 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             // 6. INFORMACIÓN ESPECIAL (Gateway, DNS, etc.)
             // ============================================================
             if (device.getIsCurrent() || device.getIsGateway() || device.getIsDNS()) {
-                details.append("⭐ SPECIAL\n");
+                details.append(ctx.getString(R.string.section_special)).append("\n");
                 if (device.getIsCurrent()) {
-                    details.append("  This is the current device\n");
+                    details.append(ctx.getString(R.string.special_current_device)).append("\n");
                 }
                 if (device.getIsGateway()) {
-                    details.append("  This is the network gateway\n");
+                    details.append(ctx.getString(R.string.special_gateway)).append("\n");
                 }
                 if (device.getIsDNS()) {
-                    details.append("  This is a DNS server\n");
+                    details.append(ctx.getString(R.string.special_dns)).append("\n");
                 }
                 details.append("\n");
                 hasInfo = true;
@@ -273,7 +263,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
             // Si no hay información adicional, mostrar mensaje
             if (!hasInfo) {
-                details.append("ℹ️ No additional information available for this device.");
+                details.append(ctx.getString(R.string.section_no_info));
             }
 
             detailsTextView.setText(details.toString());

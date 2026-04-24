@@ -26,7 +26,7 @@
                 android:id="@+id/tv_subtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SYSTEM STATUS"
+                android:text="@string/system_status"
                 android:textSize="12sp"
                 android:textColor="@color/primary"/>
 
@@ -34,7 +34,7 @@
                 android:id="@+id/tvSettingsTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Network Hub"
+                android:text="@string/network_hub"
                 android:textSize="26sp"
                 android:textColor="@color/on_background"
                 android:textStyle="bold"/>
@@ -72,14 +72,14 @@
                         android:id="@+id/tv_ip_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="LOCAL IP"
+                        android:text="@string/home_local_ip"
                         android:textSize="12sp"
                         android:textColor="@color/on_surface"/>
                     <TextView
                         android:id="@+id/tv_ip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="X.X.X.X"
+                        android:text="@string/ip_placeholder"
                         android:textSize="16sp"
                         android:textColor="@color/on_background"/>
                 </LinearLayout>
@@ -97,14 +97,14 @@
                         android:id="@+id/tv_gateway_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="GATEWAY"
+                        android:text="@string/home_gateway"
                         android:textSize="12sp"
                         android:textColor="@color/on_surface"/>
                     <TextView
                         android:id="@+id/tv_gateway"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="X.X.X.X"
+                        android:text="@string/ip_placeholder"
                         android:textSize="16sp"
                         android:textColor="@color/on_background"/>
                 </LinearLayout>
@@ -122,14 +122,14 @@
                         android:id="@+id/tv_net_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="NETWORK"
+                        android:text="@string/network"
                         android:textSize="12sp"
                         android:textColor="@color/on_surface"/>
                     <TextView
                         android:id="@+id/tv_net"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="X.X.X.X/X"
+                        android:text="@string/network_placeholder"
                         android:textSize="16sp"
                         android:textColor="@color/on_background"/>
                 </LinearLayout>
@@ -147,14 +147,14 @@
                         android:id="@+id/tv_connection_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CONNECTION"
+                        android:text="@string/connection"
                         android:textSize="12sp"
                         android:textColor="@color/on_surface"/>
                     <TextView
                         android:id="@+id/tv_connection"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-"
+                        android:text="@string/unknown"
                         android:textSize="16sp"
                         android:textColor="@color/on_background"/>
                 </LinearLayout>
@@ -178,7 +178,7 @@
                         android:id="@+id/tv_expand_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="MORE"
+                        android:text="@string/more"
                         android:textSize="12sp"
                         android:textColor="@color/on_surface"/>
 
@@ -186,7 +186,7 @@
                         android:id="@+id/iv_expand_icon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:contentDescription="Expandir información"
+                        android:contentDescription="@string/expand_info_desc"
                         android:src="@drawable/ic_arrow_forward"
                         android:layout_gravity="center"
                         app:tint="@color/on_surface"/>
@@ -238,7 +238,7 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:letterSpacing="0.15"
-            android:text="SCAN"
+            android:text="@string/scan"
             android:textColor="@color/on_primary_70"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -263,7 +263,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="32dp"
-            android:text="READY"
+            android:text="@string/ready"
             android:textColor="@color/primary"
             android:textSize="14sp"
             app:layout_constraintBottom_toTopOf="@id/advanced_menu"
@@ -296,7 +296,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="ADVANCED SETTINGS"
+                android:text="@string/advanced_settings"
                 android:textColor="@color/on_surface"
                 android:textSize="12sp" />
 
@@ -342,7 +342,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="LAST SCAN SUMMARY"
+                        android:text="@string/last_scan_summary"
                         android:textColor="@color/on_surface"
                         android:textSize="12sp" />
 
@@ -350,7 +350,7 @@
                         android:id="@+id/tv_history_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="12h ago"
+                        android:text="@string/time_ago_12h"
                         android:textColor="@color/on_surface"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -373,7 +373,7 @@
                             android:id="@+id/tv_devices_count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="14"
+                            android:text="@string/default_device_count"
                             android:textColor="@color/on_background"
                             android:textSize="20sp"
                             android:textStyle="bold" />
@@ -381,7 +381,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="DEVICES FOUND"
+                            android:text="@string/devices_found"
                             android:textColor="@color/on_surface"
                             android:textSize="10sp" />
                     </LinearLayout>
@@ -402,7 +402,7 @@
                             android:id="@+id/tv_time_elapsed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="26 s"
+                            android:text="@string/default_time_elapsed"
                             android:textColor="@color/on_background"
                             android:textSize="20sp"
                             android:textStyle="bold" />
@@ -410,7 +410,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="TIME ELAPSED"
+                            android:text="@string/time_elapsed_label"
                             android:textColor="@color/on_surface"
                             android:textSize="10sp" />
                     </LinearLayout>

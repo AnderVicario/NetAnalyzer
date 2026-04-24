@@ -55,34 +55,42 @@ public class NetworkDetailsActivity extends AppCompatActivity {
 
     private List<DetailItem> getDetailItems(NetworkInfo info) {
         List<DetailItem> items = new ArrayList<>();
-        items.add(new DetailItem("IP Address", info.getIp()));
-        items.add(new DetailItem("Netmask", info.getNetmask()));
-        items.add(new DetailItem("Prefix Length", String.valueOf(info.getPrefix())));
-        items.add(new DetailItem("Network Address", info.getNetworkAddress()));
-        items.add(new DetailItem("Gateway", info.getGateway()));
+
+        items.add(new DetailItem(getString(R.string.ip_address), info.getIp()));
+        items.add(new DetailItem(getString(R.string.netmask), info.getNetmask()));
+        items.add(new DetailItem(getString(R.string.prefix_length), String.valueOf(info.getPrefix())));
+        items.add(new DetailItem(getString(R.string.network_address), info.getNetworkAddress()));
+        items.add(new DetailItem(getString(R.string.gateway), info.getGateway()));
+
         ArrayList<String> dnsList = info.getDns();
         if (dnsList != null && !dnsList.isEmpty()) {
             if (dnsList.size() == 1) {
-                items.add(new DetailItem("DNS Server", dnsList.get(0)));
+                items.add(new DetailItem(getString(R.string.dns_server), dnsList.get(0)));
             } else {
                 for (int i = 0; i < dnsList.size(); i++) {
-                    items.add(new DetailItem("DNS Server " + (i + 1), dnsList.get(i)));
+                    items.add(new DetailItem(
+                            getString(R.string.dns_server_format, (i + 1)),
+                            dnsList.get(i)
+                    ));
                 }
             }
         } else {
-            items.add(new DetailItem("DNS Servers", "None"));
+            items.add(new DetailItem(getString(R.string.dns_servers),
+                    getString(R.string.none)));
         }
-        items.add(new DetailItem("Connection Type", info.getConnectionType()));
-        items.add(new DetailItem("Internet Access", info.isHasInternet() ? "YES" : "NO"));
-        items.add(new DetailItem("Network Validated", info.isValidated() ? "YES" : "NO"));
-        items.add(new DetailItem("Metered Connection", info.isMetered() ? "YES" : "NO"));
-        items.add(new DetailItem("Downstream", info.getDownstreamBandwidth() + " kbps"));
-        items.add(new DetailItem("Upstream", info.getUpstreamBandwidth() + " kbps"));
-        items.add(new DetailItem("SSID", info.getSsid()));
-        items.add(new DetailItem("RSSI", String.valueOf(info.getRssi())));
-        items.add(new DetailItem("BSSID", info.getBssid()));
-        items.add(new DetailItem("LINK SPEED", info.getLinkSpeed() + " Mbps"));
-        items.add(new DetailItem("SIGNAL", info.getRssi() + " dBm"));
+
+        items.add(new DetailItem(getString(R.string.connection_type), info.getConnectionType()));
+        items.add(new DetailItem(getString(R.string.internet_access), info.isHasInternet() ? getString(R.string.yes) : getString(R.string.no)));
+        items.add(new DetailItem(getString(R.string.network_validated), info.isValidated() ? getString(R.string.yes) : getString(R.string.no)));
+        items.add(new DetailItem(getString(R.string.metered_connection), info.isMetered() ? getString(R.string.yes) : getString(R.string.no)));
+        items.add(new DetailItem(getString(R.string.downstream), getString(R.string.bandwidth_format, info.getDownstreamBandwidth())));
+        items.add(new DetailItem(getString(R.string.upstream), getString(R.string.bandwidth_format, info.getUpstreamBandwidth())));
+        items.add(new DetailItem(getString(R.string.ssid), info.getSsid()));
+        items.add(new DetailItem(getString(R.string.rssi), String.valueOf(info.getRssi())));
+        items.add(new DetailItem(getString(R.string.bssid), info.getBssid()));
+        items.add(new DetailItem(getString(R.string.link_speed), getString(R.string.link_speed_format, info.getLinkSpeed())));
+        items.add(new DetailItem(getString(R.string.signal), getString(R.string.signal_format, info.getRssi())));
+
         return items;
     }
 

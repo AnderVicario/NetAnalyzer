@@ -25,17 +25,28 @@ public class FingerprintManager {
     public DeviceInfo getDeviceInfo(NetworkInfo network, String ip, String mac, String vendor, List<Integer> openPorts, Integer ttl) {
         DeviceInfo device = new DeviceInfo(ip, mac, vendor, openPorts);
         device.setTtl(ttl);
-        if (device.getOs() == null) {
-            device.setOs(new DeviceInfo.PriorityValue(-1, guessOsFromTtl(ttl)));
-        }
-        if (ip.equals(network.getIp())) {
-            device.setIsCurrent(true);
-        } else if (ip.equals(network.getGateway())) {
-            device.setIsGateway(true);
-        } else if (ip.equals(network.getDns().get(0))) {
-            device.setIsDNS(true);
-        }
+        enrichDevice(device, network);
         return device;
+    }
+
+    public void enrichDevice(@NonNull DeviceInfo device, @NonNull NetworkInfo network) {
+        if (device.getIp() != null) {
+            if (device.getIp().equals(network.getIp())) {
+                device.setIsCurrent(true);
+            } else if (device.getIp().equals(network.getGateway())) {
+                device.setIsGateway(true);
+            } else if (!network.getDns().isEmpty() && device.getIp().equals(network.getDns().get(0))) {
+                device.setIsDNS(true);
+            }
+        }
+
+        if (device.getOs() == null || device.getOs().getPriority() < 0) {
+            Integer ttl = device.getTtl();
+            if (ttl != null && ttl > 0) {
+                String guessed = guessOsFromTtl(ttl);
+                device.setOs(new DeviceInfo.PriorityValue(-1, guessed));
+            }
+        }
     }
 
     public String guessOsFromTtl(Integer ttl) {

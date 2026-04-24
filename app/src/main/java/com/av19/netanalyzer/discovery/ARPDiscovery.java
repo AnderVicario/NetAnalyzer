@@ -97,8 +97,7 @@ public class ARPDiscovery implements DiscoveryMethod {
                 String ip = parts[0];
                 String mac = parts[3];
                 String vendor = NetApiClient.getMacVendorSync(mac);
-                DeviceInfo device = FingerprintManager.getInstance()
-                        .getDeviceInfo(network, ip, mac, vendor, null, null);
+                DeviceInfo device = new DeviceInfo(ip, mac, vendor, null);
                 devices.add(device);
                 if (callback != null) callback.onDeviceFound(device);
                 int progress = 50 + (int) ((++count * 50.0) / totalArp);
