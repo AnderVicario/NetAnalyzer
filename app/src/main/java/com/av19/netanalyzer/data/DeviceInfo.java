@@ -144,7 +144,8 @@ public class DeviceInfo {
             this.value = value;
         }
 
-        public PriorityValue() {}
+        public PriorityValue() {
+        }
 
         public int getPriority() {
             return priority;

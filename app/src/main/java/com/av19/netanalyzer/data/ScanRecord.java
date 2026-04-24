@@ -8,7 +8,8 @@ public class ScanRecord {
     private int deviceCount;
     private List<DeviceInfo> devices;
 
-    public ScanRecord() {} // para Gson
+    public ScanRecord() {
+    } // para Gson
 
     public ScanRecord(long timestamp, long durationSec, int deviceCount, List<DeviceInfo> devices) {
         this.timestamp = timestamp;

@@ -90,7 +90,11 @@ public class SSDPDiscovery implements DiscoveryMethod {
                 Log.d(TAG, "M-SEARCH sent for ST: " + st);
 
                 // Pequeña pausa para evitar saturar la red
-                try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
 
             // ==================== FASE 1: ESCUCHA SSDP ====================
@@ -143,7 +147,8 @@ public class SSDPDiscovery implements DiscoveryMethod {
 
                     if (server != null && device.getOs() == null) {
                         String[] parts = server.split(" ");
-                        if (parts.length > 0) device.setOs(new DeviceInfo.PriorityValue(0, parts[0]));
+                        if (parts.length > 0)
+                            device.setOs(new DeviceInfo.PriorityValue(0, parts[0]));
                     }
 
                     if (isNew && callback != null) {
@@ -197,7 +202,8 @@ public class SSDPDiscovery implements DiscoveryMethod {
                     }
                     if (locations != null && !locations.isEmpty()) {
                         combinedInfo.append("LOCATION headers:\n");
-                        for (String loc : locations) combinedInfo.append("  ").append(loc).append("\n");
+                        for (String loc : locations)
+                            combinedInfo.append("  ").append(loc).append("\n");
                     }
                     if (usns != null && !usns.isEmpty()) {
                         combinedInfo.append("USN headers:\n");
@@ -230,22 +236,28 @@ public class SSDPDiscovery implements DiscoveryMethod {
                                     if (!devObj.isNull("mac") && !mac.isEmpty()) device.setMac(mac);
 
                                     String manufacturer = devObj.optString("manufacturer", null);
-                                    if (!devObj.isNull("manufacturer") && !manufacturer.isEmpty()) device.setVendor(manufacturer);
+                                    if (!devObj.isNull("manufacturer") && !manufacturer.isEmpty())
+                                        device.setVendor(manufacturer);
 
                                     String os = devObj.optString("os", null);
-                                    if (!devObj.isNull("os") && !os.isEmpty()) device.setOs(new DeviceInfo.PriorityValue(1, os));
+                                    if (!devObj.isNull("os") && !os.isEmpty())
+                                        device.setOs(new DeviceInfo.PriorityValue(1, os));
 
                                     String model = devObj.optString("model", null);
-                                    if (!devObj.isNull("model") && !model.isEmpty()) device.setModel(new DeviceInfo.PriorityValue(1, model));
+                                    if (!devObj.isNull("model") && !model.isEmpty())
+                                        device.setModel(new DeviceInfo.PriorityValue(1, model));
 
                                     String hostname = devObj.optString("friendly_name", null);
-                                    if (!devObj.isNull("friendly_name") && !hostname.isEmpty()) device.setHostname(new DeviceInfo.PriorityValue(1,hostname));
+                                    if (!devObj.isNull("friendly_name") && !hostname.isEmpty())
+                                        device.setHostname(new DeviceInfo.PriorityValue(1, hostname));
 
                                     String udn = devObj.optString("udn", null);
-                                    if (!devObj.isNull("udn") && !udn.isEmpty()) device.addDetail("udn", udn);
+                                    if (!devObj.isNull("udn") && !udn.isEmpty())
+                                        device.addDetail("udn", udn);
 
                                     String serial_number = devObj.optString("serial_number", null);
-                                    if (!devObj.isNull("serial_number") && !serial_number.isEmpty()) device.addDetail("serial_number", serial_number);
+                                    if (!devObj.isNull("serial_number") && !serial_number.isEmpty())
+                                        device.addDetail("serial_number", serial_number);
                                 }
 
                                 JSONArray services = parsed.optJSONArray("services");

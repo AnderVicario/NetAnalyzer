@@ -53,7 +53,7 @@ public class OpenRouterApiClient {
 
     public static JSONObject parseDeviceInfoSync(String rawDeviceInfo) throws JSONException {
         Log.d(TAG, rawDeviceInfo);
-        
+
         String token = getToken();
         if (token.isEmpty()) {
             Log.e(TAG, "Error: No se encontró el API token en SharedPreferences");

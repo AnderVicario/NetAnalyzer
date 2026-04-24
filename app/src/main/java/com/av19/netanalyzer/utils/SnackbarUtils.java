@@ -16,7 +16,8 @@ import com.google.android.material.snackbar.Snackbar;
 
 public class SnackbarUtils {
 
-    private SnackbarUtils() {}
+    private SnackbarUtils() {
+    }
 
     public static void showSuccess(@NonNull View view, @NonNull Context context, String message) {
         Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_SHORT);

@@ -233,7 +233,7 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
         String key = item.getSettingKey();
         if (key != null) {
             prefs.edit().putString(key, newValue).apply();
-            SnackbarUtils.showSuccess(requireView(), requireContext(),"Nueva API key establecida. ");
+            SnackbarUtils.showSuccess(requireView(), requireContext(), "Nueva API key establecida. ");
         }
     }
 }

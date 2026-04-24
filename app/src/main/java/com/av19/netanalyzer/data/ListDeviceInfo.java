@@ -1,7 +1,5 @@
 package com.av19.netanalyzer.data;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;

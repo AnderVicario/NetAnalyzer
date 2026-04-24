@@ -9,10 +9,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-
-import com.av19.netanalyzer.utils.FingerprintManager;
-import com.av19.netanalyzer.utils.PreferencesManager;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
@@ -44,8 +40,10 @@ import com.av19.netanalyzer.discovery.TCPDiscovery;
 import com.av19.netanalyzer.repository.ScanRepository;
 import com.av19.netanalyzer.scanner.NetworkScanner;
 import com.av19.netanalyzer.utils.CancellationToken;
+import com.av19.netanalyzer.utils.FingerprintManager;
 import com.av19.netanalyzer.utils.NetUtils;
 import com.av19.netanalyzer.utils.OpenRouterApiClient;
+import com.av19.netanalyzer.utils.PreferencesManager;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;

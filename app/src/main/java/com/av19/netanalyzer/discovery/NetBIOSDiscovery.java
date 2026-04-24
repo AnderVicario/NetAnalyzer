@@ -16,6 +16,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -168,7 +169,7 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
         // 2. Rellenar con 15 caracteres nulos (0x00) -> 0x41, 0x41 ('AA')
         // Esto es lo que nmblookup hace y lo que el estándar espera para NBSTAT
         for (int i = 1; i < 16; i++) {
-            encodedName[i * 2]     = (byte) 'A';
+            encodedName[i * 2] = (byte) 'A';
             encodedName[i * 2 + 1] = (byte) 'A';
         }
 
@@ -201,15 +202,15 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
         for (int i = 0; i < 15; i++) {
             char c = padded.charAt(i);
             int high = (c >> 4) & 0x0F;
-            int low  = c & 0x0F;
-            encoded[i * 2]     = (byte) (high + 0x41);
-            encoded[i * 2 + 1] = (byte) (low  + 0x41);
+            int low = c & 0x0F;
+            encoded[i * 2] = (byte) (high + 0x41);
+            encoded[i * 2 + 1] = (byte) (low + 0x41);
         }
         // El sufijo se codifica por separado como byte, no como char
         int high = (suffix >> 4) & 0x0F;
-        int low  = suffix & 0x0F;
+        int low = suffix & 0x0F;
         encoded[30] = (byte) (high + 0x41);
-        encoded[31] = (byte) (low  + 0x41);
+        encoded[31] = (byte) (low + 0x41);
 
         return encoded;
     }
@@ -226,18 +227,24 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
             DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data, 0, length));
 
             // --- Cabecera (12 bytes) ---
-            short transactionId  = dis.readShort();
-            short flags          = dis.readShort();
-            short questions      = dis.readShort();
-            short answerRRs      = dis.readShort();
-            short authorityRRs   = dis.readShort();
-            short additionalRRs  = dis.readShort();
+            short transactionId = dis.readShort();
+            short flags = dis.readShort();
+            short questions = dis.readShort();
+            short answerRRs = dis.readShort();
+            short authorityRRs = dis.readShort();
+            short additionalRRs = dis.readShort();
 
             Log.v(TAG, "Header: flags=0x" + Integer.toHexString(flags & 0xFFFF)
                     + ", questions=" + questions + ", answers=" + answerRRs);
 
-            if ((flags & 0x8000) == 0) { Log.w(TAG, "No es respuesta (QR=0)"); return null; }
-            if ((flags & 0x000F) != 0) { Log.w(TAG, "RCODE=" + (flags & 0x000F));  return null; }
+            if ((flags & 0x8000) == 0) {
+                Log.w(TAG, "No es respuesta (QR=0)");
+                return null;
+            }
+            if ((flags & 0x000F) != 0) {
+                Log.w(TAG, "RCODE=" + (flags & 0x000F));
+                return null;
+            }
 
             // 🔧 FIX 1: Saltar preguntas solo si las hay
             for (int i = 0; i < questions; i++) {
@@ -250,10 +257,10 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
             for (int i = 0; i < answerRRs; i++) {
                 skipNameField(dis);
 
-                short type     = dis.readShort();
-                short rrClass  = dis.readShort();
-                int   ttl      = dis.readInt();
-                short dataLen  = dis.readShort();
+                short type = dis.readShort();
+                short rrClass = dis.readShort();
+                int ttl = dis.readInt();
+                short dataLen = dis.readShort();
 
                 if (dataLen > dis.available()) {
                     Log.w(TAG, "dataLen (" + dataLen + ") excede el buffer disponible");
@@ -276,7 +283,7 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
                         int suffix = bais.read();
                         int nameFlags = (bais.read() << 8) | bais.read();
 
-                        String decodedName = new String(rawName, "US-ASCII").trim();
+                        String decodedName = new String(rawName, StandardCharsets.US_ASCII).trim();
 
                         // 🔧 FIX 2: Nombre ÚNICO (bit15 == 0) con sufijo 0x00
                         if ((nameFlags & 0x8000) == 0 && suffix == 0x00 && !decodedName.isEmpty()) {
@@ -384,9 +391,10 @@ public class NetBIOSDiscovery implements DiscoveryMethod {
     private static class NetBIOSResult {
         String hostname;
         String mac;
+
         NetBIOSResult(String hostname, String mac) {
             this.hostname = hostname;
-            this.mac      = mac;
+            this.mac = mac;
         }
     }
 }

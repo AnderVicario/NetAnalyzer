@@ -53,7 +53,8 @@ public class PreferencesManager {
             defaults.add("AUTO");
             return defaults;
         }
-        Type listType = new TypeToken<List<String>>(){}.getType();
+        Type listType = new TypeToken<List<String>>() {
+        }.getType();
         return gson.fromJson(json, listType);
     }
 
@@ -76,7 +77,8 @@ public class PreferencesManager {
     private Map<String, Map<String, String>> getAllMethodParams() {
         String json = prefs.getString(KEY_METHOD_PARAMS, null);
         if (json == null) return new HashMap<>();
-        Type mapType = new TypeToken<Map<String, Map<String, String>>>(){}.getType();
+        Type mapType = new TypeToken<Map<String, Map<String, String>>>() {
+        }.getType();
         return gson.fromJson(json, mapType);
     }
 
@@ -97,7 +99,8 @@ public class PreferencesManager {
     public List<ScanRecord> getScanHistory() {
         String json = prefs.getString(KEY_SCAN_HISTORY, null);
         if (json == null) return new ArrayList<>();
-        Type listType = new TypeToken<List<ScanRecord>>(){}.getType();
+        Type listType = new TypeToken<List<ScanRecord>>() {
+        }.getType();
         return gson.fromJson(json, listType);
     }
 
@@ -122,11 +125,13 @@ public class PreferencesManager {
             if (version != 1) return false;
 
             List<String> activeMethods = gson.fromJson(root.get("active_methods"),
-                    new TypeToken<List<String>>(){}.getType());
+                    new TypeToken<List<String>>() {
+                    }.getType());
             setActiveMethods(activeMethods);
 
             Map<String, Map<String, String>> params = gson.fromJson(root.get("method_params"),
-                    new TypeToken<Map<String, Map<String, String>>>(){}.getType());
+                    new TypeToken<Map<String, Map<String, String>>>() {
+                    }.getType());
             saveAllMethodParams(params);
 
             String scanLevel = root.get("scan_level").getAsString();
@@ -152,7 +157,8 @@ public class PreferencesManager {
             if (version != 1) return false;
 
             List<ScanRecord> imported = gson.fromJson(root.get("scan_history"),
-                    new TypeToken<List<ScanRecord>>(){}.getType());
+                    new TypeToken<List<ScanRecord>>() {
+                    }.getType());
 
             List<ScanRecord> current = getScanHistory();
             // Fusionar: añadir los registros importados al principio

@@ -1,24 +1,17 @@
 package com.av19.netanalyzer.ui.settings;
 
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.av19.netanalyzer.R;
-import com.av19.netanalyzer.utils.LocaleManager;
 
 public class SettingsOperations {
 

@@ -94,7 +94,7 @@ public class HomeFragment extends Fragment {
 
         OpenRouterApiClient.getInstance(requireContext());
 
-        if (!hasToken()){
+        if (!hasToken()) {
             btnScan.setIcon(null);
         } else {
             btnScan.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_ai));

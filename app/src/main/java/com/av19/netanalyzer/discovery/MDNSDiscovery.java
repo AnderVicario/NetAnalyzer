@@ -145,6 +145,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
                         if (token.isCancelled() || stopped.get()) return;
                         processResolvedService(resolvedInfo, callback);
                     }
+
                     @Override
                     public void onResolveFailed(NsdServiceInfo info, int errorCode) {
                         Log.d(TAG, "Resolve failed for " + info.getServiceName() + ": " + errorCode);
@@ -173,7 +174,8 @@ public class MDNSDiscovery implements DiscoveryMethod {
             }
 
             @Override
-            public void onServiceLost(NsdServiceInfo serviceInfo) { }
+            public void onServiceLost(NsdServiceInfo serviceInfo) {
+            }
 
             @Override
             public void onStartDiscoveryFailed(String serviceType, int errorCode) {
@@ -341,7 +343,7 @@ public class MDNSDiscovery implements DiscoveryMethod {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Map<String, byte[]> attributes = info.getAttributes();
             if (attributes.containsKey("md") && device.getModel() == null) {
-                device.setModel(new DeviceInfo.PriorityValue(0, new String(attributes.get("md"))) );
+                device.setModel(new DeviceInfo.PriorityValue(0, new String(attributes.get("md"))));
             } else if (attributes.containsKey("modelid") && device.getModel() == null) {
                 device.setModel(new DeviceInfo.PriorityValue(0, new String(attributes.get("modelid"))));
             }
@@ -444,7 +446,8 @@ public class MDNSDiscovery implements DiscoveryMethod {
             try {
                 InetAddress ipv6Group = InetAddress.getByName("ff02::fb");
                 socket.send(new DatagramPacket(query, query.length, ipv6Group, MDNS_PORT));
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
         }
 
         private static void writeDnsName(DataOutputStream dos, String name) throws IOException {
