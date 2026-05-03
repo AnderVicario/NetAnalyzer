@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Tema principal -->
     <style name="Theme.NetAnalyzer" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Colores primarios -->
@@ -31,6 +31,7 @@
     </style>
 
     <style name="mySwitchStyle" parent="@style/Widget.AppCompat.CompoundButton.Switch" />
+
     <style name="mySwitchTheme" parent="ThemeOverlay.AppCompat.Light">
         <item name="switchStyle">@style/mySwitchStyle</item>
     </style>

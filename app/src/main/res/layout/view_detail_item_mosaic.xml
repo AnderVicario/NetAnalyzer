@@ -10,9 +10,9 @@
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textAllCaps="true"
         android:textColor="@color/on_surface"
-        android:textSize="12sp"
-        android:textAllCaps="true" />
+        android:textSize="12sp" />
 
     <TextView
         android:id="@+id/tv_value"

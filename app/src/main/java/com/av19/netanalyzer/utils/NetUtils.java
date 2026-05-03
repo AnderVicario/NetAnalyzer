@@ -90,16 +90,6 @@ public class NetUtils {
         return entry;
     }
 
-    private static class CacheEntry {
-        final int[] ports;
-        final Map<Integer, String> serviceNames;
-
-        CacheEntry(int[] ports, Map<Integer, String> serviceNames) {
-            this.ports = ports;
-            this.serviceNames = serviceNames;
-        }
-    }
-
     public static int compareIps(String ip1, String ip2) {
         if (ip1 == null) return (ip2 == null) ? 0 : -1;
         if (ip2 == null) return 1;
@@ -120,5 +110,15 @@ public class NetUtils {
             }
         }
         return Integer.compare(parts1.length, parts2.length);
+    }
+
+    private static class CacheEntry {
+        final int[] ports;
+        final Map<Integer, String> serviceNames;
+
+        CacheEntry(int[] ports, Map<Integer, String> serviceNames) {
+            this.ports = ports;
+            this.serviceNames = serviceNames;
+        }
     }
 }

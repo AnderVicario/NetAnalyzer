@@ -41,11 +41,6 @@ public class PreferencesManager {
         prefs.edit().putString(KEY_SCAN_LEVEL, level).apply();
     }
 
-    // --- Preset de métodos activos ---
-    public void setActiveMethods(List<String> methods) {
-        prefs.edit().putString(KEY_ACTIVE_METHODS, gson.toJson(methods)).apply();
-    }
-
     public List<String> getActiveMethods() {
         String json = prefs.getString(KEY_ACTIVE_METHODS, null);
         if (json == null) {
@@ -56,6 +51,11 @@ public class PreferencesManager {
         Type listType = new TypeToken<List<String>>() {
         }.getType();
         return gson.fromJson(json, listType);
+    }
+
+    // --- Preset de métodos activos ---
+    public void setActiveMethods(List<String> methods) {
+        prefs.edit().putString(KEY_ACTIVE_METHODS, gson.toJson(methods)).apply();
     }
 
     // --- Parámetros de métodos (ej. tcp_port) ---

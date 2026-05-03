@@ -9,21 +9,21 @@
         android:id="@+id/icmp_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/edit_text_border"
         android:hint="@string/number_of_pings_hint"
         android:inputType="number"
-        android:text="@string/default_icmp_count"
         android:padding="12dp"
-        android:background="@drawable/edit_text_border" />
+        android:text="@string/default_icmp_count" />
 
     <EditText
         android:id="@+id/icmp_timeout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/edit_text_border"
         android:hint="@string/timeout_ms_hint"
         android:inputType="number"
-        android:text="@string/default_icmp_timeout"
-        android:layout_marginTop="8dp"
         android:padding="12dp"
-        android:background="@drawable/edit_text_border" />
+        android:text="@string/default_icmp_timeout" />
 
 </LinearLayout>

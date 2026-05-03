@@ -6,6 +6,17 @@ import android.os.Parcelable;
 import java.util.ArrayList;
 
 public class NetworkInfo implements Parcelable {
+    public static final Creator<NetworkInfo> CREATOR = new Creator<NetworkInfo>() {
+        @Override
+        public NetworkInfo createFromParcel(Parcel in) {
+            return new NetworkInfo(in);
+        }
+
+        @Override
+        public NetworkInfo[] newArray(int size) {
+            return new NetworkInfo[size];
+        }
+    };
     private final String ip;
     private final String netmask;
     private final int prefix;
@@ -93,18 +104,6 @@ public class NetworkInfo implements Parcelable {
     public int describeContents() {
         return 0;
     }
-
-    public static final Creator<NetworkInfo> CREATOR = new Creator<NetworkInfo>() {
-        @Override
-        public NetworkInfo createFromParcel(Parcel in) {
-            return new NetworkInfo(in);
-        }
-
-        @Override
-        public NetworkInfo[] newArray(int size) {
-            return new NetworkInfo[size];
-        }
-    };
 
     // Getters
     public String getIp() {

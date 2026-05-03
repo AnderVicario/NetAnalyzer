@@ -17,27 +17,27 @@
             android:id="@+id/header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_margin="20dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/tv_subtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/system_status"
-                android:textSize="12sp"
-                android:textColor="@color/primary"/>
+                android:textColor="@color/primary"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/tvSettingsTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/network_hub"
-                android:textSize="26sp"
                 android:textColor="@color/on_background"
-                android:textStyle="bold"/>
+                android:textSize="26sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
@@ -47,9 +47,9 @@
             android:layout_marginTop="20dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="0dp"
-            app:layout_constraintTop_toBottomOf="@id/header"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/header">
 
             <GridLayout
                 android:id="@+id/layout_network_info"
@@ -66,22 +66,24 @@
                     android:layout_marginEnd="0.5dp"
                     android:layout_marginBottom="0.5dp"
                     android:background="@color/surface"
-                    android:padding="12dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
                     <TextView
                         android:id="@+id/tv_ip_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/home_local_ip"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface"/>
+                        android:textColor="@color/on_surface"
+                        android:textSize="12sp" />
+
                     <TextView
                         android:id="@+id/tv_ip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/ip_placeholder"
-                        android:textSize="16sp"
-                        android:textColor="@color/on_background"/>
+                        android:textColor="@color/on_background"
+                        android:textSize="16sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -91,22 +93,24 @@
                     android:layout_marginStart="0.5dp"
                     android:layout_marginBottom="0.5dp"
                     android:background="@color/surface"
-                    android:padding="12dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
                     <TextView
                         android:id="@+id/tv_gateway_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/home_gateway"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface"/>
+                        android:textColor="@color/on_surface"
+                        android:textSize="12sp" />
+
                     <TextView
                         android:id="@+id/tv_gateway"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/ip_placeholder"
-                        android:textSize="16sp"
-                        android:textColor="@color/on_background"/>
+                        android:textColor="@color/on_background"
+                        android:textSize="16sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -116,47 +120,51 @@
                     android:layout_marginTop="0.5dp"
                     android:layout_marginEnd="0.5dp"
                     android:background="@color/surface"
-                    android:padding="12dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
                     <TextView
                         android:id="@+id/tv_net_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/network"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface"/>
+                        android:textColor="@color/on_surface"
+                        android:textSize="12sp" />
+
                     <TextView
                         android:id="@+id/tv_net"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/network_placeholder"
-                        android:textSize="16sp"
-                        android:textColor="@color/on_background"/>
+                        android:textColor="@color/on_background"
+                        android:textSize="16sp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/info4"
                     android:layout_width="160dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="0.5dp"
                     android:layout_marginStart="0.5dp"
+                    android:layout_marginTop="0.5dp"
                     android:background="@color/surface"
-                    android:padding="12dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
                     <TextView
                         android:id="@+id/tv_connection_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/connection"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface"/>
+                        android:textColor="@color/on_surface"
+                        android:textSize="12sp" />
+
                     <TextView
                         android:id="@+id/tv_connection"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/unknown"
-                        android:textSize="16sp"
-                        android:textColor="@color/on_background"/>
+                        android:textColor="@color/on_background"
+                        android:textSize="16sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -167,29 +175,29 @@
                     android:layout_gravity="fill_horizontal"
                     android:layout_marginTop="1dp"
                     android:background="@color/surface"
-                    android:focusable="true"
-                    android:padding="12dp"
                     android:clickable="true"
-                    android:gravity="center"
+                    android:focusable="true"
                     android:foreground="?android:attr/selectableItemBackground"
-                    android:orientation="horizontal">
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
 
                     <TextView
                         android:id="@+id/tv_expand_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/more"
-                        android:textSize="12sp"
-                        android:textColor="@color/on_surface"/>
+                        android:textColor="@color/on_surface"
+                        android:textSize="12sp" />
 
                     <ImageView
                         android:id="@+id/iv_expand_icon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center"
                         android:contentDescription="@string/expand_info_desc"
                         android:src="@drawable/ic_arrow_forward"
-                        android:layout_gravity="center"
-                        app:tint="@color/on_surface"/>
+                        app:tint="@color/on_surface" />
                 </LinearLayout>
 
             </GridLayout>
@@ -200,34 +208,34 @@
             android:id="@+id/ring3"
             android:layout_width="280dp"
             android:layout_height="280dp"
-            android:background="@drawable/scan_ring"
             android:alpha="0"
-            app:layout_constraintTop_toTopOf="@id/btn_scan"
+            android:background="@drawable/scan_ring"
             app:layout_constraintBottom_toBottomOf="@id/btn_scan"
+            app:layout_constraintEnd_toEndOf="@id/btn_scan"
             app:layout_constraintStart_toStartOf="@id/btn_scan"
-            app:layout_constraintEnd_toEndOf="@id/btn_scan" />
+            app:layout_constraintTop_toTopOf="@id/btn_scan" />
 
         <View
             android:id="@+id/ring2"
             android:layout_width="220dp"
             android:layout_height="220dp"
-            android:background="@drawable/scan_ring"
             android:alpha="0"
-            app:layout_constraintTop_toTopOf="@id/btn_scan"
+            android:background="@drawable/scan_ring"
             app:layout_constraintBottom_toBottomOf="@id/btn_scan"
+            app:layout_constraintEnd_toEndOf="@id/btn_scan"
             app:layout_constraintStart_toStartOf="@id/btn_scan"
-            app:layout_constraintEnd_toEndOf="@id/btn_scan" />
+            app:layout_constraintTop_toTopOf="@id/btn_scan" />
 
         <View
             android:id="@+id/ring1"
             android:layout_width="170dp"
             android:layout_height="170dp"
-            android:background="@drawable/scan_ring"
             android:alpha="0"
-            app:layout_constraintTop_toTopOf="@id/btn_scan"
+            android:background="@drawable/scan_ring"
             app:layout_constraintBottom_toBottomOf="@id/btn_scan"
+            app:layout_constraintEnd_toEndOf="@id/btn_scan"
             app:layout_constraintStart_toStartOf="@id/btn_scan"
-            app:layout_constraintEnd_toEndOf="@id/btn_scan" />
+            app:layout_constraintTop_toTopOf="@id/btn_scan" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_scan"

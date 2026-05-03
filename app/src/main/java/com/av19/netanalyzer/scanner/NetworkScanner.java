@@ -25,18 +25,6 @@ public class NetworkScanner {
     private CancellationToken token;
     private Callback callback;
 
-    public interface Callback {
-        void onDiscoveryProgress(String methodName, int progressPercent);
-
-        void onDeviceFound(DeviceInfo device);
-
-        void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices);
-
-        void onComplete(List<DeviceInfo> devices);
-
-        void onCancelled();
-    }
-
     public NetworkScanner(NetworkInfo networkInfo, int[] ports) {
         this.networkInfo = networkInfo;
         this.ports = ports;
@@ -159,5 +147,17 @@ public class NetworkScanner {
             Thread.currentThread().interrupt();
             callback.onCancelled();
         }
+    }
+
+    public interface Callback {
+        void onDiscoveryProgress(String methodName, int progressPercent);
+
+        void onDeviceFound(DeviceInfo device);
+
+        void onPortScanProgress(int current, int total, String currentIp, List<DeviceInfo> currentDevices);
+
+        void onComplete(List<DeviceInfo> devices);
+
+        void onCancelled();
     }
 }

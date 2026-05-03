@@ -3,9 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/surface"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:background="@color/surface">
+    android:padding="24dp">
 
     <View
         android:layout_width="40dp"
@@ -17,9 +17,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
+        android:layout_marginBottom="12dp"
         android:gravity="center"
-        android:layout_marginBottom="12dp">
+        android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
@@ -32,47 +32,47 @@
         <View
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
 
         <ImageButton
             android:id="@+id/btn_import"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:padding="2dp"
             android:background="@drawable/round_button_36"
+            android:padding="2dp"
             android:src="@drawable/ic_import"
             app:tint="@color/on_surface" />
 
         <View
             android:layout_width="4dp"
-            android:layout_height="0dp"/>
+            android:layout_height="0dp" />
 
         <ImageButton
             android:id="@+id/btn_export"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:padding="2dp"
             android:background="@drawable/round_button_36"
+            android:padding="2dp"
             android:src="@drawable/ic_export"
-            app:tint="@color/on_surface"/>
+            app:tint="@color/on_surface" />
 
     </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/scan_methods_long_press"
+        android:layout_marginBottom="12dp"
         android:alpha="0.7"
-        android:textSize="12sp"
-        android:layout_marginBottom="12dp" />
+        android:text="@string/scan_methods_long_press"
+        android:textSize="12sp" />
 
     <!-- Matriz 3 columnas -->
     <GridLayout
         android:id="@+id/grid_methods"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="3"
         android:alignmentMode="alignMargins"
+        android:columnCount="3"
         android:columnOrderPreserved="false">
 
         <com.google.android.material.button.MaterialButton
@@ -82,8 +82,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="@string/auto"
-            android:checkable="true" />
+            android:checkable="true"
+            android:text="@string/auto" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_arp"
@@ -92,8 +92,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="@string/arp"
-            android:checkable="true" />
+            android:checkable="true"
+            android:text="@string/arp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_tcp"
@@ -102,8 +102,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="@string/tcp"
-            android:checkable="true" />
+            android:checkable="true"
+            android:text="@string/tcp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_icmp"
@@ -112,8 +112,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="@string/icmp"
-            android:checkable="true" />
+            android:checkable="true"
+            android:text="@string/icmp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_mdns"
@@ -122,8 +122,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="@string/mdns"
-            android:checkable="true" />
+            android:checkable="true"
+            android:text="@string/mdns" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_ssdp"
@@ -132,8 +132,8 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="@string/ssdp"
-            android:checkable="true" />
+            android:checkable="true"
+            android:text="@string/ssdp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_netbios"
@@ -142,44 +142,49 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
             android:layout_margin="4dp"
-            android:text="@string/netbios"
-            android:checkable="true" />
+            android:checkable="true"
+            android:text="@string/netbios" />
 
     </GridLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/ports_to_scan"
-        android:alpha="0.7"
-        android:textSize="12sp"
         android:layout_marginTop="24dp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp"
+        android:alpha="0.7"
+        android:text="@string/ports_to_scan"
+        android:textSize="12sp" />
 
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/toggle_group_ports"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:singleSelection="true"
+        android:layout_marginBottom="32dp"
         app:selectionRequired="true"
-        android:layout_marginBottom="32dp">
+        app:singleSelection="true">
 
-        <Button android:id="@+id/btn_ports_100"
+        <Button
+            android:id="@+id/btn_ports_100"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_height="wrap_content"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/ports_100" />
-        <Button android:id="@+id/btn_ports_500"
+
+        <Button
+            android:id="@+id/btn_ports_500"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_height="wrap_content"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/ports_500" />
-        <Button android:id="@+id/btn_ports_1000"
+
+        <Button
+            android:id="@+id/btn_ports_1000"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_height="wrap_content"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/ports_1000" />
     </com.google.android.material.button.MaterialButtonToggleGroup>

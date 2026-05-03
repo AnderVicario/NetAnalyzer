@@ -3,32 +3,32 @@
     android:id="@+id/devicesRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:layout_margin="20dp"
     android:background="@color/background"
-    android:layout_margin="20dp">
+    android:orientation="vertical">
 
     <!-- Header -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/devices_title"
-        android:textSize="26sp"
-        android:textStyle="bold"
         android:paddingBottom="20dp"
-        android:textColor="@color/on_background" />
+        android:text="@string/devices_title"
+        android:textColor="@color/on_background"
+        android:textSize="26sp"
+        android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewDevices"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
     <TextView
         android:id="@+id/emptyView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center"
         android:text="@string/empty_devices"
         android:textSize="14sp"
-        android:gravity="center"
         android:visibility="gone" />
 
 </LinearLayout>

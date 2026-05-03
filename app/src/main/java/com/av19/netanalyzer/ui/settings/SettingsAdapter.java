@@ -25,19 +25,9 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
 
     private final List<SettingsItem> settings;
     private final OnSettingClickListener listener;
-    private int expandedPosition = -1;
     private final Context context;
     private final SharedPreferences prefs;
-
-    public interface OnSettingClickListener {
-        void onSettingClicked(SettingsItem item, int position);
-
-        void onOptionSelected(SettingsItem item, int optionIndex);
-
-        void onSwitchChanged(SettingsItem item, boolean isChecked, int position);
-
-        void onKeyChanged(SettingsItem item, String newValue);
-    }
+    private int expandedPosition = -1;
 
     public SettingsAdapter(List<SettingsItem> settings, OnSettingClickListener listener, Context context) {
         this.settings = settings;
@@ -407,6 +397,16 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
     @Override
     public int getItemCount() {
         return settings != null ? settings.size() : 0;
+    }
+
+    public interface OnSettingClickListener {
+        void onSettingClicked(SettingsItem item, int position);
+
+        void onOptionSelected(SettingsItem item, int optionIndex);
+
+        void onSwitchChanged(SettingsItem item, boolean isChecked, int position);
+
+        void onKeyChanged(SettingsItem item, String newValue);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

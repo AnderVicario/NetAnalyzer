@@ -54,16 +54,14 @@ public class ScanService extends Service {
     private static final String CHANNEL_ID = "scan_channel";
     private static final int NOTIFICATION_ID = 1;
     private static final long NOTIFICATION_THROTTLE_MS = 500;
-
+    // Lista especializada que maneja la fusión de dispositivos sin duplicados
+    private final ListDeviceInfo discoveredDevices = new ListDeviceInfo();
     private ScanRepository repository;
     private CancellationToken cancellationToken;
     private NetworkScanner networkScanner;
     private Handler mainHandler;
     private long lastNotificationUpdate = 0;
     private long scanStartTime;
-
-    // Lista especializada que maneja la fusión de dispositivos sin duplicados
-    private final ListDeviceInfo discoveredDevices = new ListDeviceInfo();
 
     @Override
     public void onCreate() {

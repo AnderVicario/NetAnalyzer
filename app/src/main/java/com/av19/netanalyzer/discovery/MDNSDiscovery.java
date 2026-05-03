@@ -36,16 +36,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MDNSDiscovery implements DiscoveryMethod {
     private static final String TAG = "MDNSDiscovery";
+    private static final int SERVICE_TYPE_DISCOVERY_TIME = 5000;
+    private static final int INSTANCE_DISCOVERY_TIME = 5000;
+    // Porcentajes: fase1 (tipos) 30%, fase2 (instancias) 70%
+    private static final int PHASE1_MAX_PROGRESS = 30;
     private final NsdManager nsdManager;
     private final Map<String, DeviceInfo> foundDevices = new ConcurrentHashMap<>();
     private final Set<String> discoveredServiceTypes = Collections.synchronizedSet(new HashSet<>());
     private final Set<NsdManager.DiscoveryListener> activeListeners = Collections.synchronizedSet(new HashSet<>());
-
-    private static final int SERVICE_TYPE_DISCOVERY_TIME = 5000;
-    private static final int INSTANCE_DISCOVERY_TIME = 5000;
-
-    // Porcentajes: fase1 (tipos) 30%, fase2 (instancias) 70%
-    private static final int PHASE1_MAX_PROGRESS = 30;
 
     public MDNSDiscovery(Context context) {
         this.nsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
@@ -356,10 +354,10 @@ public class MDNSDiscovery implements DiscoveryMethod {
 
     // ======================== CLASE INTERNA MDNSUtils (sin cambios) ========================
     private static class MDNSUtils {
-        private static final String MDNS_IPV4_ADDRESS = "224.0.0.251";
-        private static final int MDNS_PORT = 5353;
         public static final int TYPE_PTR = 12;
         public static final int CLASS_IN = 1;
+        private static final String MDNS_IPV4_ADDRESS = "224.0.0.251";
+        private static final int MDNS_PORT = 5353;
 
         public static MulticastSocket openMulticastSocket() {
             NetworkInterface ni = findMulticastInterface();

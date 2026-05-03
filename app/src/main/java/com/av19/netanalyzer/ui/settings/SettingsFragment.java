@@ -185,9 +185,12 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
 
     private String getLanguageOptionText(int index) {
         switch (index) {
-            case 1: return getString(R.string.settings_language_basque);
-            case 2: return getString(R.string.settings_language_english);
-            default: return getString(R.string.settings_language_spanish);
+            case 1:
+                return getString(R.string.settings_language_basque);
+            case 2:
+                return getString(R.string.settings_language_english);
+            default:
+                return getString(R.string.settings_language_spanish);
         }
     }
 
@@ -213,8 +216,7 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
             if (getActivity() instanceof AppCompatActivity) {
                 SettingsOperations.setAppTheme((AppCompatActivity) getActivity(), value);
             }
-        }
-        else if ("idioma".equals(settingKey)) {
+        } else if ("idioma".equals(settingKey)) {
             if (getActivity() instanceof AppCompatActivity) {
                 SettingsOperations.setLanguageChange((AppCompatActivity) getActivity(), value);
             }

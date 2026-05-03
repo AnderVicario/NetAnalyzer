@@ -3,23 +3,23 @@
     android:id="@+id/settingsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:layout_margin="20dp"
     android:background="@color/background"
-    android:layout_margin="20dp">
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/tvSettingsTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="20dp"
         android:text="@string/settings_title"
-        android:textSize="26sp"
         android:textColor="@color/on_background"
-        android:textStyle="bold"
-        android:paddingBottom="20dp"/>
+        android:textSize="26sp"
+        android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewSettings"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
 </LinearLayout>

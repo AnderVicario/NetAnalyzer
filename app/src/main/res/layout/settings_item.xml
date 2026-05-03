@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:layout_margin="4dp"
     android:background="@drawable/round_button_list_36"
-    android:layout_margin="4dp">
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/buttonPanel"
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        android:orientation="horizontal"
-        android:padding="16dp"
+        android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
-        android:background="?android:attr/selectableItemBackground">
+        android:orientation="horizontal"
+        android:padding="16dp">
 
         <ImageView
             android:id="@+id/iconImageView"
@@ -27,9 +27,9 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
+            android:layout_weight="1"
             android:orientation="vertical"
             android:paddingStart="8dp"
             android:paddingEnd="8dp">
@@ -38,16 +38,16 @@
                 android:id="@+id/titleTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="@color/on_background"/>
+                android:textColor="@color/on_background"
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/subtitleTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textColor="@color/on_background"
                 android:alpha="0.7"
+                android:textColor="@color/on_background"
+                android:textSize="14sp"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -66,24 +66,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:thumb="@drawable/ic_thumb"
-            app:track="@drawable/ic_track"
+            android:layout_marginEnd="15dp"
             android:checked="true"
             android:gravity="center"
             android:theme="@style/mySwitchTheme"
-            android:layout_marginEnd="15dp"
-            android:visibility="gone" />
+            android:thumb="@drawable/ic_thumb"
+            android:visibility="gone"
+            app:track="@drawable/ic_track" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/options_panel"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:background="@color/transparent"
+        android:orientation="vertical"
         android:paddingStart="40dp"
         android:paddingEnd="40dp"
         android:paddingBottom="2dp"
-        android:background="@color/transparent"
-        android:orientation="vertical"
         android:visibility="invisible">
 
         <EditText
@@ -93,18 +93,17 @@
             android:background="@null"
             android:hint="@string/set_key_hint"
             android:paddingVertical="12dp"
-            android:visibility="gone">
-        </EditText>
+            android:visibility="gone"></EditText>
 
         <!-- Opción 1 con indicador de selección -->
         <LinearLayout
             android:id="@+id/option1_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
+            android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground">
+            android:orientation="horizontal"
+            android:padding="12dp">
 
             <TextView
                 android:id="@+id/option1"
@@ -137,10 +136,10 @@
             android:id="@+id/option2_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
+            android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground">
+            android:orientation="horizontal"
+            android:padding="12dp">
 
             <TextView
                 android:id="@+id/option2"
@@ -173,10 +172,10 @@
             android:id="@+id/option3_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp"
+            android:background="?android:attr/selectableItemBackground"
             android:clickable="true"
-            android:background="?android:attr/selectableItemBackground">
+            android:orientation="horizontal"
+            android:padding="12dp">
 
             <TextView
                 android:id="@+id/option3"

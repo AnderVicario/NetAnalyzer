@@ -9,20 +9,20 @@
         android:id="@+id/tcp_port"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/edit_text_border"
         android:hint="@string/port_default_hint"
         android:inputType="number"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_border" />
+        android:padding="12dp" />
 
     <EditText
         android:id="@+id/tcp_timeout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/edit_text_border"
         android:hint="@string/timeout_ms_hint"
         android:inputType="number"
-        android:text="@string/default_tcp_timeout"
-        android:layout_marginTop="8dp"
         android:padding="12dp"
-        android:background="@drawable/edit_text_border" />
+        android:text="@string/default_tcp_timeout" />
 
 </LinearLayout>
