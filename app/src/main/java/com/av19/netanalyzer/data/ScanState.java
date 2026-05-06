@@ -12,6 +12,7 @@ public class ScanState {
     private final List<DeviceInfo> devices;
     private final NetworkInfo networkInfo;
     private final String errorMessage;
+
     public ScanState(Status status, Phase phase, String currentMethod, int progress, String currentHost, List<DeviceInfo> devices, NetworkInfo networkInfo, String errorMessage) {
         this.status = status;
         this.phase = phase;

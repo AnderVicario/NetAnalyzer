@@ -20,10 +20,24 @@ public class NetUtils {
 
     public static int ipToInt(String ip) {
         String[] parts = ip.split("\\.");
-        return (Integer.parseInt(parts[0]) << 24) |
-                (Integer.parseInt(parts[1]) << 16) |
-                (Integer.parseInt(parts[2]) << 8) |
-                Integer.parseInt(parts[3]);
+
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("Invalid IPv4 format");
+        }
+
+        int result = 0;
+
+        for (String part : parts) {
+            int octet = Integer.parseInt(part);
+
+            if (octet < 0 || octet > 255) {
+                throw new IllegalArgumentException("Invalid IPv4 octet: " + octet);
+            }
+
+            result = (result << 8) | octet;
+        }
+
+        return result;
     }
 
     @SuppressLint("DefaultLocale")

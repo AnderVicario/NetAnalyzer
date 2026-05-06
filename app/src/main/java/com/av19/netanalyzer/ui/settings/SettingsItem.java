@@ -11,6 +11,7 @@ public class SettingsItem {
     private String[] options;
     private String[] optionValues;
     private int selectedOptionIndex;
+
     public SettingsItem(int iconRes, String title, String subtitle, Type type, Boolean switchValue, String settingKey) {
         this.iconRes = iconRes;
         this.title = title;
