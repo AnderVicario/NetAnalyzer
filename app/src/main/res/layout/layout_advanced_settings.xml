@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/surface"
+    android:background="?attr/colorSurface"
     android:orientation="vertical"
     android:padding="24dp">
 
@@ -12,7 +12,7 @@
         android:layout_height="2dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
-        android:background="@color/on_surface" />
+        android:background="?attr/colorOnSurface" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/advanced_configuration"
-            android:textColor="@color/on_surface"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -41,7 +41,7 @@
             android:background="@drawable/round_button_36"
             android:padding="2dp"
             android:src="@drawable/ic_import"
-            app:tint="@color/on_surface" />
+            app:tint="?attr/colorOnSurface" />
 
         <View
             android:layout_width="4dp"
@@ -54,7 +54,7 @@
             android:background="@drawable/round_button_36"
             android:padding="2dp"
             android:src="@drawable/ic_export"
-            app:tint="@color/on_surface" />
+            app:tint="?attr/colorOnSurface" />
 
     </LinearLayout>
 

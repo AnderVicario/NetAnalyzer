@@ -1,30 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Colores primarios - Modo claro -->
-    <color name="primary">#FF6200EE</color>
-    <color name="primary_70">#B36200EE</color>
-    <color name="primary_variant">#FF3700B3</color>
-    <color name="on_primary">#FFFFFFFF</color>
-    <color name="on_primary_70">#B3FFFFFF</color>
-
-    <!-- Colores secundarios - Modo claro -->
-    <color name="secondary">#FF03DAC5</color>
-    <color name="on_secondary">#FF000000</color>
-
-    <!-- Colores de fondo - Modo claro -->
-    <color name="terminal">#FF121212</color>
-    <color name="background">#FFFFFFFF</color>
-    <color name="background_10">#11121212</color>
-    <color name="surface">#EFEFEF</color>
-    <color name="on_terminal">#FFFFFFFF</color>
-    <color name="on_background">#FF000000</color>
-    <color name="on_surface">#CC000000</color>
-
-    <!-- Error - Modo claro -->
-    <color name="error">#FFB00020</color>
-    <color name="warning">#FFC107</color>
-    <color name="on_error">#FFFFFFFF</color>
-
-    <color name="transparent">#00FFFFFF</color>
-    <color name="button">#e8def8</color>
+    <color name="light_primary">#FF6200EE</color>
+    <color name="light_primary_70">#B36200EE</color>
+    <color name="light_primary_variant">#FF3700B3</color>
+    <color name="light_on_primary">#FFFFFFFF</color>
+    <color name="light_on_primary_70">#B3FFFFFF</color>
+    <color name="light_secondary">#FF03DAC5</color>
+    <color name="light_on_secondary">#FF000000</color>
+    <color name="light_terminal">#FF121212</color>
+    <color name="light_background">#FFFFFFFF</color>
+    <color name="light_background_10">#11121212</color>
+    <color name="light_surface">#EFEFEF</color>
+    <color name="light_on_terminal">#FFFFFFFF</color>
+    <color name="light_on_background">#FF000000</color>
+    <color name="light_on_surface">#CC000000</color>
+    <color name="light_error">#FFB00020</color>
+    <color name="light_warning">#FFC107</color>
+    <color name="light_on_error">#FFFFFFFF</color>
+    <color name="light_transparent">#00FFFFFF</color>
+    <color name="light_button">#e8def8</color>
 </resources>

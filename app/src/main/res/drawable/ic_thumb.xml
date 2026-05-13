@@ -7,6 +7,6 @@
         android:height="20dp" />
     <stroke
         android:width="4dp"
-        android:color="@color/transparent" />
+        android:color="?attr/colorTransparent" />
 
 </shape>

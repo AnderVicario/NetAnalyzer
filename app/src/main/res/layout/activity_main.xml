@@ -4,7 +4,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface">
+    android:background="?attr/colorSurface">
 
     <!-- Contenedor de fragments -->
     <FrameLayout
@@ -24,7 +24,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:elevation="0dp"
-        app:itemBackground="@color/surface"
+        app:itemBackground="?attr/colorSurface"
         app:itemIconTint="@color/bottom_nav_icon_tint"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

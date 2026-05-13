@@ -158,4 +158,5 @@
     <string name="bottom_nav_menu_settings">Settings</string>
     <string name="bottom_nav_menu_devices">Devices</string>
     <string name="bottom_nav_menu_home">Home</string>
+    <string name="settings_theme_ocean">ocean</string>
 </resources>

@@ -8,16 +8,15 @@ import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.NetworkInfo;
+import com.av19.netanalyzer.ui.base.BaseActivity;
 import com.av19.netanalyzer.utils.LocaleManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class NetworkDetailsActivity extends AppCompatActivity {
+public class NetworkDetailsActivity extends BaseActivity {
 
     private boolean isMosaicMode = false;
     private List<DetailItem> detailItems;

@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.av19.netanalyzer.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHolder> {
@@ -45,13 +46,13 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         SettingsItem item = settings.get(position);
 
         holder.iconImageView.setImageResource(item.getIconRes());
         holder.titleTextView.setText(item.getTitle());
 
-        // Configurar subtitle (se mantiene estático)
+        // Subtitle
         if (item.getSubtitle() != null && !item.getSubtitle().isEmpty()) {
             holder.subtitleTextView.setText(item.getSubtitle());
             holder.subtitleTextView.setVisibility(View.VISIBLE);
@@ -59,7 +60,8 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
             holder.subtitleTextView.setVisibility(View.GONE);
         }
 
-        // Inicialmente ocultar el panel de opciones
+        // Resetear panel de opciones (limpiar vistas previas)
+        holder.optionsPanel.removeAllViews();
         holder.optionsPanel.setVisibility(View.INVISIBLE);
         ViewGroup.LayoutParams params = holder.optionsPanel.getLayoutParams();
         params.height = 0;
@@ -68,165 +70,215 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         // Configurar según tipo
         switch (item.getType()) {
             case SWITCH:
-                holder.settingSwitch.setVisibility(View.VISIBLE);
-                holder.accessoryImageView.setVisibility(View.GONE);
-                holder.optionsPanel.setVisibility(View.GONE);
-                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_36);
-
-                // Obtener valor actual desde SharedPreferences si existe una clave
-                boolean switchValue = getSwitchValueFromPreferences(item);
-                holder.settingSwitch.setChecked(switchValue);
-
-                // Actualizar el modelo
-                item.setSwitchValue(switchValue);
-
-                holder.settingSwitch.setOnCheckedChangeListener(null); // Limpiar listener previo
-                holder.settingSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                    item.setSwitchValue(isChecked);
-
-                    // Guardar en SharedPreferences si existe una clave
-                    saveSwitchValueToPreferences(item, isChecked);
-
-                    // Notificar al listener
-                    if (listener != null) {
-                        listener.onSwitchChanged(item, isChecked, position);
-                    }
-                });
-
-                holder.buttonPanel.setOnClickListener(v -> {
-                    // Alternar el switch al hacer clic en el panel
-                    boolean newValue = !holder.settingSwitch.isChecked();
-                    holder.settingSwitch.setChecked(newValue);
-
-                    if (listener != null) {
-                        listener.onSettingClicked(item, position);
-                    }
-                });
+                configSwitch(holder, item, position);
                 break;
 
             case NAVIGATION:
-                holder.settingSwitch.setVisibility(View.GONE);
-                holder.accessoryImageView.setVisibility(View.VISIBLE);
-                holder.optionsPanel.setVisibility(View.GONE);
-                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
-
-                holder.buttonPanel.setOnClickListener(v -> {
-                    if (listener != null) {
-                        listener.onSettingClicked(item, position);
-                    }
-                });
+                configNavigation(holder, item, position);
                 break;
 
             case KEY:
-                holder.settingSwitch.setVisibility(View.GONE);
-                holder.accessoryImageView.setVisibility(View.GONE);
-                holder.editText.setVisibility(View.VISIBLE);
-
-                holder.view1.setVisibility(View.GONE);
-                holder.view2.setVisibility(View.GONE);
-                holder.option1Layout.setVisibility(View.GONE);
-                holder.option2Layout.setVisibility(View.GONE);
-                holder.option3Layout.setVisibility(View.GONE);
-                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
-
-                preMeasureOptionsPanel(holder.optionsPanel);
-
-                holder.buttonPanel.setOnClickListener(v -> {
-                    boolean isExpanded = holder.optionsPanel.getVisibility() == View.VISIBLE;
-
-                    if (isExpanded) {
-                        // --- AL CERRAR EL PANEL (COLLAPSE) ---
-                        // Solo para el tipo KEY: capturar el nuevo valor del EditText
-                        if (item.getType() == SettingsItem.Type.KEY) {
-                            String newKey = holder.editText.getText().toString().trim();
-                            String oldKey = prefs.getString(item.getSettingKey(), "");
-
-                            if (!newKey.equals(oldKey)) {
-                                // Actualizar el subtítulo del ítem según si está vacío o no
-                                boolean isEmpty = newKey.isEmpty();
-                                String newSubtitle = isEmpty
-                                        ? context.getString(R.string.settings_key_empty)
-                                        : context.getString(R.string.settings_key_not_empty);
-                                item.setSubtitle(newSubtitle);
-                                holder.subtitleTextView.setText(newSubtitle);
-                                holder.subtitleTextView.setVisibility(View.VISIBLE);
-
-                                // Notificar al listener (SettingsFragment)
-                                if (listener != null) {
-                                    listener.onKeyChanged(item, newKey);
-                                }
-                            }
-                        }
-                        collapse(holder.optionsPanel);
-                        expandedPosition = -1;
-                    } else {
-                        // --- AL ABRIR EL PANEL (EXPAND) ---
-                        // Cargar la clave actual en el EditText
-                        if (item.getType() == SettingsItem.Type.KEY) {
-                            String currentKey = prefs.getString(item.getSettingKey(), "");
-                            holder.editText.setText(currentKey);
-                            // Mover el cursor al final para facilitar la edición
-                            holder.editText.setSelection(currentKey.length());
-                        }
-                        if (expandedPosition != -1 && expandedPosition != position) {
-                            notifyItemChanged(expandedPosition);
-                        }
-                        expand(holder.optionsPanel);
-                        expandedPosition = position;
-                    }
-
-                    if (listener != null) {
-                        listener.onSettingClicked(item, position);
-                    }
-                });
+                configKey(holder, item, position);
                 break;
 
             case INFO:
-                holder.settingSwitch.setVisibility(View.GONE);
-                holder.accessoryImageView.setVisibility(View.GONE);
-                holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
-
-                // Configurar opciones si las tiene
-                if (item.getOptions() != null && item.getOptions().length >= 3) {
-                    setupOptions(holder, item, position);
-
-                    // Pre-medir la altura del panel de opciones
-                    preMeasureOptionsPanel(holder.optionsPanel);
-
-                    holder.buttonPanel.setOnClickListener(v -> {
-                        boolean isExpanded = holder.optionsPanel.getVisibility() == View.VISIBLE;
-
-                        if (isExpanded) {
-                            collapse(holder.optionsPanel);
-                            expandedPosition = -1;
-                        } else {
-                            if (expandedPosition != -1 && expandedPosition != position) {
-                                notifyItemChanged(expandedPosition);
-                            }
-                            expand(holder.optionsPanel);
-                            expandedPosition = position;
-                        }
-
-                        if (listener != null) {
-                            listener.onSettingClicked(item, position);
-                        }
-                    });
-                } else {
-                    // Para "Acerca de" que no tiene opciones
-                    holder.optionsPanel.setVisibility(View.GONE);
-                    holder.buttonPanel.setOnClickListener(v -> {
-                        if (listener != null) {
-                            listener.onSettingClicked(item, position);
-                        }
-                    });
-                }
+                configInfo(holder, item, position);
                 break;
         }
     }
 
-    /**
-     * Obtiene el valor del switch desde SharedPreferences
-     */
+    // ==================== CONFIGURACIÓN POR TIPO ====================
+
+    private void configSwitch(ViewHolder holder, SettingsItem item, int position) {
+        holder.settingSwitch.setVisibility(View.VISIBLE);
+        holder.accessoryImageView.setVisibility(View.GONE);
+        holder.buttonPanel.setBackgroundResource(R.drawable.round_button_36);
+
+        boolean switchValue = getSwitchValueFromPreferences(item);
+        holder.settingSwitch.setChecked(switchValue);
+        item.setSwitchValue(switchValue);
+
+        holder.settingSwitch.setOnCheckedChangeListener(null);
+        holder.settingSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            item.setSwitchValue(isChecked);
+            saveSwitchValueToPreferences(item, isChecked);
+            if (listener != null) {
+                listener.onSwitchChanged(item, isChecked, position);
+            }
+        });
+
+        holder.buttonPanel.setOnClickListener(v -> {
+            boolean newValue = !holder.settingSwitch.isChecked();
+            holder.settingSwitch.setChecked(newValue);
+            if (listener != null) listener.onSettingClicked(item, position);
+        });
+    }
+
+    private void configNavigation(ViewHolder holder, SettingsItem item, int position) {
+        holder.settingSwitch.setVisibility(View.GONE);
+        holder.accessoryImageView.setVisibility(View.VISIBLE);
+        holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
+        holder.buttonPanel.setOnClickListener(v -> {
+            if (listener != null) listener.onSettingClicked(item, position);
+        });
+    }
+
+    private void configKey(ViewHolder holder, SettingsItem item, int position) {
+        holder.settingSwitch.setVisibility(View.GONE);
+        holder.accessoryImageView.setVisibility(View.GONE);
+        holder.editText.setVisibility(View.VISIBLE);
+
+        // Limpiar opciones previas (por si acaso)
+        holder.optionsPanel.removeAllViews();
+        holder.editText.setText(prefs.getString(item.getSettingKey(), ""));
+        holder.editText.setSelection(holder.editText.getText().length());
+
+        preMeasureOptionsPanel(holder.optionsPanel);
+
+        holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
+        holder.buttonPanel.setOnClickListener(v -> {
+            boolean isExpanded = holder.optionsPanel.getVisibility() == View.VISIBLE;
+
+            if (isExpanded) {
+                // Colapsar y guardar el nuevo valor
+                String newKey = holder.editText.getText().toString().trim();
+                String oldKey = prefs.getString(item.getSettingKey(), "");
+                if (!newKey.equals(oldKey)) {
+                    boolean isEmpty = newKey.isEmpty();
+                    String newSubtitle = isEmpty
+                            ? context.getString(R.string.settings_key_empty)
+                            : context.getString(R.string.settings_key_not_empty);
+                    item.setSubtitle(newSubtitle);
+                    holder.subtitleTextView.setText(newSubtitle);
+                    holder.subtitleTextView.setVisibility(View.VISIBLE);
+                    if (listener != null) listener.onKeyChanged(item, newKey);
+                }
+                collapse(holder.optionsPanel);
+                expandedPosition = -1;
+            } else {
+                // Expandir
+                if (expandedPosition != -1 && expandedPosition != position) {
+                    notifyItemChanged(expandedPosition);
+                }
+                expand(holder.optionsPanel);
+                expandedPosition = position;
+            }
+            if (listener != null) listener.onSettingClicked(item, position);
+        });
+    }
+
+    private void configInfo(ViewHolder holder, SettingsItem item, int position) {
+        holder.settingSwitch.setVisibility(View.GONE);
+        holder.accessoryImageView.setVisibility(View.GONE);
+        holder.editText.setVisibility(View.GONE);
+        holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
+
+        // Generar opciones dinámicamente
+        if (item.getOptions() != null && item.getOptions().length > 0) {
+            populateOptionsPanel(holder, item, position);
+            preMeasureOptionsPanel(holder.optionsPanel);
+
+            holder.buttonPanel.setOnClickListener(v -> {
+                boolean isExpanded = holder.optionsPanel.getVisibility() == View.VISIBLE;
+                if (isExpanded) {
+                    collapse(holder.optionsPanel);
+                    expandedPosition = -1;
+                } else {
+                    if (expandedPosition != -1 && expandedPosition != position) {
+                        notifyItemChanged(expandedPosition);
+                    }
+                    expand(holder.optionsPanel);
+                    expandedPosition = position;
+                }
+                if (listener != null) listener.onSettingClicked(item, position);
+            });
+        } else {
+            // Sin opciones (ej. About)
+            holder.optionsPanel.setVisibility(View.GONE);
+            holder.buttonPanel.setOnClickListener(v -> {
+                if (listener != null) listener.onSettingClicked(item, position);
+            });
+        }
+    }
+
+    // ==================== MÉTODOS DINÁMICOS PARA OPCIONES ====================
+
+    private void populateOptionsPanel(ViewHolder holder, SettingsItem item, int position) {
+        LinearLayout panel = holder.optionsPanel;
+        panel.removeAllViews();
+
+        String[] options = item.getOptions();
+        String[] optionValues = item.getOptionValues();
+        int selectedIndex = item.getSelectedOptionIndex();
+
+        // Lista para guardar las vistas de check (para poder actualizarlas después)
+        holder.optionCheckViews.clear();
+
+        for (int i = 0; i < options.length; i++) {
+            final int index = i;
+            View optionView = LayoutInflater.from(context).inflate(R.layout.settings_option_item, panel, false);
+            TextView textView = optionView.findViewById(R.id.option_text);
+            ImageView checkView = optionView.findViewById(R.id.option_check);
+            textView.setText(options[i]);
+            checkView.setVisibility(index == selectedIndex ? View.VISIBLE : View.INVISIBLE);
+            holder.optionCheckViews.add(checkView);
+
+            optionView.setOnClickListener(v -> handleOptionSelection(holder, item, position, index));
+            panel.addView(optionView);
+
+            // Añadir divisor (excepto después del último)
+            if (i < options.length - 1) {
+                View divider = new View(context);
+                LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 1);
+                divider.setLayoutParams(dividerParams);
+                divider.setBackgroundColor(getColorFromAttr(R.attr.colorBackground10));
+                panel.addView(divider);
+            }
+        }
+    }
+
+    private int getColorFromAttr(int attrRes) {
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(attrRes, typedValue, true);
+        return typedValue.data;
+    }
+
+    private void handleOptionSelection(ViewHolder holder, SettingsItem item, int position, int optionIndex) {
+        String currentValue = prefs.getString(item.getSettingKey(), "");
+        String newValue = item.getOptionValues()[optionIndex];
+
+        // Actualizar checks visualmente
+        for (int i = 0; i < holder.optionCheckViews.size(); i++) {
+            holder.optionCheckViews.get(i).setVisibility(i == optionIndex ? View.VISIBLE : View.INVISIBLE);
+        }
+
+        // Actualizar modelo
+        item.setSelectedOptionIndex(optionIndex);
+        if (item.getOptions() != null && optionIndex < item.getOptions().length) {
+            item.setSubtitle(item.getOptions()[optionIndex]);
+            holder.subtitleTextView.setText(item.getOptions()[optionIndex]);
+            holder.subtitleTextView.setVisibility(View.VISIBLE);
+        }
+
+        // Guardar solo si cambió
+        if (!newValue.equals(currentValue)) {
+            prefs.edit().putString(item.getSettingKey(), newValue).apply();
+            applySettingChange(item.getTitle(), newValue);
+        }
+
+        // Colapsar panel
+        collapse(holder.optionsPanel);
+        expandedPosition = -1;
+
+        // Notificar cambio
+        if (!newValue.equals(currentValue) && listener != null) {
+            listener.onOptionSelected(item, optionIndex);
+        }
+    }
+
+    // ==================== MÉTODOS AUXILIARES ====================
+
     private boolean getSwitchValueFromPreferences(SettingsItem item) {
         if (item.getSettingKey() != null && !item.getSettingKey().isEmpty()) {
             return prefs.getBoolean(item.getSettingKey(),
@@ -235,106 +287,30 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         return item.getSwitchValue() != null ? item.getSwitchValue() : false;
     }
 
-    /**
-     * Guarda el valor del switch en SharedPreferences
-     */
     private void saveSwitchValueToPreferences(SettingsItem item, boolean value) {
         if (item.getSettingKey() != null && !item.getSettingKey().isEmpty()) {
             prefs.edit().putBoolean(item.getSettingKey(), value).apply();
         }
     }
 
-    private void setupOptions(ViewHolder holder, SettingsItem item, int position) {
-        // Configurar textos de opciones
-        holder.option1.setText(item.getOptions()[0]);
-        holder.option2.setText(item.getOptions()[1]);
-        holder.option3.setText(item.getOptions()[2]);
-
-        // Mostrar check en la opción seleccionada
-        updateOptionSelection(holder, item.getSelectedOptionIndex());
-
-        // Configurar listeners para las opciones
-        holder.option1Layout.setOnClickListener(v -> handleOptionSelection(holder, item, position, 0));
-        holder.option2Layout.setOnClickListener(v -> handleOptionSelection(holder, item, position, 1));
-        holder.option3Layout.setOnClickListener(v -> handleOptionSelection(holder, item, position, 2));
-    }
-
-    private void handleOptionSelection(ViewHolder holder, SettingsItem item, int position, int optionIndex) {
-        // OBTENER el valor actual ANTES de guardar el nuevo
-        String currentValue = prefs.getString(item.getSettingKey(), "es");
-        String newValue = item.getOptionValues()[optionIndex];
-
-        // Actualizar selección visual
-        updateOptionSelection(holder, optionIndex);
-
-        // Actualizar el modelo
-        item.setSelectedOptionIndex(optionIndex);
-
-        // Actualizar subtítulo con la opción seleccionada
-        if (item.getOptions() != null && optionIndex < item.getOptions().length) {
-            item.setSubtitle(item.getOptions()[optionIndex]);
-            holder.subtitleTextView.setText(item.getOptions()[optionIndex]);
-            holder.subtitleTextView.setVisibility(View.VISIBLE);
-        }
-
-        // Solo guardar si es diferente al valor actual
-        if (!newValue.equals(currentValue)) {
-            prefs.edit().putString(item.getSettingKey(), newValue).apply();
-
-            // Aplicar cambios según el tipo de setting
-            applySettingChange(item.getTitle(), newValue);
-        }
-
-        // Contraer el panel después de seleccionar
-        collapse(holder.optionsPanel);
-        expandedPosition = -1;
-
-        // Notificar al listener SOLO si hubo cambio
-        if (!newValue.equals(currentValue) && listener != null) {
-            listener.onOptionSelected(item, optionIndex);
-        }
-    }
-
-    private void updateOptionSelection(ViewHolder holder, int selectedIndex) {
-        // Ocultar todos los checks primero
-        holder.option1Check.setVisibility(View.INVISIBLE);
-        holder.option2Check.setVisibility(View.INVISIBLE);
-        holder.option3Check.setVisibility(View.INVISIBLE);
-
-        // Mostrar check en la opción seleccionada
-        switch (selectedIndex) {
-            case 0:
-                holder.option1Check.setVisibility(View.VISIBLE);
-                break;
-            case 1:
-                holder.option2Check.setVisibility(View.VISIBLE);
-                break;
-            case 2:
-                holder.option3Check.setVisibility(View.VISIBLE);
-                break;
-        }
-    }
-
     private void applySettingChange(String settingTitle, String value) {
-        // Aquí puedes aplicar cambios inmediatos como reiniciar la actividad si es necesario
+        // Aquí puedes aplicar cambios inmediatos si es necesario
     }
 
-    // Los métodos preMeasureOptionsPanel, expand, collapse y getItemCount se mantienen igual...
+    // ==================== MÉTODOS DE ANIMACIÓN (expandir/colapsar) ====================
+
     private void preMeasureOptionsPanel(final View optionsPanel) {
         if (optionsPanel.getTag() != null && optionsPanel.getTag().equals("measured")) {
             return;
         }
-
         optionsPanel.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
                 optionsPanel.getViewTreeObserver().removeOnPreDrawListener(this);
-
                 optionsPanel.measure(
                         View.MeasureSpec.makeMeasureSpec(optionsPanel.getWidth(), View.MeasureSpec.EXACTLY),
                         View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
                 );
-
                 optionsPanel.setTag("measured");
                 return true;
             }
@@ -343,18 +319,15 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
 
     private void expand(final View view) {
         if (view.getVisibility() == View.VISIBLE) return;
-
         view.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
                 view.getViewTreeObserver().removeOnPreDrawListener(this);
-
                 view.measure(
                         View.MeasureSpec.makeMeasureSpec(view.getWidth(), View.MeasureSpec.EXACTLY),
                         View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
                 );
                 final int targetHeight = view.getMeasuredHeight();
-
                 ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
                 layoutParams.height = 0;
                 view.setLayoutParams(layoutParams);
@@ -368,7 +341,6 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
                 });
                 animator.setDuration(300);
                 animator.start();
-
                 return true;
             }
         });
@@ -376,7 +348,10 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
 
     private void collapse(final View view) {
         final int initialHeight = view.getMeasuredHeight();
-
+        if (initialHeight == 0) {
+            view.setVisibility(View.INVISIBLE);
+            return;
+        }
         ValueAnimator animator = ValueAnimator.ofInt(initialHeight, 0);
         animator.addUpdateListener(animation -> {
             int value = (int) animation.getAnimatedValue();
@@ -396,8 +371,10 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return settings != null ? settings.size() : 0;
+        return settings.size();
     }
+
+    // ==================== INTERFACE ====================
 
     public interface OnSettingClickListener {
         void onSettingClicked(SettingsItem item, int position);
@@ -409,6 +386,8 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         void onKeyChanged(SettingsItem item, String newValue);
     }
 
+    // ==================== VIEWHOLDER ====================
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView iconImageView;
         TextView titleTextView;
@@ -417,15 +396,12 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         SwitchCompat settingSwitch;
         LinearLayout buttonPanel;
         LinearLayout optionsPanel;
-
-        // Nuevos elementos para las opciones
-        LinearLayout option1Layout, option2Layout, option3Layout;
         EditText editText;
-        View view1, view2;
-        TextView option1, option2, option3;
-        ImageView option1Check, option2Check, option3Check;
 
-        public ViewHolder(View itemView) {
+        // Para opciones dinámicas: lista de ImageView de check (una por opción)
+        List<ImageView> optionCheckViews = new ArrayList<>();
+
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
             iconImageView = itemView.findViewById(R.id.iconImageView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
@@ -434,25 +410,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
             settingSwitch = itemView.findViewById(R.id.settingSwitch);
             buttonPanel = itemView.findViewById(R.id.buttonPanel);
             optionsPanel = itemView.findViewById(R.id.options_panel);
-
             editText = itemView.findViewById(R.id.ic_edit);
-            view1 = itemView.findViewById(R.id.view1);
-            view2 = itemView.findViewById(R.id.view2);
-
-            // Opción 1
-            option1Layout = itemView.findViewById(R.id.option1_layout);
-            option1 = itemView.findViewById(R.id.option1);
-            option1Check = itemView.findViewById(R.id.option1_check);
-
-            // Opción 2
-            option2Layout = itemView.findViewById(R.id.option2_layout);
-            option2 = itemView.findViewById(R.id.option2);
-            option2Check = itemView.findViewById(R.id.option2_check);
-
-            // Opción 3
-            option3Layout = itemView.findViewById(R.id.option3_layout);
-            option3 = itemView.findViewById(R.id.option3);
-            option3Check = itemView.findViewById(R.id.option3_check);
         }
     }
 }

@@ -3,14 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="?attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginTop="38dp"
-        android:background="@color/background"
+        android:background="?attr/colorBackground"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
@@ -19,7 +19,7 @@
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_arrow_backward"
             app:title="@string/network_details_title"
-            app:titleTextColor="@color/on_background" />
+            app:titleTextColor="?attr/colorBackground" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <ImageButton
@@ -35,7 +35,7 @@
         android:contentDescription="@string/list_layout_desc"
         android:focusable="true"
         android:src="@drawable/ic_mosaic"
-        app:tint="@color/on_surface" />
+        app:tint="?attr/colorOnSurface" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -62,7 +62,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:alignmentMode="alignMargins"
-                    android:background="@color/background"
+                    android:background="?attr/colorBackground"
                     android:columnCount="1">
 
                 </GridLayout>

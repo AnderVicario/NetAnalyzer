@@ -302,8 +302,17 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void updateButtonStyle(MaterialButton btn, boolean checked) {
-        int color = checked ? getResources().getColor(R.color.button) : getResources().getColor(R.color.transparent);
+        Context context = btn.getContext();
+        int color = checked
+                ? getColorFromAttr(context, R.attr.colorButton)
+                : getColorFromAttr(context, R.attr.colorTransparent);
         btn.setBackgroundColor(color);
+    }
+
+    private int getColorFromAttr(Context context, int attrRes) {
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(attrRes, typedValue, true);
+        return typedValue.data;
     }
 
     private String getPortsFromId(int id) {

@@ -82,11 +82,12 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                 getThemeOptionText(themeIndex),
                 SettingsItem.Type.INFO,
                 new String[]{
-                        getString(R.string.settings_theme_default),
-                        getString(R.string.settings_theme_light),
-                        getString(R.string.settings_theme_dark)
+                        getString(R.string.settings_theme_default),  // "Sistema"
+                        getString(R.string.settings_theme_light),    // "Claro"
+                        getString(R.string.settings_theme_dark),     // "Oscuro"
+                        getString(R.string.settings_theme_ocean)     // "Ocean"  ← NUEVO
                 },
-                new String[]{"auto", "light", "dark"},
+                new String[]{"auto", "light", "dark", "ocean"},      // ← valores internos
                 "tema",
                 themeIndex
         ));
@@ -147,6 +148,8 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                 return 1;
             case "dark":
                 return 2;
+            case "ocean":
+                return 3;
             default:
                 return 0;
         }
@@ -171,6 +174,8 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                 return getString(R.string.settings_theme_light);
             case 2:
                 return getString(R.string.settings_theme_dark);
+            case 3:
+                return getString(R.string.settings_theme_ocean);
             default:
                 return getString(R.string.settings_theme_default);
         }
