@@ -3,14 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorBackground">
+    android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginTop="38dp"
-        android:background="?attr/colorBackground"
+        android:background="?android:attr/colorBackground"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
@@ -19,7 +19,7 @@
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_arrow_backward"
             app:title="@string/network_details_title"
-            app:titleTextColor="?attr/colorBackground" />
+            app:titleTextColor="?android:attr/colorBackground" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <ImageButton
@@ -62,7 +62,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:alignmentMode="alignMargins"
-                    android:background="?attr/colorBackground"
+                    android:background="?android:attr/colorBackground"
                     android:columnCount="1">
 
                 </GridLayout>

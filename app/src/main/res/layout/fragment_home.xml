@@ -9,7 +9,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorBackground"
+        android:background="?android:attr/colorBackground"
         android:clipChildren="false"
         android:clipToPadding="false">
 
@@ -55,7 +55,7 @@
                 android:id="@+id/layout_network_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="?attr/colorBackground"
+                android:background="?android:attr/colorBackground"
                 android:columnCount="2"
                 android:rowCount="3">
 
@@ -397,7 +397,7 @@
                     <View
                         android:layout_width="1dp"
                         android:layout_height="24dp"
-                        android:background="?attr/colorBackground" />
+                        android:background="?android:attr/colorBackground" />
 
                     <LinearLayout
                         android:layout_width="0dp"

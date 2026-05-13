@@ -21,38 +21,37 @@ public class SnackbarUtils {
 
     public static void showSuccess(@NonNull View view, @NonNull Context context, String message) {
         Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_SHORT);
-        configBaseSnackbar(snackbar, context, R.attr.colorPrimary, null);
+        // Usar android.R.attr.colorPrimary (estándar de Android)
+        configBaseSnackbar(snackbar, context, android.R.attr.colorPrimary, null);
         snackbar.show();
     }
 
     public static void showWarning(@NonNull View view, @NonNull Context context, String message) {
         Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_LONG);
+        // colorWarning es tuyo (sí está en attrs.xml)
         configBaseSnackbar(snackbar, context, R.attr.colorWarning, R.drawable.ic_warning);
         snackbar.show();
     }
 
     public static void showError(@NonNull View view, @NonNull Context context, String message) {
         Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_LONG);
-        configBaseSnackbar(snackbar, context, R.attr.colorError, R.drawable.ic_error);
+        // Usar android.R.attr.colorError (estándar desde API 23)
+        configBaseSnackbar(snackbar, context, android.R.attr.colorError, R.drawable.ic_error);
         snackbar.show();
     }
 
     private static void configBaseSnackbar(Snackbar snackbar, Context context, int backgroundColorAttr, Integer iconRes) {
         View snackbarView = snackbar.getView();
-        Context themedContext = snackbarView.getContext(); // ya tiene el tema aplicado
+        Context themedContext = snackbarView.getContext();
 
         // Obtener colores del tema actual
         int backgroundColor = getColorFromAttr(themedContext, backgroundColorAttr);
-        int textColor = getColorFromAttr(themedContext, R.attr.colorOnSurface);
-        int iconTintColor = getColorFromAttr(themedContext, R.attr.colorOnPrimary); // para iconos de warning/error
 
-        // Aplicar fondo con un pequeño alpha opcional (para error se puede mantener el alpha o no)
-        if (backgroundColorAttr == R.attr.colorError) {
-            // Opcional: darle un toque más oscuro con alpha, pero es mejor usar el color puro
-            snackbarView.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
-        } else {
-            snackbarView.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
-        }
+        // Para textColor y iconTintColor usar atributos de Material Components
+        int textColor = getColorFromAttr(themedContext, com.google.android.material.R.attr.colorOnSurface);
+        int iconTintColor = getColorFromAttr(themedContext, com.google.android.material.R.attr.colorOnPrimary);
+
+        snackbarView.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
 
         TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
         if (iconRes != null) {
@@ -64,12 +63,7 @@ public class SnackbarUtils {
                 textView.setCompoundDrawables(icon, null, null, null);
                 textView.setCompoundDrawablePadding(themedContext.getResources().getDimensionPixelOffset(R.dimen.padding_icon));
             }
-            textView.setTextColor(textColor);
-        } else {
-            textView.setTextColor(textColor);
         }
-
-        // Asegurar que el texto sea legible en fondos oscuros
         textView.setTextColor(textColor);
     }
 
