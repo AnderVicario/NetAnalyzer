@@ -60,8 +60,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
             holder.subtitleTextView.setVisibility(View.GONE);
         }
 
-        // Resetear panel de opciones (limpiar vistas previas)
-        holder.optionsPanel.removeAllViews();
+        holder.optionsContainer.removeAllViews();
         holder.optionsPanel.setVisibility(View.INVISIBLE);
         ViewGroup.LayoutParams params = holder.optionsPanel.getLayoutParams();
         params.height = 0;
@@ -127,9 +126,9 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         holder.settingSwitch.setVisibility(View.GONE);
         holder.accessoryImageView.setVisibility(View.GONE);
         holder.editText.setVisibility(View.VISIBLE);
+        holder.optionsContainer.setVisibility(View.GONE);
+        holder.optionsContainer.removeAllViews();
 
-        // Limpiar opciones previas (por si acaso)
-        holder.optionsPanel.removeAllViews();
         holder.editText.setText(prefs.getString(item.getSettingKey(), ""));
         holder.editText.setSelection(holder.editText.getText().length());
 
@@ -171,6 +170,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         holder.settingSwitch.setVisibility(View.GONE);
         holder.accessoryImageView.setVisibility(View.GONE);
         holder.editText.setVisibility(View.GONE);
+        holder.optionsContainer.setVisibility(View.VISIBLE);      // Mostrar contenedor de opciones
         holder.buttonPanel.setBackgroundResource(R.drawable.round_button_selector_36);
 
         // Generar opciones dinámicamente
@@ -204,8 +204,8 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
     // ==================== MÉTODOS DINÁMICOS PARA OPCIONES ====================
 
     private void populateOptionsPanel(ViewHolder holder, SettingsItem item, int position) {
-        LinearLayout panel = holder.optionsPanel;
-        panel.removeAllViews();
+        LinearLayout container = holder.optionsContainer;   // Usar el contenedor específico
+        container.removeAllViews();
 
         String[] options = item.getOptions();
         String[] optionValues = item.getOptionValues();
@@ -216,7 +216,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
 
         for (int i = 0; i < options.length; i++) {
             final int index = i;
-            View optionView = LayoutInflater.from(context).inflate(R.layout.settings_option_item, panel, false);
+            View optionView = LayoutInflater.from(context).inflate(R.layout.settings_option_item, container, false);
             TextView textView = optionView.findViewById(R.id.option_text);
             ImageView checkView = optionView.findViewById(R.id.option_check);
             textView.setText(options[i]);
@@ -224,7 +224,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
             holder.optionCheckViews.add(checkView);
 
             optionView.setOnClickListener(v -> handleOptionSelection(holder, item, position, index));
-            panel.addView(optionView);
+            container.addView(optionView);
 
             // Añadir divisor (excepto después del último)
             if (i < options.length - 1) {
@@ -233,7 +233,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
                         LinearLayout.LayoutParams.MATCH_PARENT, 1);
                 divider.setLayoutParams(dividerParams);
                 divider.setBackgroundColor(getColorFromAttr(R.attr.colorBackground10));
-                panel.addView(divider);
+                container.addView(divider);
             }
         }
     }
@@ -396,6 +396,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
         SwitchCompat settingSwitch;
         LinearLayout buttonPanel;
         LinearLayout optionsPanel;
+        LinearLayout optionsContainer;
         EditText editText;
 
         // Para opciones dinámicas: lista de ImageView de check (una por opción)
@@ -410,6 +411,7 @@ public class SettingsAdapter extends RecyclerView.Adapter<SettingsAdapter.ViewHo
             settingSwitch = itemView.findViewById(R.id.settingSwitch);
             buttonPanel = itemView.findViewById(R.id.buttonPanel);
             optionsPanel = itemView.findViewById(R.id.options_panel);
+            optionsContainer = itemView.findViewById(R.id.options_container);
             editText = itemView.findViewById(R.id.ic_edit);
         }
     }
