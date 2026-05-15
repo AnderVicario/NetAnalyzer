@@ -38,7 +38,7 @@
             android:id="@+id/btn_import"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/round_button_36"
+            android:background="@drawable/round_button_selector_36_adv"
             android:padding="2dp"
             android:src="@drawable/ic_import"
             app:tint="?attr/colorOnSurface" />
@@ -51,7 +51,7 @@
             android:id="@+id/btn_export"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/round_button_36"
+            android:background="@drawable/round_button_selector_36_adv"
             android:padding="2dp"
             android:src="@drawable/ic_export"
             app:tint="?attr/colorOnSurface" />
@@ -64,6 +64,7 @@
         android:layout_marginBottom="12dp"
         android:alpha="0.7"
         android:text="@string/scan_methods_long_press"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="12sp" />
 
     <!-- Matriz 3 columnas -->
@@ -77,7 +78,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_auto"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -87,7 +88,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_arp"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -97,7 +98,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_tcp"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -107,7 +108,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_icmp"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -117,7 +118,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_mdns"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -127,7 +128,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_ssdp"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -137,7 +138,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_method_netbios"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -154,6 +155,7 @@
         android:layout_marginBottom="8dp"
         android:alpha="0.7"
         android:text="@string/ports_to_scan"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="12sp" />
 
     <com.google.android.material.button.MaterialButtonToggleGroup
@@ -166,7 +168,7 @@
 
         <Button
             android:id="@+id/btn_ports_100"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -174,7 +176,7 @@
 
         <Button
             android:id="@+id/btn_ports_500"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -182,7 +184,7 @@
 
         <Button
             android:id="@+id/btn_ports_1000"
-            style="?attr/materialButtonOutlinedStyle"
+            style="@style/Widget.App.MethodButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

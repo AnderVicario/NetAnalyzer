@@ -157,5 +157,5 @@
     <string name="bottom_nav_menu_settings">Aukerak</string>
     <string name="bottom_nav_menu_devices">Gailuak</string>
     <string name="bottom_nav_menu_home">Hasiera</string>
-    <string name="settings_theme_ocean">ocean</string>
+    <string name="settings_theme_amoled">Amoled</string>
 </resources>

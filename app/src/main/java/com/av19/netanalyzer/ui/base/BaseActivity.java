@@ -33,8 +33,8 @@ public abstract class BaseActivity extends AppCompatActivity {
             themeResId = R.style.Theme_NetAnalyzer_Light;
         } else if ("dark".equals(themeMode)) {
             themeResId = R.style.Theme_NetAnalyzer_Dark;
-        } else if ("ocean".equals(themeMode)) {
-            themeResId = R.style.Theme_NetAnalyzer_Ocean;
+        } else if ("amoled".equals(themeMode)) {
+            themeResId = R.style.Theme_NetAnalyzer_Amoled;
         } else { // auto
             int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
             if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {

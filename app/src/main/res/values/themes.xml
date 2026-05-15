@@ -5,6 +5,7 @@
         <item name="colorPrimary">@color/light_primary</item>
         <item name="colorOnPrimary">@color/light_on_primary</item>
         <item name="colorSecondary">@color/light_secondary</item>
+        <item name="colorSecondaryContainer">@color/light_background_10</item>
         <item name="colorOnSecondary">@color/light_on_secondary</item>
         <item name="colorError">@color/light_error</item>
         <item name="colorOnError">@color/light_on_error</item>
@@ -15,6 +16,7 @@
         <item name="colorOnBackground">@color/light_on_background</item>
 
         <!-- Tus atributos personalizados -->
+        <item name="colorDialogSurface">@color/light_surface</item>
         <item name="colorTerminal">@color/light_terminal</item>
         <item name="colorOnTerminal">@color/light_on_terminal</item>
         <item name="colorButton">@color/light_button</item>
@@ -26,48 +28,60 @@
     </style>
 
     <style name="Theme.NetAnalyzer.Dark" parent="Theme.NetAnalyzer.Light">
-        <item name="colorPrimary">@color/dark_primary</item>
-        <item name="colorOnPrimary">@color/dark_on_primary</item>
-        <item name="colorSecondary">@color/dark_secondary</item>
-        <item name="colorOnSecondary">@color/dark_on_secondary</item>
-        <item name="android:colorBackground">@color/dark_background</item>
-        <item name="colorSurface">@color/dark_surface</item>
-        <item name="colorOnSurface">@color/dark_on_surface</item>
-        <item name="colorOnBackground">@color/dark_on_background</item>
-        <!-- Colores personalizados -->
-        <item name="colorTerminal">@color/dark_terminal</item>
-        <item name="colorOnTerminal">@color/dark_on_terminal</item>
-        <item name="colorButton">@color/dark_button</item>
-        <item name="colorWarning">@color/dark_warning</item>
-        <item name="colorBackground10">@color/dark_background_10</item>
-        <item name="colorPrimary70">@color/dark_primary_70</item>
-        <item name="colorOnPrimary70">@color/dark_on_primary_70</item>
-    </style>
-
-    <style name="Theme.NetAnalyzer.Ocean" parent="Theme.NetAnalyzer.Light">
-        <item name="colorPrimary">#FF4F9DA6</item>
+        <item name="colorPrimary">#FFBB86FC</item>
         <item name="colorOnPrimary">#FFFFFFFF</item>
-        <item name="colorSecondary">#FFA1E3F9</item>
-        <item name="colorOnSecondary">#FF001F2B</item>
-        <item name="android:colorBackground">#FF0A1929</item>
-        <item name="colorSurface">#FF112B3C</item>
-        <item name="colorOnSurface">#B3E6F7FF</item>
-        <item name="colorOnBackground">#FFE6F7FF</item>
-        <item name="colorTerminal">#FF02131F</item>
-        <item name="colorOnTerminal">#FFA3D9F0</item>
-        <item name="colorButton">#FF1F4E6E</item>
-        <item name="colorWarning">#FFFFCB80</item>
-        <item name="colorBackground10">#1AE6F7FF</item>
-        <item name="colorPrimary70">#B34F9DA6</item>
+        <item name="colorSecondary">#FF03DAC5</item>
+        <item name="colorSecondaryContainer">#11FFFFFF</item>
+        <item name="colorOnSecondary">#FF000000</item>
+        <item name="colorError">#FFCF6679</item>
+        <item name="colorOnError">#FFCC80</item>
+
+        <item name="android:colorBackground">#FF121212</item>
+        <item name="colorSurface">#FF1E1E1E</item>
+        <item name="colorOnSurface">#CCFFFFFF</item>
+        <item name="colorOnBackground">#FFFFFFFF</item>
+
+        <item name="colorDialogSurface">#FF1E1E1E</item>
+        <item name="colorTerminal">#FF000000</item>
+        <item name="colorOnTerminal">#FFFFFFFF</item>
+        <item name="colorButton">#4a4458</item>
+        <item name="colorWarning">#FFCC80</item>
+        <item name="colorBackground10">#11FFFFFF</item>
+        <item name="colorPrimary70">#B3BB86FC</item>
         <item name="colorOnPrimary70">#B3FFFFFF</item>
     </style>
 
-    <style name="mySwitchStyle" parent="Widget.Material3.CompoundButton.Switch" />
+    <style name="Theme.NetAnalyzer.Amoled" parent="Theme.NetAnalyzer.Dark">
+        <item name="colorPrimary">#FFBB86FC</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF03DAC5</item>
+        <item name="colorSecondaryContainer">#11FFFFFF</item>
+        <item name="colorOnSecondary">#FF000000</item>
+        <item name="colorError">#FFCF6679</item>
+        <item name="colorOnError">#FFCC80</item>
 
-    <style name="AppBottomSheetDialogTheme" parent="Theme.Material3.DayNight.BottomSheetDialog">
+        <!-- AMOLED: fondo y superficie completamente negros -->
+        <item name="android:colorBackground">#FF000000</item>
+        <item name="colorSurface">#0F0F0F</item>
+        <item name="colorOnSurface">#FFFFFFFF</item>
+        <item name="colorOnBackground">#FFFFFFFF</item>
+
+        <item name="colorDialogSurface">#0F0F0F</item>
+        <item name="colorTerminal">#FF000000</item>
+        <item name="colorOnTerminal">#FFFFFFFF</item>
+        <item name="colorButton">#4a4458</item>
+        <item name="colorWarning">#FFCC80</item>
+        <item name="colorBackground10">#11FFFFFF</item>
+        <item name="colorPrimary70">#B3BB86FC</item>
+        <item name="colorOnPrimary70">#B3FFFFFF</item>
+    </style>
+
+    <!--<style name="mySwitchStyle" parent="Widget.Material3.CompoundButton.Switch" />-->
+
+    <!--<style name="AppBottomSheetDialogTheme" parent="Theme.Material3.DayNight.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-    </style>
+    </style>-->
 
     <style name="RoundedDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Dialog.Rounded</item>
@@ -79,4 +93,10 @@
     </style>
 
     <style name="ShapeAppearanceOverlay.Dialog" parent="ShapeAppearanceOverlay.Dialog.Rounded" />
+
+    <style name="Widget.App.MethodButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="backgroundTint">@color/btn_background_selector</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="strokeColor">?attr/colorBackground10</item>
+    </style>
 </resources>

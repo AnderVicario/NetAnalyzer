@@ -85,9 +85,9 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                         getString(R.string.settings_theme_default),  // "Sistema"
                         getString(R.string.settings_theme_light),    // "Claro"
                         getString(R.string.settings_theme_dark),     // "Oscuro"
-                        getString(R.string.settings_theme_ocean)     // "Ocean"  ← NUEVO
+                        getString(R.string.settings_theme_amoled)     // "Ocean"  ← NUEVO
                 },
-                new String[]{"auto", "light", "dark", "ocean"},      // ← valores internos
+                new String[]{"auto", "light", "dark", "amoled"},
                 "tema",
                 themeIndex
         ));
@@ -148,7 +148,7 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                 return 1;
             case "dark":
                 return 2;
-            case "ocean":
+            case "amoled":
                 return 3;
             default:
                 return 0;
@@ -175,7 +175,7 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
             case 2:
                 return getString(R.string.settings_theme_dark);
             case 3:
-                return getString(R.string.settings_theme_ocean);
+                return getString(R.string.settings_theme_amoled);
             default:
                 return getString(R.string.settings_theme_default);
         }
@@ -198,8 +198,6 @@ public class SettingsFragment extends Fragment implements SettingsAdapter.OnSett
                 return getString(R.string.settings_language_spanish);
         }
     }
-
-    // ---------------- OnSettingClickListener implementation ----------------
 
     @Override
     public void onSettingClicked(SettingsItem item, int position) {

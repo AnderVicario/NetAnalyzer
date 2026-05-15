@@ -69,7 +69,6 @@
             android:layout_marginEnd="15dp"
             android:checked="true"
             android:gravity="center"
-            android:theme="@style/mySwitchStyle"
             android:thumb="@drawable/ic_thumb"
             android:visibility="gone"
             app:track="@drawable/ic_track" />
