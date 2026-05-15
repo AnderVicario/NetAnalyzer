@@ -1,53 +1,102 @@
 <resources>
-    <!-- Tema principal - Ahora sin ActionBar -->
-    <style name="Theme.NetAnalyzer" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Colores primarios -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_variant</item>
-        <item name="colorOnPrimary">@color/on_primary</item>
 
-        <!-- Colores secundarios -->
-        <item name="colorSecondary">@color/secondary</item>
-        <item name="colorOnSecondary">@color/on_secondary</item>
+    <style name="Theme.NetAnalyzer.Light" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Colores estándar Material -->
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorOnPrimary">@color/light_on_primary</item>
+        <item name="colorSecondary">@color/light_secondary</item>
+        <item name="colorSecondaryContainer">@color/light_background_10</item>
+        <item name="colorOnSecondary">@color/light_on_secondary</item>
+        <item name="colorError">@color/light_error</item>
+        <item name="colorOnError">@color/light_on_error</item>
 
-        <!-- Colores de fondo -->
-        <item name="android:windowBackground">@color/background</item>
-        <item name="colorOnBackground">@color/on_background</item>
+        <item name="android:colorBackground">@color/light_background</item>
+        <item name="colorSurface">@color/light_surface</item>
+        <item name="colorOnSurface">@color/light_on_surface</item>
+        <item name="colorOnBackground">@color/light_on_background</item>
 
-        <!-- Colores de superficie -->
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/on_surface</item>
-
-        <!-- Colores de error -->
-        <item name="colorError">@color/error</item>
-        <item name="colorOnError">@color/on_error</item>
-
-        <!-- Colores de texto -->
-        <item name="android:textColorPrimary">@color/on_primary</item>
-        <item name="android:textColorSecondary">@color/on_secondary</item>
-
-        <item name="colorControlNormal">?attr/colorOnSurface</item>
-        <item name="colorControlActivated">@color/primary</item>
+        <!-- Tus atributos personalizados -->
+        <item name="colorDialogSurface">@color/light_surface</item>
+        <item name="colorTerminal">@color/light_terminal</item>
+        <item name="colorOnTerminal">@color/light_on_terminal</item>
+        <item name="colorButton">@color/light_button</item>
+        <item name="colorWarning">@color/light_warning</item>
+        <item name="colorBackground10">@color/light_background_10</item>
+        <item name="colorPrimary70">@color/light_primary_70</item>
+        <item name="colorOnPrimary70">@color/light_on_primary_70</item>
+        <item name="colorTransparent">@android:color/transparent</item>
     </style>
 
-    <style name="mySwitchStyle" parent="@style/Widget.AppCompat.CompoundButton.Switch" />
+    <style name="Theme.NetAnalyzer.Dark" parent="Theme.NetAnalyzer.Light">
+        <item name="colorPrimary">#FFBB86FC</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF03DAC5</item>
+        <item name="colorSecondaryContainer">#11FFFFFF</item>
+        <item name="colorOnSecondary">#FF000000</item>
+        <item name="colorError">#FFCF6679</item>
+        <item name="colorOnError">#FFCC80</item>
 
-    <style name="mySwitchTheme" parent="ThemeOverlay.AppCompat.Light">
-        <item name="switchStyle">@style/mySwitchStyle</item>
+        <item name="android:colorBackground">#FF121212</item>
+        <item name="colorSurface">#FF1E1E1E</item>
+        <item name="colorOnSurface">#CCFFFFFF</item>
+        <item name="colorOnBackground">#FFFFFFFF</item>
+
+        <item name="colorDialogSurface">#FF1E1E1E</item>
+        <item name="colorTerminal">#FF000000</item>
+        <item name="colorOnTerminal">#FFFFFFFF</item>
+        <item name="colorButton">#4a4458</item>
+        <item name="colorWarning">#FFCC80</item>
+        <item name="colorBackground10">#11FFFFFF</item>
+        <item name="colorPrimary70">#B3BB86FC</item>
+        <item name="colorOnPrimary70">#B3FFFFFF</item>
     </style>
 
-    <style name="AppBottomSheetDialogTheme" parent="Theme.Material3.DayNight.BottomSheetDialog">
+    <style name="Theme.NetAnalyzer.Amoled" parent="Theme.NetAnalyzer.Dark">
+        <item name="colorPrimary">#FFBB86FC</item>
+        <item name="colorOnPrimary">#FFFFFFFF</item>
+        <item name="colorSecondary">#FF03DAC5</item>
+        <item name="colorSecondaryContainer">#11FFFFFF</item>
+        <item name="colorOnSecondary">#FF000000</item>
+        <item name="colorError">#FFCF6679</item>
+        <item name="colorOnError">#FFCC80</item>
+
+        <!-- AMOLED: fondo y superficie completamente negros -->
+        <item name="android:colorBackground">#FF000000</item>
+        <item name="colorSurface">#0F0F0F</item>
+        <item name="colorOnSurface">#FFFFFFFF</item>
+        <item name="colorOnBackground">#FFFFFFFF</item>
+
+        <item name="colorDialogSurface">#0F0F0F</item>
+        <item name="colorTerminal">#FF000000</item>
+        <item name="colorOnTerminal">#FFFFFFFF</item>
+        <item name="colorButton">#4a4458</item>
+        <item name="colorWarning">#FFCC80</item>
+        <item name="colorBackground10">#11FFFFFF</item>
+        <item name="colorPrimary70">#B3BB86FC</item>
+        <item name="colorOnPrimary70">#B3FFFFFF</item>
+    </style>
+
+    <!--<style name="mySwitchStyle" parent="Widget.Material3.CompoundButton.Switch" />-->
+
+    <!--<style name="AppBottomSheetDialogTheme" parent="Theme.Material3.DayNight.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-    </style>
+    </style>-->
 
     <style name="RoundedDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Dialog.Rounded</item>
     </style>
 
-    <style name="ShapeAppearanceOverlay.Dialog.Rounded" parent="">
+    <style name="ShapeAppearanceOverlay.Dialog.Rounded">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.Dialog" parent="ShapeAppearanceOverlay.Dialog.Rounded" />
+
+    <style name="Widget.App.MethodButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="backgroundTint">@color/btn_background_selector</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="strokeColor">?attr/colorBackground10</item>
     </style>
 </resources>

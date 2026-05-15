@@ -3,8 +3,8 @@
     android:id="@+id/settingsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="20dp"
-    android:background="@color/background"
+    android:layout_margin="22dp"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
     <TextView
@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:paddingBottom="20dp"
         android:text="@string/settings_title"
-        android:textColor="@color/on_background"
+        android:textColor="?attr/colorOnBackground"
         android:textSize="26sp"
         android:textStyle="bold" />
 

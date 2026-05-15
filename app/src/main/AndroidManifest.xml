@@ -28,7 +28,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NetAnalyzer"
+        android:theme="@style/Theme.NetAnalyzer.Light"
         android:usesCleartextTraffic="true">
 
         <activity
@@ -41,9 +41,7 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ui.home.NetworkDetailsActivity"
-            android:theme="@style/Theme.NetAnalyzer" />
+        <activity android:name=".ui.home.NetworkDetailsActivity" />
 
         <!-- Scan Service with foreground service type -->
         <service

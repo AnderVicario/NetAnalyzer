@@ -40,7 +40,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setStyle(STYLE_NORMAL, R.style.AppBottomSheetDialogTheme);
+        /*setStyle(STYLE_NORMAL, R.style.AppBottomSheetDialogTheme);*/
         pm = new PreferencesManager(requireContext());
     }
 
@@ -93,7 +93,9 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             if (btnAuto.isChecked()) {
                 for (MaterialButton btn : methodButtons) {
                     btn.setChecked(false);
+/*
                     updateButtonStyle(btn, false);
+*/
                 }
             } else {
                 boolean anyChecked = false;
@@ -130,7 +132,9 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
                     btnAuto.setChecked(true);
                 }
             }
+/*
             updateButtonStyle(btn, btn.isChecked());
+*/
         };
 
         View.OnLongClickListener longClickListener = vw -> {
@@ -196,7 +200,9 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             String methodName = getMethodNameFromButton(btn);
             boolean checked = activeMethods.contains(methodName);
             btn.setChecked(checked);
+/*
             updateButtonStyle(btn, checked);
+*/
         }
 
         String level = pm.getScanLevel();
@@ -231,7 +237,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         final String finalMethodName = methodName;
         loadConfigValues(finalMethodName, dialogView);
 
-        new MaterialAlertDialogBuilder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext(), R.style.RoundedDialog)
                 .setTitle(getString(R.string.adv_settings_method_config_title, finalMethodName))
                 .setView(dialogView)
                 .setPositiveButton(getString(R.string.adv_settings_method_config_btn_positive), (d, which) -> saveConfigValues(finalMethodName, dialogView))
@@ -301,10 +307,24 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         return "AUTO";
     }
 
-    private void updateButtonStyle(MaterialButton btn, boolean checked) {
-        int color = checked ? getResources().getColor(R.color.button) : getResources().getColor(R.color.transparent);
-        btn.setBackgroundColor(color);
-    }
+    /*private void updateButtonStyle(MaterialButton btn, boolean checked) {
+        Context context = btn.getContext();
+
+        int backgroundColor = checked
+                ? getColorFromAttr(context, R.attr.colorBackground10)
+                : getColorFromAttr(context, R.attr.colorTransparent);
+        btn.setBackgroundColor(backgroundColor);
+
+        int textColor = getColorFromAttr(context, com.google.android.material.R.attr.colorOnBackground);
+
+        btn.setTextColor(textColor);
+    }*/
+
+    /*private int getColorFromAttr(Context context, int attrRes) {
+        android.util.TypedValue typedValue = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(attrRes, typedValue, true);
+        return typedValue.data;
+    }*/
 
     private String getPortsFromId(int id) {
         if (id == R.id.btn_ports_500) return "500";
