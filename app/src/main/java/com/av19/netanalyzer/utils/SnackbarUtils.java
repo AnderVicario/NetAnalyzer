@@ -48,7 +48,7 @@ public class SnackbarUtils {
         int backgroundColor = getColorFromAttr(themedContext, backgroundColorAttr);
 
         // Para textColor y iconTintColor usar atributos de Material Components
-        int textColor = getColorFromAttr(themedContext, com.google.android.material.R.attr.colorOnSurface);
+        int textColor = getColorFromAttr(themedContext, com.google.android.material.R.attr.colorOnPrimary);
         int iconTintColor = getColorFromAttr(themedContext, com.google.android.material.R.attr.colorOnPrimary);
 
         snackbarView.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));

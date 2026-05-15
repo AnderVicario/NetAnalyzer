@@ -33,8 +33,8 @@
         <item name="colorSecondary">#FF03DAC5</item>
         <item name="colorSecondaryContainer">#11FFFFFF</item>
         <item name="colorOnSecondary">#FF000000</item>
-        <item name="colorError">#FFCF6679</item>
-        <item name="colorOnError">#FFCC80</item>
+        <item name="colorError">@color/light_error</item>
+        <item name="colorOnError">@color/light_on_error</item>
 
         <item name="android:colorBackground">#FF121212</item>
         <item name="colorSurface">#FF1E1E1E</item>
@@ -45,7 +45,7 @@
         <item name="colorTerminal">#FF000000</item>
         <item name="colorOnTerminal">#FFFFFFFF</item>
         <item name="colorButton">#4a4458</item>
-        <item name="colorWarning">#FFCC80</item>
+        <item name="colorWarning">#FFBB55</item>
         <item name="colorBackground10">#11FFFFFF</item>
         <item name="colorPrimary70">#B3BB86FC</item>
         <item name="colorOnPrimary70">#B3FFFFFF</item>
@@ -57,8 +57,8 @@
         <item name="colorSecondary">#FF03DAC5</item>
         <item name="colorSecondaryContainer">#11FFFFFF</item>
         <item name="colorOnSecondary">#FF000000</item>
-        <item name="colorError">#FFCF6679</item>
-        <item name="colorOnError">#FFCC80</item>
+        <item name="colorError">@color/light_error</item>
+        <item name="colorOnError">@color/light_on_error</item>
 
         <!-- AMOLED: fondo y superficie completamente negros -->
         <item name="android:colorBackground">#FF000000</item>
@@ -70,7 +70,7 @@
         <item name="colorTerminal">#FF000000</item>
         <item name="colorOnTerminal">#FFFFFFFF</item>
         <item name="colorButton">#4a4458</item>
-        <item name="colorWarning">#FFCC80</item>
+        <item name="colorWarning">#FFBB55</item>
         <item name="colorBackground10">#11FFFFFF</item>
         <item name="colorPrimary70">#B3BB86FC</item>
         <item name="colorOnPrimary70">#B3FFFFFF</item>
