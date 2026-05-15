@@ -1,5 +1,6 @@
 package com.av19.netanalyzer.discovery;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.av19.netanalyzer.data.DeviceInfo;
@@ -7,6 +8,7 @@ import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.utils.CancellationToken;
 import com.av19.netanalyzer.utils.NetUtils;
 import com.av19.netanalyzer.utils.ProgressCallback;
+import com.av19.netanalyzer.utils.PreferencesManager;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -22,6 +24,11 @@ import java.util.regex.Pattern;
 public class ICMPDiscovery implements DiscoveryMethod {
 
     private static final String TAG = "IcmpDiscovery";
+    private Context context;
+
+    public ICMPDiscovery(Context context) {
+        this.context = context.getApplicationContext();
+    }
 
     @Override
     public String getName() {
@@ -31,6 +38,14 @@ public class ICMPDiscovery implements DiscoveryMethod {
     @Override
     public List<DeviceInfo> discover(NetworkInfo network, CancellationToken token, ProgressCallback callback) {
         List<DeviceInfo> devices = new ArrayList<>();
+
+        PreferencesManager pm = new PreferencesManager(context);
+        String countStr = pm.getMethodParam("icmp", "count", "1");
+        String timeoutStr = pm.getMethodParam("icmp", "timeout", "700");
+        String packetSizeStr = pm.getMethodParam("icmp", "packet_size", "56");
+        int packetSize = Integer.parseInt(packetSizeStr);
+        int pingCount = Integer.parseInt(countStr);
+        int pingTimeout = Integer.parseInt(timeoutStr);
 
         int networkInt = NetUtils.ipToInt(network.getNetworkAddress());
         int mask = NetUtils.ipToInt(network.getNetmask());
@@ -54,7 +69,7 @@ public class ICMPDiscovery implements DiscoveryMethod {
 
                 String ip = NetUtils.intToIp(currentHost);
                 try {
-                    PingResult result = pingHostWithTTL(ip, 1, 700);
+                    PingResult result = pingHostWithTTL(ip, pingCount, pingTimeout, packetSize);
                     if (result.success) {
                         DeviceInfo device = new DeviceInfo(ip, null, null, null);
                         device.setTtl(result.ttl);
@@ -84,10 +99,10 @@ public class ICMPDiscovery implements DiscoveryMethod {
         return devices;
     }
 
-    private PingResult pingHostWithTTL(String ip, int count, int timeoutMs) {
+    private PingResult pingHostWithTTL(String ip, int count, int timeoutMs, int packetSize) {
         try {
             int timeoutSec = Math.max(1, timeoutMs / 1000);
-            String command = "ping -c " + count + " -W " + timeoutSec + " " + ip;
+            String command = "ping -c " + count + " -W " + timeoutSec + " -s " + packetSize + " " + ip;
             Process process = Runtime.getRuntime().exec(command);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));

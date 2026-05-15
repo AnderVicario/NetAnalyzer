@@ -273,6 +273,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             case "ICMP":
                 ((EditText) view.findViewById(R.id.icmp_count)).setText(pm.getMethodParam("icmp", "count", "1"));
                 ((EditText) view.findViewById(R.id.icmp_timeout)).setText(pm.getMethodParam("icmp", "timeout", "700"));
+                ((EditText) view.findViewById(R.id.icmp_packet_size)).setText(pm.getMethodParam("icmp", "packet_size", "56"));
                 break;
             case "SSDP":
                 ((EditText) view.findViewById(R.id.ssdp_timeout)).setText(pm.getMethodParam("ssdp", "timeout", "5000"));
@@ -289,6 +290,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             case "ICMP":
                 pm.setMethodParam("icmp", "count", ((EditText) view.findViewById(R.id.icmp_count)).getText().toString());
                 pm.setMethodParam("icmp", "timeout", ((EditText) view.findViewById(R.id.icmp_timeout)).getText().toString());
+                pm.setMethodParam("icmp", "packet_size", ((EditText) view.findViewById(R.id.icmp_packet_size)).getText().toString());
                 break;
             case "SSDP":
                 pm.setMethodParam("ssdp", "timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());

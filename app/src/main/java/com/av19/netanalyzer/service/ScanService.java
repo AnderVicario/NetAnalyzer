@@ -111,7 +111,7 @@ public class ScanService extends Service {
                     networkScanner.addMethod(new ARPDiscovery());
                     break;
                 case "ICMP":
-                    networkScanner.addMethod(new ICMPDiscovery());
+                    networkScanner.addMethod(new ICMPDiscovery(this));
                     break;
                 case "TCP":
                     networkScanner.addMethod(new TCPDiscovery());
