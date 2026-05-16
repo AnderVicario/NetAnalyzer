@@ -1,6 +1,5 @@
 package com.av19.netanalyzer.ui.home;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,7 +29,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
+public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment
+        implements MethodConfigDialogFragment.ConfigSaveListener {
 
     private PreferencesManager pm;
     private List<MaterialButton> methodButtons;
@@ -40,7 +40,6 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        /*setStyle(STYLE_NORMAL, R.style.AppBottomSheetDialogTheme);*/
         pm = new PreferencesManager(requireContext());
     }
 
@@ -93,9 +92,6 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             if (btnAuto.isChecked()) {
                 for (MaterialButton btn : methodButtons) {
                     btn.setChecked(false);
-/*
-                    updateButtonStyle(btn, false);
-*/
                 }
             } else {
                 boolean anyChecked = false;
@@ -132,15 +128,14 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
                     btnAuto.setChecked(true);
                 }
             }
-/*
-            updateButtonStyle(btn, btn.isChecked());
-*/
         };
 
+        // Long‑click: ahora mostramos el DialogFragment
         View.OnLongClickListener longClickListener = vw -> {
             MaterialButton btn = (MaterialButton) vw;
             String methodName = getMethodNameFromButton(btn);
-            showConfigDialog(methodName);
+            MethodConfigDialogFragment dialogFrag = MethodConfigDialogFragment.newInstance(methodName);
+            dialogFrag.show(getChildFragmentManager(), MethodConfigDialogFragment.class.getSimpleName());
             return true;
         };
 
@@ -191,6 +186,11 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         return v;
     }
 
+    @Override
+    public void onConfigSaved(String methodName) {
+        // Actualmente no hace falta hacer nada porque PreferencesManager ya se actualiza solo.
+    }
+
     private void loadSavedSelection() {
         List<String> activeMethods = pm.getActiveMethods();
         boolean autoSelected = activeMethods.contains("AUTO");
@@ -200,9 +200,6 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
             String methodName = getMethodNameFromButton(btn);
             boolean checked = activeMethods.contains(methodName);
             btn.setChecked(checked);
-/*
-            updateButtonStyle(btn, checked);
-*/
         }
 
         String level = pm.getScanLevel();
@@ -227,77 +224,6 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         pm.setScanLevel(getPortsFromId(groupPorts.getCheckedButtonId()));
     }
 
-    private void showConfigDialog(String methodName) {
-        Context context = getContext();
-        if (context == null) return;
-
-        final View dialogView = createConfigView(methodName, context);
-        if (dialogView == null) return;
-
-        final String finalMethodName = methodName;
-        loadConfigValues(finalMethodName, dialogView);
-
-        new MaterialAlertDialogBuilder(requireContext(), R.style.RoundedDialog)
-                .setTitle(getString(R.string.adv_settings_method_config_title, finalMethodName))
-                .setView(dialogView)
-                .setPositiveButton(getString(R.string.adv_settings_method_config_btn_positive), (d, which) -> saveConfigValues(finalMethodName, dialogView))
-                .setNegativeButton(getString(R.string.adv_settings_method_config_btn_negative), null)
-                .show();
-    }
-
-    @Nullable
-    private View createConfigView(String methodName, Context context) {
-        int layoutRes;
-        switch (methodName) {
-            case "TCP":
-                layoutRes = R.layout.dialog_tcp_config;
-                break;
-            case "ICMP":
-                layoutRes = R.layout.dialog_icmp_config;
-                break;
-            case "SSDP":
-                layoutRes = R.layout.dialog_ssdp_config;
-                break;
-            default:
-                return null;
-        }
-        return LayoutInflater.from(context).inflate(layoutRes, null);
-    }
-
-    private void loadConfigValues(String methodName, View view) {
-        switch (methodName) {
-            case "TCP":
-                ((EditText) view.findViewById(R.id.tcp_port)).setText(pm.getMethodParam("tcp", "port", ""));
-                ((EditText) view.findViewById(R.id.tcp_timeout)).setText(pm.getMethodParam("tcp", "timeout", "200"));
-                break;
-            case "ICMP":
-                ((EditText) view.findViewById(R.id.icmp_count)).setText(pm.getMethodParam("icmp", "count", "1"));
-                ((EditText) view.findViewById(R.id.icmp_timeout)).setText(pm.getMethodParam("icmp", "timeout", "700"));
-                ((EditText) view.findViewById(R.id.icmp_packet_size)).setText(pm.getMethodParam("icmp", "packet_size", "56"));
-                break;
-            case "SSDP":
-                ((EditText) view.findViewById(R.id.ssdp_timeout)).setText(pm.getMethodParam("ssdp", "timeout", "5000"));
-                break;
-        }
-    }
-
-    private void saveConfigValues(String methodName, View view) {
-        switch (methodName) {
-            case "TCP":
-                pm.setMethodParam("tcp", "port", ((EditText) view.findViewById(R.id.tcp_port)).getText().toString());
-                pm.setMethodParam("tcp", "timeout", ((EditText) view.findViewById(R.id.tcp_timeout)).getText().toString());
-                break;
-            case "ICMP":
-                pm.setMethodParam("icmp", "count", ((EditText) view.findViewById(R.id.icmp_count)).getText().toString());
-                pm.setMethodParam("icmp", "timeout", ((EditText) view.findViewById(R.id.icmp_timeout)).getText().toString());
-                pm.setMethodParam("icmp", "packet_size", ((EditText) view.findViewById(R.id.icmp_packet_size)).getText().toString());
-                break;
-            case "SSDP":
-                pm.setMethodParam("ssdp", "timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());
-                break;
-        }
-    }
-
     private String getMethodNameFromButton(MaterialButton btn) {
         int id = btn.getId();
         if (id == R.id.btn_method_arp) return "ARP";
@@ -308,25 +234,6 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment {
         if (id == R.id.btn_method_netbios) return "NETBIOS";
         return "AUTO";
     }
-
-    /*private void updateButtonStyle(MaterialButton btn, boolean checked) {
-        Context context = btn.getContext();
-
-        int backgroundColor = checked
-                ? getColorFromAttr(context, R.attr.colorBackground10)
-                : getColorFromAttr(context, R.attr.colorTransparent);
-        btn.setBackgroundColor(backgroundColor);
-
-        int textColor = getColorFromAttr(context, com.google.android.material.R.attr.colorOnBackground);
-
-        btn.setTextColor(textColor);
-    }*/
-
-    /*private int getColorFromAttr(Context context, int attrRes) {
-        android.util.TypedValue typedValue = new android.util.TypedValue();
-        context.getTheme().resolveAttribute(attrRes, typedValue, true);
-        return typedValue.data;
-    }*/
 
     private String getPortsFromId(int id) {
         if (id == R.id.btn_ports_500) return "500";

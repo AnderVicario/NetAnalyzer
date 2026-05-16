@@ -21,7 +21,8 @@
         android:background="@drawable/edit_text_border"
         android:hint="1"
         android:inputType="number"
-        android:padding="12dp" />
+        android:padding="12dp"
+        android:textColor="?attr/colorOnSurface" />
 
     <TextView
         android:layout_width="match_parent"
@@ -40,7 +41,8 @@
         android:background="@drawable/edit_text_border"
         android:hint="700"
         android:inputType="number"
-        android:padding="12dp" />
+        android:padding="12dp"
+        android:textColor="?attr/colorOnSurface" />
 
     <TextView
         android:layout_width="match_parent"
@@ -59,6 +61,7 @@
         android:background="@drawable/edit_text_border"
         android:hint="56"
         android:inputType="number"
-        android:padding="12dp" />
+        android:padding="12dp"
+        android:textColor="?attr/colorOnSurface" />
 
 </LinearLayout>
