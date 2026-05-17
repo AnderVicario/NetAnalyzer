@@ -161,4 +161,9 @@
     <string name="settings_theme_amoled">Amoled</string>
     <string name="packet_size_bytes_hint">Packet size (bytes)</string>
     <string name="threads_hint">Threads</string>
+    <string name="tcp_ports_list_hint">Ports and Timeouts</string>
+    <string name="tcp_add_port">Add Port</string>
+    <string name="tcp_port_label">Port</string>
+    <string name="tcp_timeout_label">Timeout (ms)</string>
+    <string name="remove">Remove</string>
 </resources>

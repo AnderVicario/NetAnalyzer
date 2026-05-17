@@ -9,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,6 +20,12 @@ import androidx.fragment.app.Fragment;
 
 import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.utils.PreferencesManager;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MethodConfigDialogFragment extends DialogFragment {
 
@@ -66,32 +74,28 @@ public class MethodConfigDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // Inflar el contenedor del diálogo
         View root = inflater.inflate(R.layout.dialog_config_container, container, false);
 
         String methodName = getArguments() != null ? getArguments().getString(ARG_METHOD_NAME) : "";
         Context context = requireContext();
 
-        // Título
         TextView title = root.findViewById(R.id.dialog_title);
         title.setText(getString(R.string.adv_settings_method_config_title, methodName));
 
-        // Contenedor de contenido
         ViewGroup contentContainer = root.findViewById(R.id.content_container);
-
-        // Inflar el layout específico del método y añadirlo al contenedor
         View methodView = createConfigView(methodName, context);
         if (methodView != null) {
             contentContainer.addView(methodView);
-            loadConfigValues(methodName, methodView);
+            // Solo cargar valores para métodos que NO sean TCP (TCP ya se configura en createConfigView)
+            if (!"TCP".equals(methodName)) {
+                loadConfigValues(methodName, methodView);
+            }
         }
 
-        // Botones
         Button btnSave = root.findViewById(R.id.btn_save);
         Button btnCancel = root.findViewById(R.id.btn_cancel);
 
         btnCancel.setOnClickListener(v -> dismiss());
-
         btnSave.setOnClickListener(v -> {
             if (methodView != null) {
                 saveConfigValues(methodName, methodView);
@@ -108,29 +112,22 @@ public class MethodConfigDialogFragment extends DialogFragment {
 
     @Nullable
     private View createConfigView(String methodName, Context context) {
-        int layoutRes;
         switch (methodName) {
             case "TCP":
-                layoutRes = R.layout.dialog_tcp_config;
-                break;
+                View tcpView = LayoutInflater.from(context).inflate(R.layout.dialog_tcp_config, null);
+                setupTcpConfig(tcpView);
+                return tcpView;
             case "ICMP":
-                layoutRes = R.layout.dialog_icmp_config;
-                break;
+                return LayoutInflater.from(context).inflate(R.layout.dialog_icmp_config, null);
             case "SSDP":
-                layoutRes = R.layout.dialog_ssdp_config;
-                break;
+                return LayoutInflater.from(context).inflate(R.layout.dialog_ssdp_config, null);
             default:
                 return null;
         }
-        return LayoutInflater.from(context).inflate(layoutRes, null);
     }
 
     private void loadConfigValues(String methodName, View view) {
         switch (methodName) {
-            case "TCP":
-                ((EditText) view.findViewById(R.id.tcp_port)).setText(pm.getMethodParam("tcp", "port", ""));
-                ((EditText) view.findViewById(R.id.tcp_timeout)).setText(pm.getMethodParam("tcp", "timeout", "200"));
-                break;
             case "ICMP":
                 Resources res = requireContext().getResources();
                 String defaultCount = String.valueOf(res.getInteger(R.integer.icmp_count_default));
@@ -152,22 +149,103 @@ public class MethodConfigDialogFragment extends DialogFragment {
     private void saveConfigValues(String methodName, View view) {
         switch (methodName) {
             case "TCP":
-                pm.setMethodParam("tcp", "port", ((EditText) view.findViewById(R.id.tcp_port)).getText().toString());
-                pm.setMethodParam("tcp", "timeout", ((EditText) view.findViewById(R.id.tcp_timeout)).getText().toString());
+                // Guardar número de hilos
+                String threadsStr = ((EditText) view.findViewById(R.id.tcp_threads)).getText().toString();
+                pm.setMethodParam("tcp", "threads", threadsStr);
+
+                // Guardar lista de pares (puerto, timeout)
+                LinearLayout container = view.findViewById(R.id.ports_container);
+                List<PortTimeoutPair> pairs = new ArrayList<>();
+                for (int i = 0; i < container.getChildCount(); i++) {
+                    View row = container.getChildAt(i);
+                    EditText portEdit = row.findViewById(R.id.port_edit);
+                    EditText timeoutEdit = row.findViewById(R.id.timeout_edit);
+                    String portStr = portEdit.getText().toString().trim();
+                    String timeoutStr = timeoutEdit.getText().toString().trim();
+                    if (!portStr.isEmpty() && !timeoutStr.isEmpty()) {
+                        try {
+                            int port = Integer.parseInt(portStr);
+                            int timeout = Integer.parseInt(timeoutStr);
+                            pairs.add(new PortTimeoutPair(port, timeout));
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                }
+                String json = new Gson().toJson(pairs);
+                pm.setMethodParam("tcp", "ports", json);
                 break;
+
             case "ICMP":
                 pm.setMethodParam("icmp", "count", ((EditText) view.findViewById(R.id.icmp_count)).getText().toString());
                 pm.setMethodParam("icmp", "timeout", ((EditText) view.findViewById(R.id.icmp_timeout)).getText().toString());
                 pm.setMethodParam("icmp", "packet_size", ((EditText) view.findViewById(R.id.icmp_packet_size)).getText().toString());
                 pm.setMethodParam("icmp", "threads", ((EditText) view.findViewById(R.id.icmp_threads)).getText().toString());
                 break;
+
             case "SSDP":
                 pm.setMethodParam("ssdp", "timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());
                 break;
         }
     }
 
+    private void setupTcpConfig(View view) {
+        LinearLayout container = view.findViewById(R.id.ports_container);
+        Button btnAdd = view.findViewById(R.id.btn_add_port);
+        EditText threadsEdit = view.findViewById(R.id.tcp_threads);
+
+        // Cargar configuración guardada (hilos)
+        String threadsStr = pm.getMethodParam("tcp", "threads",
+                String.valueOf(getResources().getInteger(R.integer.tcp_threads_default)));
+        threadsEdit.setText(threadsStr);
+
+        // Cargar lista de puertos desde JSON
+        String portsJson = pm.getMethodParam("tcp", "ports", null);
+        List<PortTimeoutPair> pairs = new ArrayList<>();
+        if (portsJson != null && !portsJson.isEmpty()) {
+            try {
+                Type type = new TypeToken<List<PortTimeoutPair>>() {
+                }.getType();
+                pairs = new Gson().fromJson(portsJson, type);
+            } catch (Exception e) { /* ignorar */ }
+        }
+        // Si no hay pares guardados, usar un par por defecto
+        if (pairs.isEmpty()) {
+            int defaultPort = getResources().getInteger(R.integer.tcp_default_port);
+            int defaultTimeout = getResources().getInteger(R.integer.tcp_default_timeout);
+            pairs.add(new PortTimeoutPair(defaultPort, defaultTimeout));
+        }
+        // Mostrar las filas
+        for (PortTimeoutPair pair : pairs) {
+            addPortRow(container, pair.port, pair.timeout);
+        }
+
+        btnAdd.setOnClickListener(v -> addPortRow(container, null, null));
+    }
+
+    private void addPortRow(LinearLayout container, Integer port, Integer timeout) {
+        View row = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_tcp_item_port_timeout, container, false);
+        EditText portEdit = row.findViewById(R.id.port_edit);
+        EditText timeoutEdit = row.findViewById(R.id.timeout_edit);
+        ImageButton removeBtn = row.findViewById(R.id.btn_remove);
+
+        if (port != null) portEdit.setText(String.valueOf(port));
+        if (timeout != null) timeoutEdit.setText(String.valueOf(timeout));
+
+        removeBtn.setOnClickListener(v -> container.removeView(row));
+        container.addView(row);
+    }
+
     public interface ConfigSaveListener {
         void onConfigSaved(String methodName);
+    }
+
+    private static class PortTimeoutPair {
+        int port;
+        int timeout;
+
+        PortTimeoutPair(int port, int timeout) {
+            this.port = port;
+            this.timeout = timeout;
+        }
     }
 }
