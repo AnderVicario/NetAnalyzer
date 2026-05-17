@@ -1,0 +1,54 @@
+name: Android Compatibility Tests
+
+on:
+  push:
+    branches:
+      - tests
+  workflow_dispatch:
+
+jobs:
+  compatibility-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+        target: [google_apis]
+        arch: [x86_64]
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Run compatibility test on API ${{ matrix.api-level }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          profile: Nexus 6
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: ./gradlew connectedAndroidTest --stacktrace
+
+      - name: Upload test results (API ${{ matrix.api-level }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-api-${{ matrix.api-level }}
+          path: app/build/reports/androidTests/connected/
+
+      - name: Upload logcat (API ${{ matrix.api-level }})
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logcat-api-${{ matrix.api-level }}
+          path: ${{ runner.temp }}/android-emulator/logcat*.log
