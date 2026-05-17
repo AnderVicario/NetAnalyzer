@@ -24,6 +24,7 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.core.app.NotificationCompat;
 
 import com.av19.netanalyzer.R;
@@ -32,6 +33,7 @@ import com.av19.netanalyzer.data.ListDeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.data.ScanState;
 import com.av19.netanalyzer.discovery.ARPDiscovery;
+import com.av19.netanalyzer.discovery.DiscoveryMethod;
 import com.av19.netanalyzer.discovery.ICMPDiscovery;
 import com.av19.netanalyzer.discovery.MDNSDiscovery;
 import com.av19.netanalyzer.discovery.NetBIOSDiscovery;
@@ -45,6 +47,8 @@ import com.av19.netanalyzer.utils.NetUtils;
 import com.av19.netanalyzer.utils.OpenRouterApiClient;
 import com.av19.netanalyzer.utils.PreferencesManager;
 
+import org.jetbrains.annotations.TestOnly;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -54,7 +58,6 @@ public class ScanService extends Service {
     private static final String CHANNEL_ID = "scan_channel";
     private static final int NOTIFICATION_ID = 1;
     private static final long NOTIFICATION_THROTTLE_MS = 500;
-    // Lista especializada que maneja la fusión de dispositivos sin duplicados
     private final ListDeviceInfo discoveredDevices = new ListDeviceInfo();
     private ScanRepository repository;
     private CancellationToken cancellationToken;
@@ -62,6 +65,21 @@ public class ScanService extends Service {
     private Handler mainHandler;
     private long lastNotificationUpdate = 0;
     private long scanStartTime;
+    @TestOnly
+    private static List<DiscoveryMethod> sTestDiscoveryMethods = null;
+
+    @RestrictTo(RestrictTo.Scope.TESTS)
+
+    @TestOnly
+    public static void setTestDiscoveryMethods(List<DiscoveryMethod> methods) {
+        sTestDiscoveryMethods = methods;
+    }
+
+    @RestrictTo(RestrictTo.Scope.TESTS)
+    @TestOnly
+    public static void clearTestDiscoveryMethods() {
+        sTestDiscoveryMethods = null;
+    }
 
     @Override
     public void onCreate() {
@@ -103,7 +121,16 @@ public class ScanService extends Service {
 
         networkScanner = new NetworkScanner(networkInfo, ports);
 
-        // Añadir métodos según configuración
+        // --- MODO PRUEBA: si hay métodos inyectados estáticamente, usarlos y terminar ---
+        if (sTestDiscoveryMethods != null && !sTestDiscoveryMethods.isEmpty()) {
+            for (DiscoveryMethod method : sTestDiscoveryMethods) {
+                networkScanner.addMethod(method);
+            }
+            networkScanner.start(cancellationToken, createScanCallback(networkInfo));
+            return;
+        }
+
+        // --- MODO NORMAL: cargar métodos desde configuración ---
         List<String> methods = parseMethods(scanMethod);
         for (String m : methods) {
             switch (m) {
@@ -128,10 +155,14 @@ public class ScanService extends Service {
             }
         }
 
-        networkScanner.start(cancellationToken, new NetworkScanner.Callback() {
+        networkScanner.start(cancellationToken, createScanCallback(networkInfo));
+    }
+
+    // Callback común para ambos modos (evita duplicación de código)
+    private NetworkScanner.Callback createScanCallback(NetworkInfo networkInfo) {
+        return new NetworkScanner.Callback() {
             @Override
             public void onDiscoveryProgress(String methodName, int progressPercent) {
-                // Tomamos una instantánea de los dispositivos ya descubiertos y fusionados
                 List<DeviceInfo> snapshot = discoveredDevices.getDevices();
                 repository.setScanning(progressPercent, ScanState.Phase.DISCOVERY, methodName, null, snapshot, networkInfo);
                 String text = String.format(getString(R.string.scan_discovery_progress), methodName, progressPercent);
@@ -140,14 +171,10 @@ public class ScanService extends Service {
 
             @Override
             public void onDeviceFound(DeviceInfo device) {
-                // Añadir o fusionar el dispositivo y obtener la versión actualizada
                 DeviceInfo merged = discoveredDevices.addOrUpdate(device);
-                // Enriquecimiento común (roles, OS por TTL, etc.)
                 FingerprintManager.getInstance().enrichDevice(merged, networkInfo);
                 String text = String.format(getString(R.string.scan_device_found), merged.getIp());
                 updateNotification(text);
-                // No actualizamos el repositorio aquí para evitar demasiadas notificaciones;
-                // la UI se actualizará en onDiscoveryProgress.
             }
 
             @Override
@@ -155,20 +182,15 @@ public class ScanService extends Service {
                 int percent = (int) ((current / (float) total) * 100);
                 String text = String.format(getString(R.string.scan_port_scan_progress), currentIp, percent);
                 updateNotification(text);
-                // Usamos directamente la lista proporcionada por el scanner (ya contiene los puertos actualizados)
                 repository.setScanning(percent, ScanState.Phase.PORT_SCAN, "NIO", currentIp, currentDevices, networkInfo);
             }
 
             @Override
             public void onComplete(List<DeviceInfo> devices) {
-                // Calcular resumen (duración desde que se inició el servicio, número de dispositivos)
                 long duration = (System.currentTimeMillis() - scanStartTime) / 1000;
                 int deviceCount = devices.size();
-
                 PreferencesManager pm = new PreferencesManager(getApplicationContext());
                 pm.addScanRecord(System.currentTimeMillis(), duration, deviceCount, devices);
-
-                // Notificar a la UI (repositorio)
                 repository.setCompleted(devices, networkInfo);
                 stopSelf();
             }
@@ -178,7 +200,7 @@ public class ScanService extends Service {
                 repository.setError(getString(R.string.scan_cancelled), ScanState.Phase.NONE, null);
                 stopSelf();
             }
-        });
+        };
     }
 
     private void cancelScan() {
