@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/edit_text_border"
-        android:hint="1"
+        android:hint="@integer/icmp_count_default"
         android:inputType="number"
         android:padding="12dp"
         android:textColor="?attr/colorOnSurface" />
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:background="@drawable/edit_text_border"
-        android:hint="700"
+        android:hint="@integer/icmp_timeout_default"
         android:inputType="number"
         android:padding="12dp"
         android:textColor="?attr/colorOnSurface" />
@@ -59,7 +59,27 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:background="@drawable/edit_text_border"
-        android:hint="56"
+        android:hint="@integer/icmp_packet_size_default"
+        android:inputType="number"
+        android:padding="12dp"
+        android:textColor="?attr/colorOnSurface" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:paddingLeft="8dp"
+        android:paddingTop="6dp"
+        android:text="@string/threads_hint"
+        android:textColor="?attr/colorOnSurface" />
+
+    <EditText
+        android:id="@+id/icmp_threads"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/edit_text_border"
+        android:hint="@integer/icmp_threads_default"
         android:inputType="number"
         android:padding="12dp"
         android:textColor="?attr/colorOnSurface" />

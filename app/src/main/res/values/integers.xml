@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Parámetros ICMP -->
+    <integer name="icmp_count_default">1</integer>
+    <integer name="icmp_count_min">1</integer>
+    <integer name="icmp_count_max">10</integer>
+
+    <integer name="icmp_timeout_default">700</integer>
+    <integer name="icmp_timeout_min">100</integer>
+    <integer name="icmp_timeout_max">5000</integer>
+
+    <integer name="icmp_packet_size_default">56</integer>
+    <integer name="icmp_packet_size_min">0</integer>
+    <integer name="icmp_packet_size_max">65507</integer>
+
+    <integer name="icmp_threads_default">30</integer>
+    <integer name="icmp_threads_min">1</integer>
+    <integer name="icmp_threads_max">255</integer>
+</resources>

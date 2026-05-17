@@ -126,6 +126,18 @@ public class NetUtils {
         return Integer.compare(parts1.length, parts2.length);
     }
 
+    public static int parseIntOrDefault(String value, int defaultValue, int min, int max) {
+        if (value == null) return defaultValue;
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            if (parsed < min) return min;
+            if (parsed > max) return max;
+            return parsed;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
     private static class CacheEntry {
         final int[] ports;
         final Map<Integer, String> serviceNames;

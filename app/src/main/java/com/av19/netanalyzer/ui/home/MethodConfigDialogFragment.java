@@ -2,6 +2,7 @@ package com.av19.netanalyzer.ui.home;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -131,9 +132,16 @@ public class MethodConfigDialogFragment extends DialogFragment {
                 ((EditText) view.findViewById(R.id.tcp_timeout)).setText(pm.getMethodParam("tcp", "timeout", "200"));
                 break;
             case "ICMP":
-                ((EditText) view.findViewById(R.id.icmp_count)).setText(pm.getMethodParam("icmp", "count", "1"));
-                ((EditText) view.findViewById(R.id.icmp_timeout)).setText(pm.getMethodParam("icmp", "timeout", "700"));
-                ((EditText) view.findViewById(R.id.icmp_packet_size)).setText(pm.getMethodParam("icmp", "packet_size", "56"));
+                Resources res = requireContext().getResources();
+                String defaultCount = String.valueOf(res.getInteger(R.integer.icmp_count_default));
+                String defaultTimeout = String.valueOf(res.getInteger(R.integer.icmp_timeout_default));
+                String defaultPacketSize = String.valueOf(res.getInteger(R.integer.icmp_packet_size_default));
+                String defaultThreads = String.valueOf(res.getInteger(R.integer.icmp_threads_default));
+
+                ((EditText) view.findViewById(R.id.icmp_count)).setText(pm.getMethodParam("icmp", "count", defaultCount));
+                ((EditText) view.findViewById(R.id.icmp_timeout)).setText(pm.getMethodParam("icmp", "timeout", defaultTimeout));
+                ((EditText) view.findViewById(R.id.icmp_packet_size)).setText(pm.getMethodParam("icmp", "packet_size", defaultPacketSize));
+                ((EditText) view.findViewById(R.id.icmp_threads)).setText(pm.getMethodParam("icmp", "threads", defaultThreads));
                 break;
             case "SSDP":
                 ((EditText) view.findViewById(R.id.ssdp_timeout)).setText(pm.getMethodParam("ssdp", "timeout", "5000"));
@@ -151,6 +159,7 @@ public class MethodConfigDialogFragment extends DialogFragment {
                 pm.setMethodParam("icmp", "count", ((EditText) view.findViewById(R.id.icmp_count)).getText().toString());
                 pm.setMethodParam("icmp", "timeout", ((EditText) view.findViewById(R.id.icmp_timeout)).getText().toString());
                 pm.setMethodParam("icmp", "packet_size", ((EditText) view.findViewById(R.id.icmp_packet_size)).getText().toString());
+                pm.setMethodParam("icmp", "threads", ((EditText) view.findViewById(R.id.icmp_threads)).getText().toString());
                 break;
             case "SSDP":
                 pm.setMethodParam("ssdp", "timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());
