@@ -5,14 +5,79 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:paddingLeft="8dp"
+        android:paddingBottom="6dp"
+        android:text="@string/ssdp_timeout_total_hint"
+        android:textColor="?attr/colorOnSurface" />
+
     <EditText
-        android:id="@+id/ssdp_timeout"
+        android:id="@+id/ssdp_timeout_total"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/edit_text_border"
-        android:hint="@string/listen_timeout_hint"
         android:inputType="number"
         android:padding="12dp"
-        android:text="@string/default_ssdp_timeout" />
+        android:textColor="?attr/colorOnSurface" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:paddingLeft="8dp"
+        android:paddingTop="6dp"
+        android:text="@string/ssdp_socket_timeout_hint"
+        android:textColor="?attr/colorOnSurface" />
+
+    <EditText
+        android:id="@+id/ssdp_socket_timeout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/edit_text_border"
+        android:inputType="number"
+        android:padding="12dp"
+        android:textColor="?attr/colorOnSurface" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:paddingLeft="8dp"
+        android:paddingTop="6dp"
+        android:text="@string/ssdp_http_timeout_hint"
+        android:textColor="?attr/colorOnSurface" />
+
+    <EditText
+        android:id="@+id/ssdp_http_timeout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/edit_text_border"
+        android:inputType="number"
+        android:padding="12dp"
+        android:textColor="?attr/colorOnSurface" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:paddingLeft="8dp"
+        android:paddingTop="6dp"
+        android:text="@string/ssdp_search_delay_hint"
+        android:textColor="?attr/colorOnSurface" />
+
+    <EditText
+        android:id="@+id/ssdp_search_delay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/edit_text_border"
+        android:inputType="number"
+        android:padding="12dp"
+        android:textColor="?attr/colorOnSurface" />
 
 </LinearLayout>

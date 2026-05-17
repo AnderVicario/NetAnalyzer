@@ -23,4 +23,20 @@
 
     <integer name="tcp_default_port">80</integer>
     <integer name="tcp_default_timeout">200</integer>
+    <!-- Parámetros SSDP -->
+    <integer name="ssdp_timeout_total_default">5000</integer>
+    <integer name="ssdp_timeout_total_min">1000</integer>
+    <integer name="ssdp_timeout_total_max">30000</integer>
+
+    <integer name="ssdp_socket_timeout_default">1500</integer>
+    <integer name="ssdp_socket_timeout_min">500</integer>
+    <integer name="ssdp_socket_timeout_max">10000</integer>
+
+    <integer name="ssdp_http_timeout_default">3000</integer>
+    <integer name="ssdp_http_timeout_min">1000</integer>
+    <integer name="ssdp_http_timeout_max">10000</integer>
+
+    <integer name="ssdp_search_delay_default">50</integer>
+    <integer name="ssdp_search_delay_min">0</integer>
+    <integer name="ssdp_search_delay_max">500</integer>
 </resources>

@@ -1,11 +1,15 @@
 package com.av19.netanalyzer.discovery;
 
+import android.content.Context;
 import android.util.Log;
 
+import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.utils.CancellationToken;
+import com.av19.netanalyzer.utils.NetUtils;
 import com.av19.netanalyzer.utils.OpenRouterApiClient;
+import com.av19.netanalyzer.utils.PreferencesManager;
 import com.av19.netanalyzer.utils.ProgressCallback;
 
 import org.json.JSONArray;
@@ -36,11 +40,13 @@ public class SSDPDiscovery implements DiscoveryMethod {
     private static final String TAG = "SSDPDiscovery";
     private static final String SSDP_ADDR = "239.255.255.250";
     private static final int SSDP_PORT = 1900;
-    private static final int TIMEOUT_MS = 5000;
-    private static final int SO_TIMEOUT_MS = 1500;
-    private static final int HTTP_TIMEOUT_MS = 3000;
-
     private static final int LISTEN_PROGRESS_MAX = 20;
+
+    private final Context context;
+
+    public SSDPDiscovery(Context context) {
+        this.context = context.getApplicationContext();
+    }
 
     @Override
     public String getName() {
@@ -50,6 +56,38 @@ public class SSDPDiscovery implements DiscoveryMethod {
     @Override
     public List<DeviceInfo> discover(NetworkInfo network, CancellationToken token, ProgressCallback callback) {
         Log.d(TAG, "Starting SSDP discovery...");
+
+        PreferencesManager pm = new PreferencesManager(context);
+
+        // Leer tiempos configurables
+        int defaultTotal = context.getResources().getInteger(R.integer.ssdp_timeout_total_default);
+        int minTotal = context.getResources().getInteger(R.integer.ssdp_timeout_total_min);
+        int maxTotal = context.getResources().getInteger(R.integer.ssdp_timeout_total_max);
+        int timeoutTotal = NetUtils.parseIntOrDefault(
+                pm.getMethodParam("ssdp", "timeout_total", String.valueOf(defaultTotal)),
+                defaultTotal, minTotal, maxTotal);
+
+        int defaultSocket = context.getResources().getInteger(R.integer.ssdp_socket_timeout_default);
+        int minSocket = context.getResources().getInteger(R.integer.ssdp_socket_timeout_min);
+        int maxSocket = context.getResources().getInteger(R.integer.ssdp_socket_timeout_max);
+        int soTimeout = NetUtils.parseIntOrDefault(
+                pm.getMethodParam("ssdp", "socket_timeout", String.valueOf(defaultSocket)),
+                defaultSocket, minSocket, maxSocket);
+
+        int defaultHttp = context.getResources().getInteger(R.integer.ssdp_http_timeout_default);
+        int minHttp = context.getResources().getInteger(R.integer.ssdp_http_timeout_min);
+        int maxHttp = context.getResources().getInteger(R.integer.ssdp_http_timeout_max);
+        int httpTimeout = NetUtils.parseIntOrDefault(
+                pm.getMethodParam("ssdp", "http_timeout", String.valueOf(defaultHttp)),
+                defaultHttp, minHttp, maxHttp);
+
+        int defaultDelay = context.getResources().getInteger(R.integer.ssdp_search_delay_default);
+        int minDelay = context.getResources().getInteger(R.integer.ssdp_search_delay_min);
+        int maxDelay = context.getResources().getInteger(R.integer.ssdp_search_delay_max);
+        int searchDelay = NetUtils.parseIntOrDefault(
+                pm.getMethodParam("ssdp", "search_delay", String.valueOf(defaultDelay)),
+                defaultDelay, minDelay, maxDelay);
+
         Map<String, DeviceInfo> deviceMap = new ConcurrentHashMap<>();
         Map<String, Set<String>> rawServers = new ConcurrentHashMap<>();
         Map<String, Set<String>> rawLocations = new ConcurrentHashMap<>();
@@ -59,7 +97,7 @@ public class SSDPDiscovery implements DiscoveryMethod {
         MulticastSocket socket = null;
         try {
             socket = new MulticastSocket();
-            socket.setSoTimeout(SO_TIMEOUT_MS);
+            socket.setSoTimeout(soTimeout);
             socket.setReuseAddress(true);
 
             // ==================== MÚLTIPLES M-SEARCH ====================
@@ -89,11 +127,12 @@ public class SSDPDiscovery implements DiscoveryMethod {
                 socket.send(sendPacket);
                 Log.d(TAG, "M-SEARCH sent for ST: " + st);
 
-                // Pequeña pausa para evitar saturar la red
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                if (searchDelay > 0) {
+                    try {
+                        Thread.sleep(searchDelay);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
 
@@ -105,8 +144,8 @@ public class SSDPDiscovery implements DiscoveryMethod {
             int lastProgress = -1;
             int responseCount = 0;
 
-            while (!token.isCancelled() && (System.currentTimeMillis() - startTime) < TIMEOUT_MS) {
-                int elapsedPercent = (int) ((System.currentTimeMillis() - startTime) * 100 / TIMEOUT_MS);
+            while (!token.isCancelled() && (System.currentTimeMillis() - startTime) < timeoutTotal) {
+                int elapsedPercent = (int) ((System.currentTimeMillis() - startTime) * 100 / timeoutTotal);
                 int currentProgress = elapsedPercent * LISTEN_PROGRESS_MAX / 100;
                 if (currentProgress != lastProgress && callback != null) {
                     callback.onProgress(currentProgress, null);
@@ -175,8 +214,8 @@ public class SSDPDiscovery implements DiscoveryMethod {
             if (OpenRouterApiClient.hasToken() && !deviceMap.isEmpty() && !token.isCancelled()) {
                 Log.d(TAG, "Enriching devices with OpenRouter...");
                 OkHttpClient httpClient = new OkHttpClient.Builder()
-                        .connectTimeout(HTTP_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
-                        .readTimeout(HTTP_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
+                        .connectTimeout(httpTimeout, java.util.concurrent.TimeUnit.MILLISECONDS)
+                        .readTimeout(httpTimeout, java.util.concurrent.TimeUnit.MILLISECONDS)
                         .build();
 
                 List<Map.Entry<String, DeviceInfo>> deviceList = new ArrayList<>(deviceMap.entrySet());

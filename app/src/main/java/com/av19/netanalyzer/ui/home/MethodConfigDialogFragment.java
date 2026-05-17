@@ -141,7 +141,16 @@ public class MethodConfigDialogFragment extends DialogFragment {
                 ((EditText) view.findViewById(R.id.icmp_threads)).setText(pm.getMethodParam("icmp", "threads", defaultThreads));
                 break;
             case "SSDP":
-                ((EditText) view.findViewById(R.id.ssdp_timeout)).setText(pm.getMethodParam("ssdp", "timeout", "5000"));
+                Resources resSsdp = requireContext().getResources();
+                String defaultTotal = String.valueOf(resSsdp.getInteger(R.integer.ssdp_timeout_total_default));
+                String defaultSocket = String.valueOf(resSsdp.getInteger(R.integer.ssdp_socket_timeout_default));
+                String defaultHttp = String.valueOf(resSsdp.getInteger(R.integer.ssdp_http_timeout_default));
+                String defaultDelay = String.valueOf(resSsdp.getInteger(R.integer.ssdp_search_delay_default));
+
+                ((EditText) view.findViewById(R.id.ssdp_timeout_total)).setText(pm.getMethodParam("ssdp", "timeout_total", defaultTotal));
+                ((EditText) view.findViewById(R.id.ssdp_socket_timeout)).setText(pm.getMethodParam("ssdp", "socket_timeout", defaultSocket));
+                ((EditText) view.findViewById(R.id.ssdp_http_timeout)).setText(pm.getMethodParam("ssdp", "http_timeout", defaultHttp));
+                ((EditText) view.findViewById(R.id.ssdp_search_delay)).setText(pm.getMethodParam("ssdp", "search_delay", defaultDelay));
                 break;
         }
     }
@@ -183,7 +192,10 @@ public class MethodConfigDialogFragment extends DialogFragment {
                 break;
 
             case "SSDP":
-                pm.setMethodParam("ssdp", "timeout", ((EditText) view.findViewById(R.id.ssdp_timeout)).getText().toString());
+                pm.setMethodParam("ssdp", "timeout_total", ((EditText) view.findViewById(R.id.ssdp_timeout_total)).getText().toString());
+                pm.setMethodParam("ssdp", "socket_timeout", ((EditText) view.findViewById(R.id.ssdp_socket_timeout)).getText().toString());
+                pm.setMethodParam("ssdp", "http_timeout", ((EditText) view.findViewById(R.id.ssdp_http_timeout)).getText().toString());
+                pm.setMethodParam("ssdp", "search_delay", ((EditText) view.findViewById(R.id.ssdp_search_delay)).getText().toString());
                 break;
         }
     }

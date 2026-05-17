@@ -166,4 +166,8 @@
     <string name="tcp_port_label">Port</string>
     <string name="tcp_timeout_label">Timeout (ms)</string>
     <string name="remove">Remove</string>
+    <string name="ssdp_timeout_total_hint">Tiempo de escucha (ms)</string>
+    <string name="ssdp_socket_timeout_hint">Timeout de socket (ms)</string>
+    <string name="ssdp_http_timeout_hint">Timeout para XML (ms)</string>
+    <string name="ssdp_search_delay_hint">Delay entre M-SEARCH (ms)</string>
 </resources>

@@ -120,7 +120,7 @@ public class ScanService extends Service {
                     networkScanner.addMethod(new MDNSDiscovery(this));
                     break;
                 case "SSDP":
-                    networkScanner.addMethod(new SSDPDiscovery());
+                    networkScanner.addMethod(new SSDPDiscovery(this));
                     break;
                 case "NETBIOS":
                     networkScanner.addMethod(new NetBIOSDiscovery());
