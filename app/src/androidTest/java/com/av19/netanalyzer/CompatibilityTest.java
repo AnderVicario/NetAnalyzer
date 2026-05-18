@@ -7,8 +7,14 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import android.Manifest;
+import android.os.Build;
+
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.GrantPermissionRule;
+import androidx.test.uiautomator.UiDevice;
 
 import com.av19.netanalyzer.data.DeviceInfo;
 import com.av19.netanalyzer.discovery.DiscoveryMethod;
@@ -32,8 +38,27 @@ public class CompatibilityTest {
     public ActivityScenarioRule<MainActivity> activityRule =
             new ActivityScenarioRule<>(MainActivity.class);
 
+    // Otorga automáticamente los permisos críticos de API 33 y 34 en el emulador
+    @Rule
+    public GrantPermissionRule permissionRule = GrantPermissionRule.grant(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.NEARBY_WIFI_DEVICES
+    );
+
     @Before
     public void setupFakeDiscovery() {
+        // Corrección de ventanas y bloqueos exclusiva para API 33 y 34
+        if (Build.VERSION.SDK_INT == 33 || Build.VERSION.SDK_INT == 34) {
+            try {
+                UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+                device.executeShellCommand("am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS");
+                device.executeShellCommand("wm dismiss-keyguard");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         // Crear dispositivos falsos
         DeviceInfo device1 = new DeviceInfo("192.168.1.10", "AA:BB:CC:DD:EE:FF", "FakeVendor", Arrays.asList(80, 443));
         device1.setHostname(new DeviceInfo.PriorityValue(1, "FakePhone"));
@@ -50,7 +75,7 @@ public class CompatibilityTest {
         // Pulsar el botón SCAN
         onView(withId(R.id.btn_scan)).perform(click());
 
-        // Esperar a que termine el escaneo (ajusta el tiempo si es necesario)
+        // Esperar a que termine el escaneo
         Thread.sleep(6000);
 
         // Verificar contador de dispositivos
