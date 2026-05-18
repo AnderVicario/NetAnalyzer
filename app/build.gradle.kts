@@ -99,6 +99,7 @@ dependencies {
     implementation(libs.json)
     implementation(libs.gson)
     implementation(libs.material.icons.extended)
+    implementation(libs.rules)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     androidTestImplementation(libs.ext.junit)

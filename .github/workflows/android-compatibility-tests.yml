@@ -6,14 +6,16 @@ on:
       - tests
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   compatibility-tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
-        api-level: [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+        api-level: [24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36]
         target: [google_apis]
         arch: [x86_64]
 
@@ -34,7 +36,7 @@ jobs:
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Run compatibility test on API ${{ matrix.api-level }}
         uses: reactivecircus/android-emulator-runner@v2
@@ -60,4 +62,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: logcat-api-${{ matrix.api-level }}
-          path: ${{ runner.temp }}/android-emulator/logcat*.log
+          path: /home/runner/work/_temp/android-emulator/logcat*.log
