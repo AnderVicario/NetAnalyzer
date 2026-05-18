@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api-level: [24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+        api-level: [32, 33, 34, 35, 36]
         target: [google_apis]
         arch: [x86_64]
 

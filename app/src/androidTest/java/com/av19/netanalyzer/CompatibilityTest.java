@@ -38,19 +38,18 @@ public class CompatibilityTest {
     public ActivityScenarioRule<MainActivity> activityRule =
             new ActivityScenarioRule<>(MainActivity.class);
 
+    // FIX Bug 1: Extendemos a >= 33 para cubrir API 36 y futuras versiones
     @Rule
     public GrantPermissionRule permissionRule = providePermissionsByAPI();
 
     private static GrantPermissionRule providePermissionsByAPI() {
-        if (Build.VERSION.SDK_INT == 33 || Build.VERSION.SDK_INT == 34) {
-            // Solo para API 33 y 34 se piden los tres permisos necesarios
+        if (Build.VERSION.SDK_INT >= 33) {
             return GrantPermissionRule.grant(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.POST_NOTIFICATIONS,
                     Manifest.permission.NEARBY_WIFI_DEVICES
             );
         } else {
-            // Para cualquier otra API (API 32 o inferior), solo se pide la localización estándar
             return GrantPermissionRule.grant(
                     Manifest.permission.ACCESS_FINE_LOCATION
             );
@@ -59,8 +58,8 @@ public class CompatibilityTest {
 
     @Before
     public void setupFakeDiscovery() {
-        // Corrección de ventanas y bloqueos exclusiva para API 33 y 34
-        if (Build.VERSION.SDK_INT == 33 || Build.VERSION.SDK_INT == 34) {
+        // FIX Bug 2: Extendemos a API 32+ para limpiar overlays/keyguards molestos de google_apis
+        if (Build.VERSION.SDK_INT >= 32) {
             try {
                 UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
                 device.executeShellCommand("am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS");
@@ -77,17 +76,21 @@ public class CompatibilityTest {
         device2.setIsGateway(true);
         List<DiscoveryMethod> fakeMethods = Arrays.asList(new FakeDiscovery(Arrays.asList(device1, device2)));
 
-        // Inyectar en el servicio ANTES de que se inicie (al pulsar el botón SCAN)
         ScanService.setTestDiscoveryMethods(fakeMethods);
     }
 
     @Test
     public void fullScanAndInventoryShowsFakeDevices() throws InterruptedException {
+        // FIX para API 33/34 (window-token=null):
+        // Damos un respiro de 2 segundos antes de la primera acción de Espresso.
+        // Esto permite que la actividad se asiente en el Window Manager tras la supresión de diálogos.
+        Thread.sleep(4000);
+
         // Pulsar el botón SCAN
         onView(withId(R.id.btn_scan)).perform(click());
 
-        // Esperar a que termine el escaneo
-        Thread.sleep(6000);
+        // Esperar a que termine el escaneo asíncrono
+        Thread.sleep(12000);
 
         // Verificar contador de dispositivos
         onView(withId(R.id.tv_devices_count)).check(matches(withText("2")));
@@ -101,7 +104,6 @@ public class CompatibilityTest {
 
     @After
     public void tearDown() {
-        // Limpiar para no afectar otros posibles tests
         ScanService.clearTestDiscoveryMethods();
     }
 }
