@@ -38,7 +38,7 @@ public class CompatibilityTest {
     public ActivityScenarioRule<MainActivity> activityRule =
             new ActivityScenarioRule<>(MainActivity.class);
 
-    // FIX Bug 1: Extendemos a >= 33 para cubrir API 36 y futuras versiones
+    // Extender a >= 33 para cubrir API 36 y futuras versiones
     @Rule
     public GrantPermissionRule permissionRule = providePermissionsByAPI();
 
@@ -58,7 +58,7 @@ public class CompatibilityTest {
 
     @Before
     public void setupFakeDiscovery() {
-        // FIX Bug 2: Extendemos a API 32+ para limpiar overlays/keyguards molestos de google_apis
+        // Extender a API 32+ para limpiar overlays/keyguards molestos de google_apis
         if (Build.VERSION.SDK_INT >= 31) {
             try {
                 UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
@@ -82,7 +82,7 @@ public class CompatibilityTest {
     @Test
     public void fullScanAndInventoryShowsFakeDevices() throws InterruptedException {
         // FIX para API 33/34 (window-token=null):
-        // Damos un respiro de 2 segundos antes de la primera acción de Espresso.
+        // Esperar varios segundos antes de la primera acción de Espresso.
         // Esto permite que la actividad se asiente en el Window Manager tras la supresión de diálogos.
         Thread.sleep(20000);
 
