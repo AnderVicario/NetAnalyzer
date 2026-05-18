@@ -59,7 +59,7 @@ public class CompatibilityTest {
     @Before
     public void setupFakeDiscovery() {
         // FIX Bug 2: Extendemos a API 32+ para limpiar overlays/keyguards molestos de google_apis
-        if (Build.VERSION.SDK_INT >= 32) {
+        if (Build.VERSION.SDK_INT >= 31) {
             try {
                 UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
                 device.executeShellCommand("am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS");
