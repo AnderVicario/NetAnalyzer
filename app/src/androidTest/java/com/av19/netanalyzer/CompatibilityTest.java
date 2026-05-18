@@ -84,13 +84,13 @@ public class CompatibilityTest {
         // FIX para API 33/34 (window-token=null):
         // Damos un respiro de 2 segundos antes de la primera acción de Espresso.
         // Esto permite que la actividad se asiente en el Window Manager tras la supresión de diálogos.
-        Thread.sleep(10000);
+        Thread.sleep(20000);
 
         // Pulsar el botón SCAN
         onView(withId(R.id.btn_scan)).perform(click());
 
         // Esperar a que termine el escaneo asíncrono
-        Thread.sleep(15000);
+        Thread.sleep(20000);
 
         // Verificar contador de dispositivos
         onView(withId(R.id.tv_devices_count)).check(matches(withText("2")));
