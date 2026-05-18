@@ -38,13 +38,24 @@ public class CompatibilityTest {
     public ActivityScenarioRule<MainActivity> activityRule =
             new ActivityScenarioRule<>(MainActivity.class);
 
-    // Otorga automáticamente los permisos críticos de API 33 y 34 en el emulador
     @Rule
-    public GrantPermissionRule permissionRule = GrantPermissionRule.grant(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.POST_NOTIFICATIONS,
-            Manifest.permission.NEARBY_WIFI_DEVICES
-    );
+    public GrantPermissionRule permissionRule = providePermissionsByAPI();
+
+    private static GrantPermissionRule providePermissionsByAPI() {
+        if (Build.VERSION.SDK_INT == 33 || Build.VERSION.SDK_INT == 34) {
+            // Solo para API 33 y 34 se piden los tres permisos necesarios
+            return GrantPermissionRule.grant(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                    Manifest.permission.NEARBY_WIFI_DEVICES
+            );
+        } else {
+            // Para cualquier otra API (API 32 o inferior), solo se pide la localización estándar
+            return GrantPermissionRule.grant(
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            );
+        }
+    }
 
     @Before
     public void setupFakeDiscovery() {
