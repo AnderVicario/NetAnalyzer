@@ -73,6 +73,7 @@ android {
         versionCode = ("25${monthNumber.toString().padStart(2, '0')}$day$hour").toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["grantRuntimePermissions"] = "true"
     }
 
     buildTypes {
@@ -99,7 +100,6 @@ dependencies {
     implementation(libs.json)
     implementation(libs.gson)
     implementation(libs.material.icons.extended)
-    implementation(libs.rules)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     androidTestImplementation(libs.ext.junit)

@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="fullScanAndInventoryShowsFakeDevices()">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-05-16T22:46:04.282544786Z">
+        <DropdownSelection timestamp="2026-05-18T15:25:35.988495258Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CWC37QK8E" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/home/avicario/.android/avd/Medium_Phone_2.avd" />
             </handle>
           </Target>
         </DropdownSelection>
