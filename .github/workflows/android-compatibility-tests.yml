@@ -8,13 +8,14 @@ on:
 
 jobs:
   compatibility-tests:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         api-level: [24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
         target: [google_apis]
         arch: [x86_64]
-    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -23,8 +24,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -36,8 +37,10 @@ jobs:
           target: ${{ matrix.target }}
           arch: ${{ matrix.arch }}
           profile: Nexus 6
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew connectedAndroidTest --stacktrace
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-boot-timeout: 900
+          disable-animations: true
+          script: ./gradlew connectedDebugAndroidTest --stacktrace
 
       - name: Upload test results (API ${{ matrix.api-level }})
         if: always()
