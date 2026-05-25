@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment
-        implements MethodConfigDialogFragment.ConfigSaveListener {
+        implements MethodConfigDialogFragment.ConfigSaveListener, ImportConfigDialogFragment.ImportListener {
 
     private PreferencesManager pm;
     private List<MaterialButton> methodButtons;
@@ -156,22 +156,8 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment
         });
 
         btnImport.setOnClickListener(view -> {
-            final EditText input = new EditText(requireContext());
-            input.setHint(getString(R.string.adv_settings_import_hint));
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.adv_settings_import_title))
-                    .setView(input)
-                    .setPositiveButton(getString(R.string.adv_settings_import_btn_positive), (dialog, which) -> {
-                        String json = input.getText().toString();
-                        if (pm.importAdvancedSettings(json)) {
-                            SnackbarUtils.showSuccess(requireView(), requireContext(), getString(R.string.adv_settings_import_res_positive));
-                            loadSavedSelection();
-                        } else {
-                            SnackbarUtils.showError(requireView(), requireContext(), getString(R.string.adv_settings_import_res_negative));
-                        }
-                    })
-                    .setNegativeButton(getString(R.string.adv_settings_import_btn_negative), null)
-                    .show();
+            ImportConfigDialogFragment dialog = ImportConfigDialogFragment.newInstance();
+            dialog.show(getChildFragmentManager(), "import_config");
         });
 
         // Load saved selection
@@ -247,5 +233,10 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment
             if (new java.io.File(path).exists()) return true;
         }
         return false;
+    }
+
+    @Override
+    public void onImportSuccess() {
+        loadSavedSelection();
     }
 }
