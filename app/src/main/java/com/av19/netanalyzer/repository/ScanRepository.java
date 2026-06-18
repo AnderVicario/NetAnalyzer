@@ -53,4 +53,9 @@ public class ScanRepository {
     public void reset() {
         updateState(ScanState.idle());
     }
+
+    // Método para cargar dispositivos desde un historial importado
+    public void loadDevicesFromHistory(List<DeviceInfo> devices, NetworkInfo networkInfo) {
+        updateState(ScanState.completed(devices, networkInfo));
+    }
 }

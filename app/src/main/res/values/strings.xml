@@ -19,6 +19,7 @@
     <string name="adv_settings_arp_warning">ARP discovery may not work on Android 10+ without root access</string>
     <string name="adv_settings_export_title">Export advanced settings</string>
     <string name="adv_settings_import_title">Import advanced settings</string>
+    <string name="import_scan_history_title">Import scan history</string>
     <string name="adv_settings_import_btn_positive">Import</string>
     <string name="adv_settings_import_btn_negative">Cancel</string>
     <string name="adv_settings_import_hint">Paste JSON here...</string>

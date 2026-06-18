@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,21 +121,60 @@ public class PreferencesManager {
 
     public boolean importAdvancedSettings(String jsonString) {
         try {
-            JsonObject root = gson.fromJson(jsonString, JsonObject.class);
-            int version = root.get("version").getAsInt();
-            if (version != 1) return false;
+            // Limitar el tamaño máximo del JSON para evitar DoS
+            if (jsonString == null || jsonString.length() > 100000) { // 100KB máximo
+                return false;
+            }
 
+            JsonObject root = gson.fromJson(jsonString, JsonObject.class);
+            
+            // Validar versión
+            if (!root.has("version") || root.get("version").getAsInt() != 1) {
+                return false;
+            }
+
+            // Validar y parsear active_methods
+            if (!root.has("active_methods") || !root.get("active_methods").isJsonArray()) {
+                return false;
+            }
             List<String> activeMethods = gson.fromJson(root.get("active_methods"),
                     new TypeToken<List<String>>() {
                     }.getType());
+            // Validar que los métodos sean válidos
+            List<String> validMethods = Arrays.asList("AUTO", "ARP", "TCP", "ICMP", "MDNS", "SSDP", "NETBIOS");
+            for (String method : activeMethods) {
+                if (!validMethods.contains(method)) {
+                    return false;
+                }
+            }
             setActiveMethods(activeMethods);
 
+            // Validar y parsear method_params
+            if (!root.has("method_params") || !root.get("method_params").isJsonObject()) {
+                return false;
+            }
             Map<String, Map<String, String>> params = gson.fromJson(root.get("method_params"),
                     new TypeToken<Map<String, Map<String, String>>>() {
                     }.getType());
+            // Limitar el número de parámetros
+            if (params.size() > 50) {
+                return false;
+            }
             saveAllMethodParams(params);
 
+            // Validar y parsear scan_level
+            if (!root.has("scan_level")) {
+                return false;
+            }
+            // Verificar que sea un string (no un número)
+            if (!root.get("scan_level").isJsonPrimitive() || !root.get("scan_level").getAsJsonPrimitive().isString()) {
+                return false;
+            }
             String scanLevel = root.get("scan_level").getAsString();
+            // Validar que scan_level sea uno de los valores permitidos
+            if (!Arrays.asList("100", "500", "1000").contains(scanLevel)) {
+                return false;
+            }
             setScanLevel(scanLevel);
 
             return true;
@@ -151,14 +191,49 @@ public class PreferencesManager {
     }
 
     public boolean importScanHistory(String jsonString) {
-        try {
-            JsonObject root = gson.fromJson(jsonString, JsonObject.class);
-            int version = root.get("version").getAsInt();
-            if (version != 1) return false;
+        return importScanHistory(jsonString, null);
+    }
 
+    public boolean importScanHistory(String jsonString, ScanRecord[] outImported) {
+        try {
+            // Limitar el tamaño máximo del JSON para evitar DoS
+            if (jsonString == null || jsonString.length() > 100000) { // 100KB máximo
+                return false;
+            }
+
+            JsonObject root = gson.fromJson(jsonString, JsonObject.class);
+
+            // Validar versión
+            if (!root.has("version") || root.get("version").getAsInt() != 1) {
+                return false;
+            }
+
+            // Validar y parsear scan_history
+            if (!root.has("scan_history") || !root.get("scan_history").isJsonArray()) {
+                return false;
+            }
             List<ScanRecord> imported = gson.fromJson(root.get("scan_history"),
                     new TypeToken<List<ScanRecord>>() {
                     }.getType());
+
+            // Validar que la lista no sea demasiado grande
+            // Permite hasta 100 escaneos importados, cada uno con hasta 5000 dispositivos
+            if (imported.size() > 100) {
+                return false;
+            }
+
+            // Validar cada registro individual
+            for (ScanRecord record : imported) {
+                if (record.getDevices() == null) {
+                    return false;
+                }
+                // Validar que cada dispositivo tenga campos mínimos
+                for (DeviceInfo device : record.getDevices()) {
+                    if (device.getIp() == null || device.getIp().isEmpty()) {
+                        return false;
+                    }
+                }
+            }
 
             List<ScanRecord> current = getScanHistory();
             // Fusionar: añadir los registros importados al principio
@@ -172,6 +247,11 @@ public class PreferencesManager {
                 current = current.subList(0, MAX_HISTORY);
             }
             saveScanHistory(current);
+
+            // Devolver el primer registro importado si se solicita
+            if (outImported != null && !imported.isEmpty()) {
+                outImported[0] = imported.get(0);
+            }
             return true;
         } catch (Exception e) {
             return false;

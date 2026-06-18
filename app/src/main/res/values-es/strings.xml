@@ -18,6 +18,7 @@
     <string name="adv_settings_arp_warning">ARP puede no funcionar en Android 10+ sin root</string>
     <string name="adv_settings_export_title">Exportar configuración avanzada</string>
     <string name="adv_settings_import_title">Importar configuración avanzada</string>
+    <string name="import_scan_history_title">Importar historial de escaneos</string>
     <string name="adv_settings_import_btn_positive">Importar</string>
     <string name="adv_settings_import_btn_negative">Cancelar</string>
     <string name="adv_settings_import_hint">Pega el JSON aquí...</string>

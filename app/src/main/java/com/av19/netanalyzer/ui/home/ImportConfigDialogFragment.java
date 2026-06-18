@@ -15,20 +15,37 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
 import com.av19.netanalyzer.R;
+import com.av19.netanalyzer.data.ScanRecord;
 import com.av19.netanalyzer.utils.PreferencesManager;
 import com.av19.netanalyzer.utils.SnackbarUtils;
 
 public class ImportConfigDialogFragment extends DialogFragment {
 
+    private static final String ARG_IMPORT_TYPE = "import_type";
+
+    public static final int TYPE_ADVANCED_SETTINGS = 0;
+    public static final int TYPE_SCAN_HISTORY = 1;
+
     private PreferencesManager pm;
     private EditText jsonInput;
+    private int importType = TYPE_ADVANCED_SETTINGS;
+    private ImportListener listener;
 
     public interface ImportListener {
         void onImportSuccess();
+        default void onImportSuccess(ScanRecord importedRecord) {}
     }
 
-    public static ImportConfigDialogFragment newInstance() {
-        return new ImportConfigDialogFragment();
+    public void setImportListener(ImportListener listener) {
+        this.listener = listener;
+    }
+
+    public static ImportConfigDialogFragment newInstance(int importType) {
+        ImportConfigDialogFragment fragment = new ImportConfigDialogFragment();
+        Bundle args = new Bundle();
+        args.putInt(ARG_IMPORT_TYPE, importType);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -36,6 +53,9 @@ public class ImportConfigDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NO_TITLE, android.R.style.Theme_DeviceDefault_Dialog);
         pm = new PreferencesManager(requireContext());
+        if (getArguments() != null) {
+            importType = getArguments().getInt(ARG_IMPORT_TYPE, TYPE_ADVANCED_SETTINGS);
+        }
     }
 
     @Override
@@ -69,7 +89,12 @@ public class ImportConfigDialogFragment extends DialogFragment {
         View root = inflater.inflate(R.layout.dialog_config_container, container, false);
 
         TextView title = root.findViewById(R.id.dialog_title);
-        title.setText(getString(R.string.adv_settings_import_title));
+        // Cambiar título según el tipo de importación
+        if (importType == TYPE_SCAN_HISTORY) {
+            title.setText(R.string.import_scan_history_title);
+        } else {
+            title.setText(R.string.adv_settings_import_title);
+        }
 
         jsonInput = new EditText(requireContext());
         jsonInput.setHint(getString(R.string.adv_settings_import_hint));
@@ -89,18 +114,32 @@ public class ImportConfigDialogFragment extends DialogFragment {
 
         btnSave.setOnClickListener(v -> {
             String json = jsonInput.getText().toString();
-            if (pm.importAdvancedSettings(json)) {
-                SnackbarUtils.showSuccess(requireView(), requireContext(),
-                        getString(R.string.adv_settings_import_res_positive));
+            boolean success;
+            ScanRecord[] importedRecord = new ScanRecord[1];
+            if (importType == TYPE_SCAN_HISTORY) {
+                success = pm.importScanHistory(json, importedRecord);
+            } else {
+                success = pm.importAdvancedSettings(json);
+            }
 
-                // Notify parent fragment (which is AdvancedSettingsBottomSheet)
-                Fragment parent = getParentFragment();
-                if (parent instanceof ImportListener) {
-                    ((ImportListener) parent).onImportSuccess();
+            if (success) {
+                // Notify listener or parent fragment
+                if (listener != null) {
+                    listener.onImportSuccess(importedRecord[0]);
+                } else {
+                    Fragment parent = getParentFragment();
+                    if (parent instanceof ImportListener) {
+                        ((ImportListener) parent).onImportSuccess(importedRecord[0]);
+                    }
                 }
                 dismiss();
+                // Mostrar el Snackbar después de cerrar el diálogo para que sea visible
+                SnackbarUtils.showSuccess(requireActivity().findViewById(android.R.id.content),
+                        requireContext(),
+                        getString(R.string.adv_settings_import_res_positive));
             } else {
-                SnackbarUtils.showError(requireView(), requireContext(),
+                // Mostrar error sin cerrar el diálogo
+                SnackbarUtils.showError(root, requireContext(),
                         getString(R.string.adv_settings_import_res_negative));
             }
         });

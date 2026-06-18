@@ -156,7 +156,7 @@ public class AdvancedSettingsBottomSheet extends BottomSheetDialogFragment
         });
 
         btnImport.setOnClickListener(view -> {
-            ImportConfigDialogFragment dialog = ImportConfigDialogFragment.newInstance();
+            ImportConfigDialogFragment dialog = ImportConfigDialogFragment.newInstance(ImportConfigDialogFragment.TYPE_ADVANCED_SETTINGS);
             dialog.show(getChildFragmentManager(), "import_config");
         });
 

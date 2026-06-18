@@ -297,4 +297,153 @@ public class PreferencesManagerTest {
                 "{\"version\":99,\"scan_history\":[]}"
         ));
     }
+
+    // ==================== Nuevas validaciones de seguridad ====================
+
+    @Test
+    public void importScanHistory_tooLargeJson_returnsFalse() {
+        // Crear un JSON de más de 2MB
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"version\":1,\"scan_history\":[{\"deviceCount\":1,\"devices\":[{\"ip\":\"192.168.1.1\"");
+        // Añadir padding para superar 2MB
+        for (int i = 0; i < 300000; i++) {
+            sb.append(",\"padding\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"");
+        }
+        sb.append("}]}]}");
+        
+        assertFalse(preferencesManager.importScanHistory(sb.toString()));
+    }
+
+    @Test
+    public void importScanHistory_missingScanHistoryField_returnsFalse() {
+        assertFalse(preferencesManager.importScanHistory(
+                "{\"version\":1,\"other\":[]}"
+        ));
+    }
+
+    @Test
+    public void importScanHistory_scanHistoryNotArray_returnsFalse() {
+        assertFalse(preferencesManager.importScanHistory(
+                "{\"version\":1,\"scan_history\":\"not an array\"}"
+        ));
+    }
+
+    @Test
+    public void importScanHistory_tooManyRecords_returnsFalse() {
+        // Crear 101 registros vacíos
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"version\":1,\"scan_history\":[");
+        for (int i = 0; i < 101; i++) {
+            sb.append("{\"deviceCount\":0,\"devices\":[],\"durationSec\":0,\"timestamp\":0}");
+            if (i < 100) sb.append(",");
+        }
+        sb.append("]}");
+        
+        assertFalse(preferencesManager.importScanHistory(sb.toString()));
+    }
+
+    @Test
+    public void importScanHistory_recordWithoutDevices_returnsFalse() {
+        assertFalse(preferencesManager.importScanHistory(
+                "{\"version\":1,\"scan_history\":[{\"deviceCount\":0,\"durationSec\":10,\"timestamp\":123}]}"
+        ));
+    }
+
+    @Test
+    public void importScanHistory_deviceWithoutIp_returnsFalse() {
+        assertFalse(preferencesManager.importScanHistory(
+                "{\"version\":1,\"scan_history\":[{\"deviceCount\":1,\"devices\":[{\"extra\":\"no ip\"}],\"durationSec\":10,\"timestamp\":123}]}"
+        ));
+    }
+
+    @Test
+    public void importScanHistory_deviceWithEmptyIp_returnsFalse() {
+        assertFalse(preferencesManager.importScanHistory(
+                "{\"version\":1,\"scan_history\":[{\"deviceCount\":1,\"devices\":[{\"ip\":\"\"}],\"durationSec\":10,\"timestamp\":123}]}"
+        ));
+    }
+
+    // ==================== Validaciones de importAdvancedSettings ====================
+
+    @Test
+    public void importAdvancedSettings_tooLargeJson_returnsFalse() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"version\":1,\"active_methods\":[\"AUTO\"],\"method_params\":{},\"scan_level\":\"100\"");
+        for (int i = 0; i < 300000; i++) {
+            sb.append(",\"padding\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"");
+        }
+        sb.append("}");
+        
+        assertFalse(preferencesManager.importAdvancedSettings(sb.toString()));
+    }
+
+    @Test
+    public void importAdvancedSettings_invalidActiveMethods_returnsFalse() {
+        // "INVALID" no es un método válido
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"active_methods\":[\"INVALID\"],\"method_params\":{},\"scan_level\":\"100\"}"
+        ));
+    }
+
+    @Test
+    public void importAdvancedSettings_invalidScanLevel_returnsFalse() {
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"active_methods\":[\"AUTO\"],\"method_params\":{},\"scan_level\":\"999\"}"
+        ));
+    }
+
+    @Test
+    public void importAdvancedSettings_tooManyParams_returnsFalse() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"version\":1,\"active_methods\":[\"AUTO\"],\"method_params\":{");
+        for (int i = 0; i < 60; i++) {
+            sb.append("\"method" + i + "\":{\"key\":\"value\"}");
+            if (i < 59) sb.append(",");
+        }
+        sb.append("},\"scan_level\":\"100\"}");
+        
+        assertFalse(preferencesManager.importAdvancedSettings(sb.toString()));
+    }
+
+    @Test
+    public void importAdvancedSettings_missingActiveMethods_returnsFalse() {
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"method_params\":{},\"scan_level\":\"100\"}"
+        ));
+    }
+
+    @Test
+    public void importAdvancedSettings_missingMethodParams_returnsFalse() {
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"active_methods\":[\"AUTO\"],\"scan_level\":\"100\"}"
+        ));
+    }
+
+    @Test
+    public void importAdvancedSettings_missingScanLevel_returnsFalse() {
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"active_methods\":[\"AUTO\"],\"method_params\":{}}"
+        ));
+    }
+
+    @Test
+    public void importAdvancedSettings_activeMethodsNotArray_returnsFalse() {
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"active_methods\":\"not array\",\"method_params\":{},\"scan_level\":\"100\"}"
+        ));
+    }
+
+    @Test
+    public void importAdvancedSettings_methodParamsNotObject_returnsFalse() {
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"active_methods\":[\"AUTO\"],\"method_params\":\"not object\",\"scan_level\":\"100\"}"
+        ));
+    }
+
+    @Test
+    public void importAdvancedSettings_scanLevelNotString_returnsFalse() {
+        assertFalse(preferencesManager.importAdvancedSettings(
+                "{\"version\":1,\"active_methods\":[\"AUTO\"],\"method_params\":{},\"scan_level\":100}"
+        ));
+    }
 }

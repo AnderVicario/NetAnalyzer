@@ -17,6 +17,8 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -29,6 +31,7 @@ import com.av19.netanalyzer.R;
 import com.av19.netanalyzer.data.NetworkInfo;
 import com.av19.netanalyzer.data.ScanRecord;
 import com.av19.netanalyzer.data.ScanState;
+import com.av19.netanalyzer.repository.ScanRepository;
 import com.av19.netanalyzer.service.ScanService;
 import com.av19.netanalyzer.utils.OpenRouterApiClient;
 import com.av19.netanalyzer.utils.PreferencesManager;
@@ -43,7 +46,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements ImportConfigDialogFragment.ImportListener {
 
     private ScanViewModel viewModel;
     private boolean isScanning = false;
@@ -114,6 +117,13 @@ public class HomeFragment extends Fragment {
         // Copiar último escaneo al portapapeles al pulsar la tarjeta de historial
         MaterialCardView cardHistory = view.findViewById(R.id.card_history);
         cardHistory.setOnClickListener(v -> copyLastScanToClipboard());
+
+        // Botones de importar/exportar historial
+        ImageButton btnImportHistory = view.findViewById(R.id.btn_import_history);
+        ImageButton btnExportHistory = view.findViewById(R.id.btn_export_history);
+
+        btnImportHistory.setOnClickListener(v -> showImportHistoryDialog());
+        btnExportHistory.setOnClickListener(v -> exportScanHistory());
 
         btnScan.setOnClickListener(v -> {
             if (isScanning) stopScan();
@@ -406,6 +416,51 @@ public class HomeFragment extends Fragment {
             tvHistoryTime.setText(getString(R.string.history_time_default));
             tvDevicesCount.setText("0");
             tvTimeElapsed.setText("0 s");
+        }
+    }
+
+    private void exportScanHistory() {
+        PreferencesManager pm = new PreferencesManager(requireContext());
+        String json = pm.exportScanHistory();
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, json);
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.adv_settings_export_title)));
+    }
+
+    private void showImportHistoryDialog() {
+        ImportConfigDialogFragment dialog = ImportConfigDialogFragment.newInstance(ImportConfigDialogFragment.TYPE_SCAN_HISTORY);
+        dialog.setImportListener(this);
+        dialog.show(getChildFragmentManager(), "import_scan_history");
+    }
+
+    @Override
+    public void onImportSuccess() {
+        loadLastScanSummary();
+        // Recargar el último del historial
+        PreferencesManager pm = new PreferencesManager(requireContext());
+        List<ScanRecord> history = pm.getScanHistory();
+        if (!history.isEmpty()) {
+            ScanRecord last = history.get(0);
+            ScanRepository.getInstance().loadDevicesFromHistory(last.getDevices(), null);
+        }
+    }
+
+    @Override
+    public void onImportSuccess(ScanRecord importedRecord) {
+        loadLastScanSummary();
+        // Cargar los dispositivos del registro importado en el repositorio
+        // Nota: ScanRecord no almacena NetworkInfo, así que pasamos null
+        if (importedRecord != null && importedRecord.getDevices() != null) {
+            ScanRepository.getInstance().loadDevicesFromHistory(importedRecord.getDevices(), null);
+        } else {
+            // Si no hay registro importado, recargar el último del historial
+            PreferencesManager pm = new PreferencesManager(requireContext());
+            List<ScanRecord> history = pm.getScanHistory();
+            if (!history.isEmpty()) {
+                ScanRecord last = history.get(0);
+                ScanRepository.getInstance().loadDevicesFromHistory(last.getDevices(), null);
+            }
         }
     }
 }
