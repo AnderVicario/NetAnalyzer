@@ -6,6 +6,8 @@
 ![Android Studio](https://img.shields.io/badge/Android%20Studio-1976D2?logo=androidstudio&logoColor=fff)
 ![Gradle](https://img.shields.io/badge/Gradle-02303A?logo=gradle&logoColor=white)
 
+[🇬🇧 English](README.md) · [🇪🇸 Español](README.es.md)
+
 **NetAnalyzer** is a native Android application for auditing local networks without requiring superuser (root) privileges. It can discover active devices, identify their main characteristics (IP, MAC, manufacturer, estimated operating system, hostname), and detect exposed services through port scanning, all from a mobile device.
 
 ## What problem does it solve?
